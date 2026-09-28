@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -19,4 +20,5 @@ Route::redirect('/', '/dashboard');
 
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->middleware('can:dashboard.view')->name('dashboard');
+    Route::get('/audit-trail', [AuditTrailController::class, 'index'])->middleware('can:audit.view')->name('audit.index');
 });
