@@ -31,6 +31,9 @@ final class PermissionCatalog
         'reports.generate' => ['Generate reports', 'Reports'],
     ];
 
+    /** Every role keeps its landing page; without it login ends on a 403. */
+    public const ALWAYS_GRANTED = ['dashboard.view'];
+
     /** Permissions the Administrator role can never lose (prevents lock-out). */
     public const LOCKED_FOR_ADMIN = ['users.manage', 'roles.configure'];
 

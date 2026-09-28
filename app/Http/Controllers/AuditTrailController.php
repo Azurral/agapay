@@ -12,16 +12,18 @@ class AuditTrailController extends Controller
 {
     public function index(Request $request): View
     {
-        $timestamp = trim((string) $request->query('timestamp'));
+        $timestamp = $request->queryText('timestamp');
+        $user = $request->queryText('user');
+        $action = $request->queryText('action');
         $date = $this->parseDate($timestamp);
         $invalidDate = $timestamp !== '' && $date === null;
 
         $logs = AuditLog::query()
             ->with('user:id,username')
-            ->when($request->filled('user'), fn ($query) => $query->whereHas(
-                'user', fn ($user) => $user->where('username', 'like', '%'.$request->query('user').'%')
+            ->when($user !== '', fn ($query) => $query->whereHas(
+                'user', fn ($u) => $u->where('username', 'like', '%'.$user.'%')
             ))
-            ->when($request->filled('action'), fn ($query) => $query->where('action', $request->query('action')))
+            ->when($action !== '', fn ($query) => $query->where('action', $action))
             ->when($date, fn ($query) => $query->whereDate('created_at', $date))
             ->when($invalidDate, fn ($query) => $query->whereRaw('1 = 0'))
             ->orderByDesc('created_at')

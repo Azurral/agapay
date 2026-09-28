@@ -6,8 +6,8 @@
 
     <x-ui.card title="User Management">
         <form method="GET" class="mt-[17.5px] flex items-center gap-[22px]">
-            <x-ui.pill-input name="q" placeholder="Search by name..." :value="request('q')" width="272" />
-            <x-ui.pill-select name="role" label="Role" :options="$roleOptions" :selected="request('role')" width="280" />
+            <x-ui.pill-input name="q" placeholder="Search by name..." :value="request()->queryText('q')" width="272" />
+            <x-ui.pill-select name="role" label="Role" :options="$roleOptions" :selected="request()->queryText('role')" width="280" />
             <span class="ml-auto w-[155px] text-center text-[14px] font-medium text-muted">Status</span>
             <button type="submit" class="sr-only">Apply filters</button>
         </form>
@@ -93,7 +93,7 @@
                                 <tr class="h-[36px] font-bold">
                                     <td class="pl-[4px]">{{ $permission->label }}</td>
                                     @foreach ($roles as $role)
-                                        @php($locked = $role->slug === \App\Models\Role::ADMIN && in_array($permission->slug, \App\Support\PermissionCatalog::LOCKED_FOR_ADMIN, true))
+                                        @php($locked = in_array($permission->slug, \App\Support\PermissionCatalog::ALWAYS_GRANTED, true) || ($role->slug === \App\Models\Role::ADMIN && in_array($permission->slug, \App\Support\PermissionCatalog::LOCKED_FOR_ADMIN, true)))
                                         <td class="text-center">
                                             <input type="checkbox" name="permissions[{{ $role->id }}][]" value="{{ $permission->slug }}"
                                                    @checked($locked || $role->permissions->contains('slug', $permission->slug))

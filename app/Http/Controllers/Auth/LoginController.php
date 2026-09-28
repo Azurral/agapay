@@ -14,7 +14,7 @@ class LoginController extends Controller
 {
     public function create(Request $request): View
     {
-        return view('auth.login', ['username' => $request->query('username')]);
+        return view('auth.login', ['username' => $request->queryText('username')]);
     }
 
     public function store(LoginRequest $request): RedirectResponse

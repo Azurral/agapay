@@ -117,7 +117,7 @@ it('ignores unknown permission slugs and role ids', function () {
         ->assertRedirect(route('users.index'));
 
     expect(Permission::where('slug', 'hack.everything')->exists())->toBeFalse()
-        ->and(Role::firstWhere('slug', Role::ENCODER)->permissions)->toBeEmpty();
+        ->and(Role::firstWhere('slug', Role::ENCODER)->permissions->pluck('slug')->all())->toBe(['dashboard.view']);
 });
 
 it('limits Configure Roles to roles.configure holders', function () {
@@ -126,3 +126,18 @@ it('limits Configure Roles to roles.configure holders', function () {
 
     $this->actingAs($this->admin->fresh())->put('/roles/permissions', ['permissions' => []])->assertForbidden();
 });
+
+it('never lets a role lose its home dashboard', function () {
+    $encoder = Role::firstWhere('slug', Role::ENCODER);
+
+    $this->actingAs($this->admin)->put('/roles/permissions', ['permissions' => [$encoder->id => ['import.run']]]);
+
+    expect($encoder->fresh()->permissions->pluck('slug')->all())->toContain('dashboard.view', 'import.run');
+});
+
+it('does not crash on array query parameters', function (string $url) {
+    $this->actingAs($this->admin)->get($url)->assertOk();
+})->with([
+    '/users?q[]=a&role[]=b',
+    '/audit-trail?timestamp[]=x&user[]=y&action[]=z',
+]);

@@ -1,9 +1,9 @@
 <x-layouts.app title="AUDIT TRAIL">
     <x-ui.card title="Audit Trail">
         <form method="GET" class="mt-[18.5px] grid grid-cols-[297px_250px_427px_1fr] items-center pl-[4.5px]">
-            <x-ui.pill-input name="timestamp" placeholder="Search timestamp..." :value="request('timestamp')" width="223" />
-            <x-ui.pill-input name="user" placeholder="Search by user..." :value="request('user')" width="223" />
-            <x-ui.pill-select name="action" label="Action" :options="['' => 'All'] + $actions" :selected="request('action')" width="300" />
+            <x-ui.pill-input name="timestamp" placeholder="Search timestamp..." :value="request()->queryText('timestamp')" width="223" />
+            <x-ui.pill-input name="user" placeholder="Search by user..." :value="request()->queryText('user')" width="223" />
+            <x-ui.pill-select name="action" label="Action" :options="['' => 'All'] + $actions" :selected="request()->queryText('action')" width="300" />
             <span class="text-[14px] font-medium text-muted">Record Affected</span>
             <button type="submit" class="sr-only">Apply filters</button>
         </form>

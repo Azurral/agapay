@@ -15,11 +15,12 @@ class UserController extends Controller
 {
     public function index(Request $request): View
     {
-        $role = (string) $request->query('role', '');
+        $role = $request->queryText('role');
+        $search = $request->queryText('q');
 
         $users = User::with('role')
-            ->when($request->filled('q'), function ($query) use ($request) {
-                $term = '%'.$request->query('q').'%';
+            ->when($search !== '', function ($query) use ($search) {
+                $term = '%'.$search.'%';
                 $query->where(fn ($q) => $q->where('username', 'like', $term)->orWhere('name', 'like', $term));
             })
             ->when($role === 'none', fn ($query) => $query->whereNull('role_id'))

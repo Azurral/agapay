@@ -100,3 +100,7 @@ it('sends guests to the login page', function () {
 it('sends signed-in users away from the login page', function () {
     $this->actingAs($this->admin)->get('/login')->assertRedirect(route('dashboard'));
 });
+
+it('does not crash on an array username in the query string', function () {
+    $this->get('/login?username[]=x')->assertOk();
+});

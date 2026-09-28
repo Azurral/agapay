@@ -20,7 +20,8 @@ class RolePermissionController extends Controller
         DB::transaction(function () use ($submitted, $permissionIds) {
             foreach (Role::with('permissions:id,slug')->get() as $role) {
                 $slugs = collect((array) ($submitted[$role->id] ?? []))
-                    ->filter(fn ($slug) => is_string($slug) && $permissionIds->has($slug));
+                    ->filter(fn ($slug) => is_string($slug) && $permissionIds->has($slug))
+                    ->merge(PermissionCatalog::ALWAYS_GRANTED);
 
                 if ($role->slug === Role::ADMIN) {
                     $slugs = $slugs->merge(PermissionCatalog::LOCKED_FOR_ADMIN);
