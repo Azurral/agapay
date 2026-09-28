@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -16,10 +17,20 @@ use Illuminate\Support\Collection;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use Auditable, HasFactory, Notifiable;
 
     public const STATUS_ACTIVE = 'active';
     public const STATUS_INACTIVE = 'inactive';
+
+    protected string $auditSubject = 'User';
+
+    /** Changes that happen on every sign-in are not user activity worth auditing. */
+    protected array $auditIgnore = ['remember_token', 'last_login_at'];
+
+    public function auditRecordLabel(): string
+    {
+        return $this->username;
+    }
 
     private ?Collection $permissionSlugCache = null;
 
