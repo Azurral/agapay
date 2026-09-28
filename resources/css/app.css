@@ -68,10 +68,8 @@
     /* Placeholder logo square: brand gradient stroke (sampled), fill set by --logo-fill. */
     .logo-box {
         border-style: solid;
-        border-color: transparent;
-        background:
-            linear-gradient(var(--logo-fill, #edefea), var(--logo-fill, #edefea)) padding-box,
-            linear-gradient(170deg, #7473e9 10%, #afa6f7 80%, #d2c4ff 100%) border-box;
+        border-image: linear-gradient(170deg, #7473e9 10%, #afa6f7 80%, #d2c4ff 100%) 1;
+        background: var(--logo-fill, #edefea) padding-box;
     }
 
     .divider {

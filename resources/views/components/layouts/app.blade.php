@@ -1,0 +1,27 @@
+@props(['title'])
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ \Illuminate\Support\Str::title(strtolower($title)) }} · Agapay</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="min-h-screen min-w-[1280px] bg-white font-sans text-ink antialiased">
+    <x-app.header :title="$title" />
+
+    <div class="flex">
+        <x-app.sidebar />
+
+        <main class="bg-grid relative mt-[11px] min-h-[calc(100vh-81px)] flex-1 overflow-hidden rounded-tl-[20px] border-t-[1.5px] border-l-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px]">
+            <x-app.greeting />
+            <x-app.search-bar class="mt-[34px]" />
+
+            <div class="mt-[28px] flex flex-col gap-[14px]">
+                {{ $slot }}
+            </div>
+        </main>
+    </div>
+</body>
+</html>
