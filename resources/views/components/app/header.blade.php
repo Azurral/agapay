@@ -5,7 +5,7 @@
         <span class="ml-[15px] text-[19px] font-bold leading-[28px]">Agapay</span>
     </div>
     <div class="text-right text-[16px] font-bold leading-[20px]">
-        <p>{{ now()->format('D, F j') }}</p>
+        <p>{{ (config('agapay.frozen_now') ? \Illuminate\Support\Carbon::parse(config('agapay.frozen_now')) : now())->format('D, F j') }}</p>
         <p>{{ $title }}</p>
     </div>
 </header>

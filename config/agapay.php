@@ -6,6 +6,10 @@ return [
     // Development/demo password for seeded accounts. Change in .env for any real deployment.
     'seed_password' => env('AGAPAY_SEED_PASSWORD', 'Agapay@2026'),
 
+    // Pins only the header date (e.g. the Figma "Wed, July 22") for `npm run visual`.
+    // Never freeze the global clock: session cookie expiry is computed from it.
+    'frozen_now' => env('APP_ENV') === 'production' ? null : env('AGAPAY_FROZEN_NOW'),
+
     // Sidebar items per role (Figma order). Each is also filtered by its permission.
     'nav' => [
         Role::ADMIN => [

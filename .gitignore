@@ -28,3 +28,4 @@ Thumbs.db
 
 .claude/settings.local.json
 .claude/launch.json
+test-results/

@@ -73,6 +73,16 @@ it('renders the dashboard shell for every role', function (string $role, string 
     [Role::ENCODER, 'Encoder', 'Encoded This Month'],
 ]);
 
+it('can pin the header date for visual comparison without moving the real clock', function () {
+    config(['agapay.frozen_now' => '2026-07-22 09:00:00']);
+
+    $response = $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')->assertSee('Wed, July 22');
+
+    // The session cookie must still be valid (a frozen global clock expired it, breaking login).
+    $session = collect($response->headers->getCookies())->firstWhere(fn ($c) => $c->getName() === config('session.cookie'));
+    expect($session->getExpiresTime())->toBeGreaterThan(time());
+});
+
 it('lists remembered accounts in the account menu', function () {
     $admin = userWithRole(Role::ADMIN, ['username' => 'Admin_01']);
     $agritech = userWithRole(Role::AGRITECH, ['username' => 'Agritech_02']);
