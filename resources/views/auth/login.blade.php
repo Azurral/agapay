@@ -2,7 +2,7 @@
     <main class="flex min-h-screen items-center justify-center">
         <div class="flex flex-col items-center">
             <div class="flex items-center gap-[14px]">
-                <span class="logo-box block size-[84px] border-[5px]" style="--logo-fill: transparent"></span>
+                <img src="{{ asset('images/logo.svg') }}" alt="Agapay logo" class="block size-[84px]">
                 <h1 class="text-[64px] font-bold leading-[83px]">Agapay</h1>
             </div>
 

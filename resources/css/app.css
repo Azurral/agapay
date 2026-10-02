@@ -10,7 +10,6 @@
     --color-muted: #b4b4b4;
     --color-subtle: #b5b5b5;
     --color-canvas: #f9f6ff;
-    --color-logo: #edefea;
     --color-brand: #5a5de3;
     --color-brand-soft: #7e80ff;
     --color-cyan: #00fff2;
@@ -65,20 +64,13 @@
         color: transparent;
     }
 
-    /* Placeholder logo square: brand gradient stroke (sampled), fill set by --logo-fill. */
-    .logo-box {
-        border-style: solid;
-        border-image: linear-gradient(170deg, #7473e9 10%, #afa6f7 80%, #d2c4ff 100%) 1;
-        background: var(--logo-fill, #edefea) padding-box;
-    }
-
     .divider {
         border-top: 1.5px solid rgb(0 0 0 / 0.15);
     }
 
     /* ---- Hover states: one per button type, shared by every page ---- */
 
-    /* White surfaces: sidebar items, Filter, Switch, Configure Roles, menu rows, table rows. */
+    /* White surfaces: sidebar items, Filter, Configure Roles, menu rows, table rows. */
     .hover-tint {
         transition: background-color 150ms ease, color 150ms ease;
     }
@@ -109,6 +101,15 @@
         box-shadow: 0 6px 16px rgb(90 93 227 / 0.3);
     }
 
+    /* White pills sitting on a gradient card (Switch): a faint tint vanishes there, so they invert to dark purple. */
+    .invert-button {
+        transition: background-color 150ms ease, color 150ms ease;
+    }
+    .invert-button:hover {
+        background-color: #4b32c3;
+        color: #ffffff;
+    }
+
     /* Sidebar account button: outline turns brand and the surface tints. */
     .account-trigger {
         transition: border-color 150ms ease, background-color 150ms ease;
@@ -126,6 +127,7 @@
     .hover-tint:focus-visible,
     .pill-button:focus-visible,
     .gradient-button:focus-visible,
+    .invert-button:focus-visible,
     .account-trigger:focus-visible {
         outline: 2px solid var(--color-brand-soft);
         outline-offset: 2px;
