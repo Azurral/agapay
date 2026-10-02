@@ -6,7 +6,10 @@
         <img src="{{ $user->avatarUrl() }}" alt="" class="absolute top-[8.5px] left-[9.5px] size-[36px] rounded-full object-cover">
         <span class="absolute top-[5px] left-[50px] text-[16px] font-bold leading-[20px]">{{ $user->username }}</span>
         <span class="absolute top-[25px] left-[50px] text-[13px] font-medium leading-[17px] text-subtle">{{ $user->roleShortName() }}</span>
-        <img src="{{ asset('images/figma/icons/arrow-down.svg') }}" alt="" class="absolute top-[17px] left-[203px] size-[18px]">
+        {{-- Same 26px hover circle and position as the menu's close (up) arrow. --}}
+        <span class="hover-tint absolute top-[14.5px] left-[200.5px] flex size-[26px] items-center justify-center rounded-full">
+            <img src="{{ asset('images/figma/icons/arrow-down.svg') }}" alt="" class="size-[18px]">
+        </span>
     </button>
 
     <div x-cloak x-show="open"
