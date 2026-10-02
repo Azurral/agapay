@@ -1,0 +1,31 @@
+<?php
+
+it('ships every Figma asset the shell references', function (string $path) {
+    expect(public_path($path))->toBeFile()
+        ->and(filesize(public_path($path)))->toBeGreaterThan(100);
+})->with([
+    'images/figma/grid-bg.svg',
+    'images/figma/icons/home.svg',
+    'images/figma/icons/report.svg',
+    'images/figma/icons/newly-registered.svg',
+    'images/figma/icons/disaster.svg',
+    'images/figma/icons/user-mgmt.svg',
+    'images/figma/icons/audit.svg',
+    'images/figma/icons/validation.svg',
+    'images/figma/icons/profile.svg',
+    'images/figma/icons/inventory.svg',
+    'images/figma/icons/task.svg',
+    'images/figma/icons/arrow-down.svg',
+    'images/figma/icons/arrow-up.svg',
+    'images/figma/icons/search.svg',
+    'images/figma/icons/plus.svg',
+    'images/figma/icons/ring.svg',
+    'images/figma/avatars/admin.png',
+    'images/figma/avatars/agritech.png',
+    'images/figma/avatars/encoder.png',
+    'images/figma/gradients/bar.svg',
+    'images/figma/gradients/button.svg',
+    'images/figma/gradients/login.svg',
+    'images/figma/gradients/card.svg',
+    'images/figma/gradients/logout.svg',
+]);

@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "visual": "playwright test --config tests/visual/playwright.config.js"
     },
     "devDependencies": {
         "@fontsource/ibm-plex-sans": "^5.3.0",

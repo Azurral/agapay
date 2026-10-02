@@ -4,6 +4,132 @@
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+
+    --color-ink: #2f2f2f;
+    --color-muted: #b4b4b4;
+    --color-subtle: #b5b5b5;
+    --color-canvas: #f9f6ff;
+    --color-logo: #edefea;
+    --color-brand: #5a5de3;
+    --color-brand-soft: #7e80ff;
+    --color-cyan: #00fff2;
+    --color-ok: #a8f9b1;
+    --color-bad: #f9a8a9;
+    --color-field: #e2e2e2;
+    --color-arrow: #868686;
+    --color-danger: #d64545;
+    --color-stat-1: #da37ff;
+    --color-stat-2: #8037ff;
+    --color-stat-3: #4671ff;
+    --color-stat-4: #0bcaff;
 }
+
+@layer components {
+    /* Figma "Group 4" grid, placed at (-278, -298) inside the content container. */
+    .bg-grid {
+        background-color: var(--color-canvas);
+        background-image: url('/images/figma/grid-bg.svg');
+        background-repeat: no-repeat;
+        background-position: -278px -298px;
+        background-size: 2135.5px 1529px;
+    }
+
+    /* Login frame: grid container sits at (-66, -121) on the page. */
+    .bg-grid-login {
+        background-color: var(--color-canvas);
+        background-image: url('/images/figma/grid-bg.svg');
+        background-repeat: no-repeat;
+        background-position: -344px -419px;
+        background-size: 2135.5px 1529px;
+    }
+
+    .bg-brand-bar { background: url('/images/figma/gradients/bar.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-button { background: url('/images/figma/gradients/button.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-login { background: url('/images/figma/gradients/login.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-card { background: url('/images/figma/gradients/card.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-logout { background: url('/images/figma/gradients/logout.svg') 0 0 / 100% 100% no-repeat; }
+
+    /* Pill buttons and login inputs: cyan -> brand linear stroke (sampled from Figma render). */
+    .border-gradient {
+        border: 1.5px solid transparent;
+        background:
+            linear-gradient(#fff, #fff) padding-box,
+            linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
+    }
+
+    .text-gradient-heading {
+        background-image: linear-gradient(90deg, #00fff2 0%, #7e80ff 75.489%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    /* Placeholder logo square: brand gradient stroke (sampled), fill set by --logo-fill. */
+    .logo-box {
+        border-style: solid;
+        border-image: linear-gradient(170deg, #7473e9 10%, #afa6f7 80%, #d2c4ff 100%) 1;
+        background: var(--logo-fill, #edefea) padding-box;
+    }
+
+    .divider {
+        border-top: 1.5px solid rgb(0 0 0 / 0.15);
+    }
+
+    /* ---- Hover states: one per button type, shared by every page ---- */
+
+    /* White surfaces: sidebar items, Filter, Switch, Configure Roles, menu rows, table rows. */
+    .hover-tint {
+        transition: background-color 150ms ease, color 150ms ease;
+    }
+    .hover-tint:hover {
+        background-color: #efeaff;
+        color: var(--color-brand);
+    }
+
+    /* Gradient-outlined pills (quick actions): soft cyan->lavender fill and a small lift. */
+    .pill-button {
+        transition: background 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+    }
+    .pill-button:hover {
+        background:
+            linear-gradient(90deg, #e6fffd, #efeaff) padding-box,
+            linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgb(90 93 227 / 0.18);
+    }
+
+    /* Filled brand-gradient buttons (LOGIN, Log out, Save ...): brighter, lifted, glowing. */
+    .gradient-button {
+        transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+    }
+    .gradient-button:hover {
+        filter: brightness(1.07) saturate(1.1);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgb(90 93 227 / 0.3);
+    }
+
+    /* Sidebar account button: outline turns brand and the surface tints. */
+    .account-trigger {
+        transition: border-color 150ms ease, background-color 150ms ease;
+    }
+    .account-trigger:hover {
+        border-color: var(--color-brand-soft);
+        background-color: var(--color-canvas);
+    }
+
+    .pill-button:active,
+    .gradient-button:active {
+        transform: translateY(0);
+    }
+
+    .hover-tint:focus-visible,
+    .pill-button:focus-visible,
+    .gradient-button:focus-visible,
+    .account-trigger:focus-visible {
+        outline: 2px solid var(--color-brand-soft);
+        outline-offset: 2px;
+    }
+}
+
+[x-cloak] { display: none !important; }
