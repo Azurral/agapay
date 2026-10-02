@@ -31,6 +31,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/search', SearchController::class)->middleware('can:beneficiaries.view')->name('search');
 
     Route::get('/beneficiaries', [BeneficiaryController::class, 'index'])->middleware('can:beneficiaries.manage')->name('beneficiaries.index');
+    Route::get('/beneficiaries/{beneficiary}', [BeneficiaryController::class, 'show'])->middleware('can:beneficiaries.view')->name('beneficiaries.show');
+    Route::put('/beneficiaries/{beneficiary}', [BeneficiaryController::class, 'update'])->middleware('can:beneficiaries.manage')->name('beneficiaries.update');
 
     Route::get('/rsbsa/register', [RsbsaRegistrationController::class, 'create'])
         ->middleware('can.any:rsbsa.register,rsbsa.process')->name('rsbsa.register');

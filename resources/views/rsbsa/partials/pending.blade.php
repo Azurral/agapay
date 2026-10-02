@@ -13,7 +13,7 @@
     $fieldHints = ['rsbsa_number' => 'From the DA-RFO masterlist', 'reason' => 'e.g. Awaiting Barangay Confirmation'];
 @endphp
 
-<x-ui.card title="Pending RSBSA Applications" class="mt-[20px]">
+<x-ui.card title="Pending RSBSA Applications" class="mt-[6px]">
     <p class="mt-[3px] text-[14px] font-medium leading-[21px] text-muted">Applications awaiting OMAG validation, DA-RFO endorsement or the masterlist RSBSA number.</p>
     <div class="divider mt-[7px]"></div>
 
