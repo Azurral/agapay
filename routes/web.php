@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RsbsaRegistrationController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserController;
 use App\Services\RsbsaWorkflow;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,8 @@ Route::redirect('/', '/dashboard');
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->middleware('can:dashboard.view')->name('dashboard');
     Route::get('/audit-trail', [AuditTrailController::class, 'index'])->middleware('can:audit.view')->name('audit.index');
+
+    Route::get('/search', SearchController::class)->middleware('can:beneficiaries.view')->name('search');
 
     Route::get('/rsbsa/register', [RsbsaRegistrationController::class, 'create'])
         ->middleware('can.any:rsbsa.register,rsbsa.process')->name('rsbsa.register');

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Barangay;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -23,4 +24,10 @@ function userWithRole(?string $slug, array $attributes = []): User
         'role_id' => $slug ? Role::where('slug', $slug)->value('id') : null,
         ...$attributes,
     ]);
+}
+
+/** Id of a seeded barangay by name (BarangaySeeder must have run). */
+function brgy(string $name): int
+{
+    return Barangay::where('name', $name)->valueOrFail('id');
 }

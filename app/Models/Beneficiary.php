@@ -6,11 +6,13 @@ use App\Models\Concerns\Auditable;
 use App\Services\HouseholdService;
 use Database\Factories\BeneficiaryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 #[Fillable([
     'first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'barangay_id', 'contact_number',
@@ -88,6 +90,33 @@ class Beneficiary extends Model
     public function rsbsaDisplay(): string
     {
         return $this->rsbsa_number ?: '(pending)';
+    }
+
+    /** Eager loads for <x-beneficiary.table>: barangay name and household size without N+1 queries. */
+    public function scopeForTable(Builder $query): Builder
+    {
+        return $query->with(['barangay:id,name', 'household' => fn ($q) => $q->withCount('members')]);
+    }
+
+    /** Free-text search on name, full name, RSBSA number or barangay; LIKE wildcards in the term are literal. */
+    public function scopeSearch(Builder $query, string $term): Builder
+    {
+        $term = trim(preg_replace('/\s+/', ' ', $term));
+        if ($term === '') {
+            return $query;
+        }
+
+        // "!" is the LIKE escape character: a backslash escape behaves differently on MySQL and SQLite.
+        $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($term)).'%';
+        $fullName = DB::getDriverName() === 'sqlite' ? "first_name || ' ' || last_name" : "CONCAT(first_name, ' ', last_name)";
+        $matches = fn (string $column) => ["LOWER({$column}) LIKE ? ESCAPE '!'", [$like]];
+
+        return $query->where(fn (Builder $q) => $q
+            ->whereRaw(...$matches('first_name'))
+            ->orWhereRaw(...$matches('last_name'))
+            ->orWhereRaw(...$matches($fullName))
+            ->orWhereRaw(...$matches('rsbsa_number'))
+            ->orWhereHas('barangay', fn (Builder $b) => $b->whereRaw(...$matches('name'))));
     }
 
     /** Chip label for an RSBSA status. */
