@@ -10,7 +10,7 @@
            placeholder="Search beneficiary by name, RSBSA No., or barangay..."
            class="h-full min-w-0 flex-1 bg-transparent text-[20px] font-bold text-white outline-none placeholder:text-white">
     <button type="button" @click="filters = ! filters" :aria-expanded="filters" aria-controls="search-filters"
-            class="h-[39px] w-[176px] shrink-0 hover-tint rounded-[50px] bg-white text-[20px] font-bold">Filter{{ $filtered ? ' •' : '' }}</button>
+            class="h-[39px] w-[176px] shrink-0 hover-tint rounded-[50px] bg-white text-[20px] font-bold hover:bg-[#efeaff] hover:text-brand">Filter{{ $filtered ? ' •' : '' }}</button>
 
     <div id="search-filters" x-cloak x-show="filters" @click.outside="filters = false"
          class="absolute top-[66px] right-0 z-40 flex w-[360px] flex-col gap-[14px] rounded-[15px] border-[1.5px] border-black/10 bg-white p-[20px] shadow-[0_20px_50px_rgba(90,93,227,0.25),0_4px_12px_rgba(0,0,0,0.08)]">

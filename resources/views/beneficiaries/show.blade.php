@@ -104,7 +104,7 @@
 
     <x-beneficiary.action-bar :title="$bar[0]" :subtitle="$bar[1]" :class="$isEdit ? '' : 'mt-[7px]'">
         @if ($isEdit)
-            <button type="submit" class="hover-tint h-[39px] w-[253px] rounded-[50px] bg-white text-[20px] font-bold text-ink">{{ $bar[2] }}</button>
+            <button type="submit" class="hover-tint h-[39px] w-[253px] rounded-[50px] bg-white text-[20px] font-bold text-ink hover:bg-[#efeaff] hover:text-brand">{{ $bar[2] }}</button>
         @else
             <button type="button" disabled title="Available once intervention records exist (Phase 4)."
                     class="h-[39px] w-[253px] cursor-not-allowed rounded-[50px] bg-white text-[20px] font-bold text-ink">{{ $bar[2] }}</button>

@@ -32,7 +32,7 @@
 
     <div>
         <button type="button" x-data @click="$dispatch('open-modal', 'configure-roles')"
-                class="hover-tint ml-[-3px] flex h-[39px] w-[263px] items-center justify-center gap-[2px] rounded-[50px] border-[1.5px] border-brand-soft bg-white text-[20px] font-bold leading-[24px]">
+                class="hover-tint ml-[-3px] flex h-[39px] w-[263px] items-center justify-center gap-[2px] rounded-[50px] border-[1.5px] border-brand-soft bg-white hover:bg-[#efeaff] hover:text-brand text-[20px] font-bold leading-[24px]">
             <img src="{{ asset('images/figma/icons/plus.svg') }}" alt="" class="size-[24px]"> Configure Roles
         </button>
     </div>

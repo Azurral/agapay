@@ -26,7 +26,7 @@
                 <span class="text-center">—</span>
                 <span class="flex justify-end">
                     <a @if (Route::has('beneficiaries.show')) href="{{ route('beneficiaries.show', ['beneficiary' => $beneficiary, 'edit' => 1]) }}" @endif
-                       class="hover-tint flex h-[39px] w-[98px] items-center justify-center rounded-[10px] border-4 border-[#7e80ff] bg-white">Edit</a>
+                       class="hover-tint flex h-[39px] w-[98px] items-center justify-center rounded-[10px] border-4 border-[#7e80ff] bg-white hover:bg-[#efeaff] hover:text-brand">Edit</a>
                 </span>
             </div>
         @empty
