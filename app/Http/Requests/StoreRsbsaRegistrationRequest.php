@@ -33,14 +33,7 @@ class StoreRsbsaRegistrationRequest extends FormRequest
                     return;
                 }
 
-                $alreadyRegistered = Beneficiary::query()
-                    ->whereRaw('LOWER(first_name) = ?', [mb_strtolower($this->input('first_name'))])
-                    ->whereRaw('LOWER(last_name) = ?', [mb_strtolower($this->input('last_name'))])
-                    ->whereDate('birthdate', $this->input('birthdate'))
-                    ->where('barangay_id', $this->input('barangay_id'))
-                    ->exists();
-
-                if ($alreadyRegistered) {
+                if (Beneficiary::isAlreadyRegistered($this->input('first_name'), $this->input('last_name'), $this->input('birthdate'), (int) $this->input('barangay_id'))) {
                     $validator->errors()->add('first_name', 'This person is already registered.');
                 }
             },

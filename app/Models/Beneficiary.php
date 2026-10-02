@@ -119,6 +119,17 @@ class Beneficiary extends Model
             ->orWhereHas('barangay', fn (Builder $b) => $b->whereRaw(...$matches('name'))));
     }
 
+    /** Same person = same first and last name (any case), birthdate and barangay. */
+    public static function isAlreadyRegistered(string $firstName, string $lastName, string $birthdate, int $barangayId): bool
+    {
+        return static::query()
+            ->whereRaw('LOWER(first_name) = ?', [mb_strtolower($firstName)])
+            ->whereRaw('LOWER(last_name) = ?', [mb_strtolower($lastName)])
+            ->whereDate('birthdate', $birthdate)
+            ->where('barangay_id', $barangayId)
+            ->exists();
+    }
+
     /** Chip label for an RSBSA status. */
     public static function rsbsaStatusLabel(?string $status): string
     {

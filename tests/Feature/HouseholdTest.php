@@ -86,3 +86,26 @@ it('groups seeded households even when model events are muted', function () {
     expect(Beneficiary::where('first_name', 'Juan')->where('last_name', 'Dela Cruz')->sole()->householdSize())->toBe(3)
         ->and(Beneficiary::whereNull('household_id')->count())->toBe(0);
 });
+
+it('never groups people whose address is only the barangay name', function () {
+    $poblacion = Barangay::where('name', 'Poblacion')->value('id');
+    $a = Beneficiary::factory()->create(['address' => 'Poblacion', 'barangay_id' => $poblacion]);
+    $b = Beneficiary::factory()->create(['address' => 'Brgy. Poblacion', 'barangay_id' => $poblacion]);
+
+    expect($a->household_id)->not->toBe($b->household_id)
+        ->and($a->householdSize())->toBe(1);
+
+    // Re-saving keeps the person's own household instead of minting a new one.
+    $before = $a->household_id;
+    $a->update(['address' => 'Barangay Poblacion']);
+    expect($a->fresh()->household_id)->toBe($before);
+});
+
+it('ignores the municipality and province in addresses', function () {
+    $poblacion = Barangay::where('name', 'Poblacion')->value('id');
+    $a = Beneficiary::factory()->create(['address' => 'Purok 3', 'barangay_id' => $poblacion]);
+    $b = Beneficiary::factory()->create(['address' => 'Purok 3, Poblacion, Bontoc, Mt. Province', 'barangay_id' => $poblacion]);
+    $c = Beneficiary::factory()->create(['address' => 'Purok 3 Bontoc Mountain Province', 'barangay_id' => $poblacion]);
+
+    expect($b->household_id)->toBe($a->household_id)->and($c->household_id)->toBe($a->household_id);
+});

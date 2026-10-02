@@ -6,7 +6,8 @@
     @if ($canRegister)
         {{-- Figma 329:3290 form card + 329:3330 submit bar (20px apart). --}}
         <form method="POST" action="{{ route('rsbsa.store') }}" class="flex flex-col gap-[20px]"
-              x-data="{ birthdate: @js(old('birthdate', '')), get age() { if (! this.birthdate) return ''; const b = new Date(this.birthdate), n = new Date(); let a = n.getFullYear() - b.getFullYear(); if (n.getMonth() < b.getMonth() || (n.getMonth() === b.getMonth() && n.getDate() < b.getDate())) a--; return a >= 0 ? a : ''; } }">
+              x-on:submit="busy = true"
+              x-data="{ busy: false, birthdate: @js(old('birthdate', '')), get age() { if (! this.birthdate) return ''; const b = new Date(this.birthdate), n = new Date(); let a = n.getFullYear() - b.getFullYear(); if (n.getMonth() < b.getMonth() || (n.getMonth() === b.getMonth() && n.getDate() < b.getDate())) a--; return a >= 0 ? a : ''; } }">
             @csrf
             <x-ui.card title="RSBSA Registration Form (To be filled up by the beneficiary)" class="pb-[12px]">
                 <p class="mt-[3px] text-[14px] font-medium leading-[21px] text-muted">Registered applicant → OMAG validation → endorse to DA-RFO → masterlist returns.</p>
@@ -38,7 +39,7 @@
                 </div>
             </x-ui.card>
 
-            <button type="submit" class="bg-brand-bar gradient-button flex h-[59px] w-full items-center justify-center gap-[6px] rounded-[50px] text-[20px] font-bold leading-[24px] text-white">
+            <button type="submit" :disabled="busy" class="bg-brand-bar gradient-button disabled:cursor-wait disabled:opacity-70 flex h-[59px] w-full items-center justify-center gap-[6px] rounded-[50px] text-[20px] font-bold leading-[24px] text-white">
                 <span class="text-[24px] leading-none">+</span> Submit Registration
             </button>
         </form>

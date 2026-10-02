@@ -6,8 +6,10 @@ use App\Http\Requests\UpdateBeneficiaryRequest;
 use App\Models\Barangay;
 use App\Models\Beneficiary;
 use App\Models\Role;
+use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class BeneficiaryController extends Controller
@@ -53,12 +55,15 @@ class BeneficiaryController extends Controller
 
     public function update(UpdateBeneficiaryRequest $request, Beneficiary $beneficiary): RedirectResponse
     {
+        $old = $beneficiary->only(['rsbsa_status', 'rsbsa_number', 'rsbsa_status_reason']);
         $beneficiary->fill($request->validated());
         $beneficiary->rsbsa_number = $request->validated('rsbsa_number') ?: null;
         $beneficiary->updated_by = $request->user()->id;
 
-        // Entering the masterlist number completes the RSBSA registration.
-        if ($beneficiary->rsbsa_number && $beneficiary->rsbsa_status !== Beneficiary::RSBSA_REGISTERED) {
+        // Entering the masterlist number for an endorsed application completes the RSBSA registration
+        // (the request refuses a first number before endorsement).
+        $recordsNumber = ! $old['rsbsa_number'] && $beneficiary->rsbsa_number;
+        if ($recordsNumber) {
             $beneficiary->rsbsa_status = Beneficiary::RSBSA_REGISTERED;
             $beneficiary->rsbsa_status_reason = null;
         }
@@ -66,7 +71,13 @@ class BeneficiaryController extends Controller
             $beneficiary->encoding_issue = null;
         }
 
-        $beneficiary->save();
+        DB::transaction(function () use ($beneficiary, $recordsNumber, $old) {
+            $beneficiary->save();
+
+            if ($recordsNumber) {
+                AuditLogger::record('Recorded RSBSA Number', $beneficiary, null, $old, $beneficiary->only(array_keys($old)));
+            }
+        });
 
         return redirect()->route('beneficiaries.show', $beneficiary)->with('status', 'Profile saved.');
     }

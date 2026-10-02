@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\RsbsaRegistrationController;
 use App\Models\AuditLog;
 use App\Models\Barangay;
 use App\Models\Beneficiary;
 use App\Models\Permission;
 use App\Models\Role;
 use Database\Seeders\BarangaySeeder;
+use Illuminate\Support\Facades\Cache;
 
 beforeEach(function () {
     seedRoles();
@@ -97,4 +99,23 @@ it('validates the contact number format', function () {
 
 it('only lets rsbsa.register holders submit', function () {
     $this->actingAs(userWithRole(Role::AGRITECH))->post('/rsbsa/register', validRegistration())->assertForbidden();
+});
+
+it('disables the submit button while the registration is being sent', function () {
+    $this->actingAs(userWithRole(Role::ENCODER))->get('/rsbsa/register')
+        ->assertSee('x-on:submit="busy = true"', false)
+        ->assertSee(':disabled="busy"', false);
+});
+
+it('refuses a registration while the same person is already being saved', function () {
+    $data = validRegistration();
+    $key = RsbsaRegistrationController::lockKey($data['first_name'], $data['last_name'], $data['birthdate'], (int) $data['barangay_id']);
+    $lock = Cache::lock($key, 10);
+    $lock->get();
+
+    $this->actingAs(userWithRole(Role::ENCODER))->post('/rsbsa/register', $data)
+        ->assertSessionHasErrors(['first_name' => 'This person is already registered.']);
+    expect(Beneficiary::count())->toBe(0);
+
+    $lock->release();
 });

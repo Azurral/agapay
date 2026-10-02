@@ -97,3 +97,20 @@ it('returns 404 for archived beneficiaries', function () {
 
     $this->actingAs(userWithRole(Role::ADMIN))->get('/beneficiaries/'.$this->juan->id)->assertNotFound();
 });
+
+it('only accepts an RSBSA number on edit once the application is endorsed', function (string $status) {
+    $b = Beneficiary::factory()->create(['rsbsa_status' => $status, 'rsbsa_number' => null]);
+
+    $this->actingAs(userWithRole(Role::ENCODER))->put(route('beneficiaries.update', $b), profileInput($b, ['rsbsa_number' => 'RSBSA-0888']))
+        ->assertSessionHasErrors(['rsbsa_number' => 'Record the RSBSA number after DA-RFO endorsement.']);
+
+    expect($b->fresh())->rsbsa_status->toBe($status)->rsbsa_number->toBeNull();
+})->with(['pending_validation', 'validated', 'returned', 'rejected']);
+
+it('audits an RSBSA number entered on edit like the workflow does', function () {
+    $b = Beneficiary::factory()->create(['rsbsa_status' => Beneficiary::RSBSA_ENDORSED, 'rsbsa_number' => null]);
+
+    $this->actingAs(userWithRole(Role::ENCODER))->put(route('beneficiaries.update', $b), profileInput($b, ['rsbsa_number' => 'RSBSA-0888']));
+
+    expect(AuditLog::where('action', 'Recorded RSBSA Number')->where('auditable_id', $b->id)->exists())->toBeTrue();
+});
