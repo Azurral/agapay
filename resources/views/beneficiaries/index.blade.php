@@ -1,24 +1,23 @@
 <x-layouts.app title="BENEFICIARY PROFILES">
     {{-- Figma 430:1276 / 440:43 --}}
     <x-ui.card title="Beneficiary Profiles">
-        <form method="GET" class="mt-[18.5px] flex items-center gap-[25px]">
+        {{-- Figma: the four filters double as the Name/RSBSA/Barangay/Intervention column heads. --}}
+        <form method="GET" class="mt-[18.5px] grid grid-cols-[255px_255px_255px_255px_1fr_155px_126px] items-center text-[14px] font-medium leading-[20px]">
             <x-ui.pill-input name="name" placeholder="Search Name..." :value="request()->queryText('name')" width="230" />
             <x-ui.pill-input name="rsbsa" placeholder="RSBSA Number..." :value="request()->queryText('rsbsa')" width="230" />
             <x-ui.pill-select name="barangay" label="Barangay" :options="['' => 'All'] + $barangays->all()" :selected="request()->queryText('barangay')" width="230" />
             {{-- Interventions arrive in Phase 4. --}}
             <x-ui.pill-select name="intervention" label="Intervention" :options="['' => 'All']" width="230" />
+            <span class="pl-[23px] text-muted">Household</span>
+            <span class="text-center text-muted">Status</span>
+            <span class="flex justify-end"><span class="w-[98px] text-center text-muted">Action</span></span>
             <button type="submit" class="sr-only">Apply filters</button>
         </form>
-
-        <div class="mt-[18px] grid grid-cols-[251px_260px_255px_262px_1fr_155px_111px] pl-[15px] text-[14px] font-medium leading-[20px] text-muted" aria-hidden="true">
-            <span>Name</span><span>RSBSA Number</span><span>Barangay</span><span>Intervention</span><span>Household</span>
-            <span class="text-center">Status</span><span class="text-right pr-[6.5px]">Action</span>
-        </div>
-        <div class="divider mt-[13px]"></div>
+        <div class="divider mt-[14px] mb-[4px]"></div>
 
         @forelse ($beneficiaries as $beneficiary)
             @php($members = $beneficiary->household?->members_count ?? 1)
-            <div class="grid min-h-[51px] grid-cols-[251px_260px_255px_262px_1fr_155px_111px] items-center pl-[15px] text-[14px] font-bold leading-[21px]">
+            <div class="grid h-[45px] grid-cols-[251px_260px_255px_262px_1fr_155px_126px] items-center pl-[15px] text-[14px] font-bold leading-[21px]">
                 <span class="truncate pr-[12px]">{{ $beneficiary->fullName() }}</span>
                 <span>{{ $beneficiary->rsbsaDisplay() }}</span>
                 <span>{{ $beneficiary->barangay?->name }}</span>

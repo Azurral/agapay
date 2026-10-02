@@ -17,7 +17,18 @@ const SCREENS = [
     { frame: '237-1659', route: '/dashboard', as: 'Encoder_03' },
     { frame: '329-695', route: '/users', as: 'Admin_01' },
     { frame: '329-904', route: '/audit-trail', as: 'Admin_01' },
+    { frame: '329-1596', route: '/rsbsa/register', as: 'Admin_01' },
+    { frame: '329-2822', route: juanProfile, as: 'Admin_01' },
+    { frame: '407-1181', route: juanProfile, as: 'Agritech_02' },
+    { frame: '430-1461', route: juanProfile, as: 'Encoder_03' },
+    { frame: '430-1276', route: '/beneficiaries', as: 'Encoder_03' },
 ];
+
+// Juan Dela Cruz's profile URL, read from search results (ids differ between seeds).
+async function juanProfile(page) {
+    await page.goto('/search?q=RSBSA-0231');
+    return new URL(await page.locator('a[href*="/beneficiaries/"]').first().getAttribute('href')).pathname;
+}
 
 const results = [];
 mkdirSync(OUT, { recursive: true });
@@ -37,13 +48,14 @@ async function logout(page) {
 }
 
 for (const screen of SCREENS) {
-    test(`${screen.frame} ${screen.route}`, async ({ page }) => {
+    test(`${screen.frame} ${typeof screen.route === 'function' ? screen.route.name : screen.route}`, async ({ page }) => {
         for (const other of screen.remember ?? []) {   // puts these accounts in the remembered-accounts cookie
             await login(page, other);
             await logout(page);
         }
         if (screen.as) await login(page, screen.as);
-        await page.goto(screen.route);
+        const route = typeof screen.route === 'function' ? await screen.route(page) : screen.route;
+        await page.goto(route);
         await page.evaluate(() => document.fonts.ready);
         if (screen.before) await screen.before(page);
         await page.waitForTimeout(300); // let Alpine transitions settle
@@ -60,7 +72,7 @@ for (const screen of SCREENS) {
             const match = /\(([\d.e-]+)\)/.exec(String(error.stderr));
             rmse = match ? Number(match[1]) : null;
         }
-        results.push({ frame: screen.frame, route: screen.route, rmse });
+        results.push({ frame: screen.frame, route, rmse });
         writeFileSync(`${OUT}report.json`, JSON.stringify(results, null, 2));
     });
 }

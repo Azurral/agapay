@@ -4,6 +4,10 @@ use App\Models\Barangay;
 use App\Models\Beneficiary;
 use App\Services\HouseholdService;
 use Database\Seeders\BarangaySeeder;
+use Database\Seeders\BeneficiarySeeder;
+use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\UserSeeder;
 
 beforeEach(fn () => $this->seed(BarangaySeeder::class));
 
@@ -58,4 +62,27 @@ it('labels beneficiaries for screens and the audit trail', function () {
         ->and($b->age())->toBe(45)
         ->and($b->auditRecordLabel())->toBe('Juan Dela Cruz (RSBSA-0231)')
         ->and(Beneficiary::factory()->make(['rsbsa_number' => null])->rsbsaDisplay())->toBe('(pending)');
+});
+
+it('seeds the Figma sample beneficiaries', function () {
+    $this->seed([RolePermissionSeeder::class, BarangaySeeder::class, UserSeeder::class]);
+    $this->seed(BeneficiarySeeder::class);
+    $this->seed(BeneficiarySeeder::class);
+
+    $find = fn (string $first, string $last) => Beneficiary::where('first_name', $first)->where('last_name', $last)->sole();
+
+    expect(Beneficiary::count())->toBe(13)
+        ->and($find('Juan', 'Dela Cruz')->householdSize())->toBe(3)
+        ->and($find('Juan', 'Dela Cruz')->age())->toBe(45)
+        ->and($find('Pedro', 'Reyes')->householdSize())->toBe(2)
+        ->and($find('Carlos', 'Ibanez')->householdSize())->toBe(2)
+        ->and(Beneficiary::whereNotNull('encoding_issue')->count())->toBe(2)
+        ->and($find('Federico', 'Wasing')->created_at->toDateString())->toBe('2026-07-20');
+});
+
+it('groups seeded households even when model events are muted', function () {
+    $this->seed(DatabaseSeeder::class);
+
+    expect(Beneficiary::where('first_name', 'Juan')->where('last_name', 'Dela Cruz')->sole()->householdSize())->toBe(3)
+        ->and(Beneficiary::whereNull('household_id')->count())->toBe(0);
 });

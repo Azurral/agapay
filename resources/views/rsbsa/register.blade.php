@@ -8,7 +8,7 @@
         <form method="POST" action="{{ route('rsbsa.store') }}" class="flex flex-col gap-[20px]"
               x-data="{ birthdate: @js(old('birthdate', '')), get age() { if (! this.birthdate) return ''; const b = new Date(this.birthdate), n = new Date(); let a = n.getFullYear() - b.getFullYear(); if (n.getMonth() < b.getMonth() || (n.getMonth() === b.getMonth() && n.getDate() < b.getDate())) a--; return a >= 0 ? a : ''; } }">
             @csrf
-            <x-ui.card title="RSBSA Registration Form (To be filled up by the beneficiary)" class="pb-[22.5px]">
+            <x-ui.card title="RSBSA Registration Form (To be filled up by the beneficiary)" class="pb-[12px]">
                 <p class="mt-[3px] text-[14px] font-medium leading-[21px] text-muted">Registered applicant → OMAG validation → endorse to DA-RFO → masterlist returns.</p>
                 <div class="divider mt-[7px]"></div>
 

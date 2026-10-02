@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             BarangaySeeder::class,
             UserSeeder::class,
+            BeneficiarySeeder::class,
         ]);
     }
 }
