@@ -24,7 +24,7 @@
                 </p>
 
                 <button type="submit"
-                        class="bg-brand-login mt-[9px] h-[44px] w-[320px] rounded-[100px] text-[14px] font-bold text-white">
+                        class="bg-brand-login gradient-button mt-[9px] h-[44px] w-[320px] rounded-[100px] text-[14px] font-bold text-white">
                     LOGIN
                 </button>
             </form>

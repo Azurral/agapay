@@ -3,5 +3,5 @@
     <input type="search" name="q" value="{{ request()->queryText('q') }}" aria-label="Search beneficiaries"
            placeholder="Search beneficiary by name, RSBSA No., or barangay..."
            class="h-full min-w-0 flex-1 bg-transparent text-[20px] font-bold text-white outline-none placeholder:text-white">
-    <button type="button" class="h-[39px] w-[176px] shrink-0 rounded-[50px] bg-white text-[20px] font-bold">Filter</button>
+    <button type="button" class="h-[39px] w-[176px] shrink-0 hover-tint rounded-[50px] bg-white text-[20px] font-bold">Filter</button>
 </form>

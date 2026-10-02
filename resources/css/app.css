@@ -75,6 +75,61 @@
     .divider {
         border-top: 1.5px solid rgb(0 0 0 / 0.15);
     }
+
+    /* ---- Hover states: one per button type, shared by every page ---- */
+
+    /* White surfaces: sidebar items, Filter, Switch, Configure Roles, menu rows, table rows. */
+    .hover-tint {
+        transition: background-color 150ms ease, color 150ms ease;
+    }
+    .hover-tint:hover {
+        background-color: #efeaff;
+        color: var(--color-brand);
+    }
+
+    /* Gradient-outlined pills (quick actions): soft cyan->lavender fill and a small lift. */
+    .pill-button {
+        transition: background 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+    }
+    .pill-button:hover {
+        background:
+            linear-gradient(90deg, #e6fffd, #efeaff) padding-box,
+            linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgb(90 93 227 / 0.18);
+    }
+
+    /* Filled brand-gradient buttons (LOGIN, Log out, Save ...): brighter, lifted, glowing. */
+    .gradient-button {
+        transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+    }
+    .gradient-button:hover {
+        filter: brightness(1.07) saturate(1.1);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgb(90 93 227 / 0.3);
+    }
+
+    /* Sidebar account button: outline turns brand and the surface tints. */
+    .account-trigger {
+        transition: border-color 150ms ease, background-color 150ms ease;
+    }
+    .account-trigger:hover {
+        border-color: var(--color-brand-soft);
+        background-color: var(--color-canvas);
+    }
+
+    .pill-button:active,
+    .gradient-button:active {
+        transform: translateY(0);
+    }
+
+    .hover-tint:focus-visible,
+    .pill-button:focus-visible,
+    .gradient-button:focus-visible,
+    .account-trigger:focus-visible {
+        outline: 2px solid var(--color-brand-soft);
+        outline-offset: 2px;
+    }
 }
 
 [x-cloak] { display: none !important; }

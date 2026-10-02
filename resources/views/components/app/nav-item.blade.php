@@ -1,6 +1,6 @@
 @props(['item'])
 <a href="{{ $item['url'] }}" @if ($item['active']) aria-current="page" @endif
-   class="relative block h-[51px] w-[235px] shrink-0 rounded-[15px] transition-colors hover:bg-brand/5">
+   class="relative block h-[51px] w-[235px] shrink-0 hover-tint rounded-[15px]">
     <span class="absolute top-[14px] left-[14px] flex size-[24px] items-center justify-center">
         <img src="{{ asset('images/figma/icons/'.$item['icon'].'.svg') }}" alt="">
     </span>

@@ -9,7 +9,7 @@
         <div class="mt-[3px] flex flex-wrap" style="gap: {{ $actions['gap'] }}px">
             @foreach ($actions['items'] as $action)
                 <a href="{{ $action['url'] }}"
-                   class="border-gradient flex h-[39px] items-center justify-center rounded-[50px] text-[20px] font-bold leading-[24px] whitespace-nowrap"
+                   class="border-gradient pill-button flex h-[39px] items-center justify-center rounded-[50px] text-[20px] font-bold leading-[24px] whitespace-nowrap"
                    style="width: {{ $actions['width'] }}px">{{ $action['label'] }}</a>
             @endforeach
         </div>
