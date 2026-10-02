@@ -44,5 +44,5 @@
         </form>
     @endif
 
-    @includeWhen(View::exists('rsbsa.partials.pending'), 'rsbsa.partials.pending')
+    @include('rsbsa.partials.pending')
 </x-layouts.app>

@@ -90,6 +90,26 @@ class Beneficiary extends Model
         return $this->rsbsa_number ?: '(pending)';
     }
 
+    /** Chip label for an RSBSA status. */
+    public static function rsbsaStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            self::RSBSA_PENDING => 'Pending Validation',
+            self::RSBSA_VALIDATED => 'Validated',
+            self::RSBSA_ENDORSED => 'Endorsed to DA-RFO',
+            self::RSBSA_REGISTERED => 'Registered',
+            self::RSBSA_RETURNED => 'Returned',
+            self::RSBSA_REJECTED => 'Rejected',
+            default => '—',
+        };
+    }
+
+    /** Chip tone: statuses that need someone's attention are "bad". */
+    public static function rsbsaStatusTone(?string $status): string
+    {
+        return in_array($status, [self::RSBSA_PENDING, self::RSBSA_RETURNED, self::RSBSA_REJECTED], true) ? 'bad' : 'ok';
+    }
+
     public function auditRecordLabel(): string
     {
         return $this->fullName().' ('.($this->rsbsa_number ?: 'pending').')';

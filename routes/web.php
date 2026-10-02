@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RsbsaRegistrationController;
 use App\Http\Controllers\UserController;
+use App\Services\RsbsaWorkflow;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -29,6 +30,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->middleware('can.any:rsbsa.register,rsbsa.process')->name('rsbsa.register');
     Route::post('/rsbsa/register', [RsbsaRegistrationController::class, 'store'])
         ->middleware('can:rsbsa.register')->name('rsbsa.store');
+    Route::post('/rsbsa/{beneficiary}/{action}', [RsbsaRegistrationController::class, 'transition'])
+        ->middleware('can:rsbsa.process')->whereIn('action', RsbsaWorkflow::ACTIONS)->name('rsbsa.transition');
 
     Route::middleware('can:users.manage')->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
