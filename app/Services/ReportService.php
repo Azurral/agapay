@@ -2,12 +2,22 @@
 
 namespace App\Services;
 
+use App\Exports\DistributionReportExport;
+use App\Models\GeneratedReport;
 use App\Models\InterventionRecord;
 use App\Models\InventoryItem;
 use App\Models\InventoryMovement;
+use App\Models\User;
 use App\Support\ReportCriteria;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Excel as ExcelWriter;
+use Maatwebsite\Excel\Facades\Excel;
+use Throwable;
 
 /**
  * Distribution monitoring report for one cycle (spec rule 12; paper §1.4.1): per-intervention and per-barangay
@@ -65,12 +75,63 @@ final class ReportService
                 'barangay' => (string) $r->beneficiary->barangay?->name,
                 'program' => $r->intervention->sourcedName(),
                 'quantity' => $r->quantityDisplay(),
-                'validation' => InterventionRecord::validationLabel($r->validation_status),
+                // "Validate" is the dropdown's prompt; a report states the status.
+                'validation' => $r->validation_status === InterventionRecord::VALIDATION_PENDING
+                    ? 'Pending Validation'
+                    : InterventionRecord::validationLabel($r->validation_status),
                 'claim' => $r->claimLabel(),
                 'date' => $r->date_distributed?->format('M j, Y') ?? '—',
             ])->all(),
             'inventory' => $this->inventory($records->modelKeys()),
         ];
+    }
+
+    /** Renders the report as PDF or .xlsx, keeps the file and records it in the history (spec §4) and the audit trail. */
+    public function generate(ReportCriteria $criteria, User $actor): GeneratedReport
+    {
+        set_time_limit(300);
+        ini_set('memory_limit', '512M');   // DomPDF needs ~0.4 MB per table row
+
+        $data = $this->build($criteria);
+        $fileName = sprintf('agapay-report-%s-%s-%s.%s', Str::slug($criteria->cycle->code), $criteria->program, today()->format('Y-m-d'), $criteria->format);
+        $contents = $criteria->format === 'xlsx'
+            ? Excel::raw(new DistributionReportExport($data), ExcelWriter::XLSX)
+            : Pdf::loadView('reports.pdf', [
+                ...$data,
+                'generatedBy' => $actor->name,
+                'generatedAt' => now(),
+                'maxRows' => (int) config('agapay.report_pdf_max_rows', 1000),
+            ])->setPaper('a4', 'landscape')->output();
+
+        $path = 'reports/'.Str::uuid().'.'.$criteria->format;
+        Storage::disk(GeneratedReport::DISK)->put($path, $contents);
+
+        try {
+            return DB::transaction(function () use ($criteria, $actor, $fileName, $path, $data) {
+                $report = GeneratedReport::create([
+                    'user_id' => $actor->id,
+                    'distribution_cycle_id' => $criteria->cycle->id,
+                    'program' => $criteria->program,
+                    'start_date' => $criteria->start?->toDateString(),
+                    'end_date' => $criteria->end?->toDateString(),
+                    'format' => $criteria->format,
+                    'file_name' => $fileName,
+                    'path' => $path,
+                    'rows' => count($data['beneficiaries']),
+                ]);
+                $labels = $criteria->labels();
+                AuditLogger::record('Generated Distribution Report', $report, $fileName, [], [
+                    'cycle' => $labels['cycle'], 'program' => $labels['program'], 'dates' => $labels['dates'],
+                    'format' => $labels['format'], 'rows' => $report->rows,
+                ], $actor);
+
+                return $report;
+            });
+        } catch (Throwable $e) {
+            Storage::disk(GeneratedReport::DISK)->delete($path);
+
+            throw $e;
+        }
     }
 
     /** @return Builder<InterventionRecord> non-archived records of the cycle, program and date range */

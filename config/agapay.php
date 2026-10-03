@@ -81,6 +81,9 @@ return [
 
     'stat_colors' => ['#da37ff', '#8037ff', '#4671ff', '#0bcaff'],
 
+    // Beneficiary rows in the distribution report PDF (DomPDF memory); the Excel workbook lists everyone.
+    'report_pdf_max_rows' => 1000,
+
     // Rows in the damage report PDF table (DomPDF needs ~0.4 MB per row); the Excel export has no cap.
     'damage_pdf_max_rows' => 1000,
 
