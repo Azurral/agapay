@@ -5,6 +5,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BeneficiaryController;
 use App\Http\Controllers\BeneficiaryLookupController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExportController;
+use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InterventionController;
 use App\Http\Controllers\InterventionRecordActionController;
 use App\Http\Controllers\InterventionRecordController;
@@ -66,6 +68,16 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware('can:inventory.manage')->group(function () {
         Route::post('/inventory/items', [InventoryController::class, 'storeItem'])->name('inventory.items.store');
         Route::put('/inventory/items/{item}', [InventoryController::class, 'updateItem'])->name('inventory.items.update');
+    });
+    Route::middleware('can:export.run')->group(function () {
+        Route::get('/export', [ExportController::class, 'index'])->name('export.index');
+        Route::get('/export/download', [ExportController::class, 'download'])->name('export.download');
+    });
+    Route::middleware('can:import.run')->group(function () {
+        Route::get('/import', [ImportController::class, 'index'])->name('import.index');
+        Route::post('/import', [ImportController::class, 'store'])->name('import.store');
+        Route::post('/import/{batch}/confirm', [ImportController::class, 'confirm'])->name('import.confirm');
+        Route::post('/import/{batch}/discard', [ImportController::class, 'discard'])->name('import.discard');
     });
     Route::get('/validation', ValidationQueueController::class)->middleware('can:interventions.validate')->name('validation.index');
     Route::post('/intervention-records/{record}/validation', [InterventionRecordActionController::class, 'validate'])

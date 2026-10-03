@@ -80,4 +80,10 @@ return [
     ],
 
     'stat_colors' => ['#da37ff', '#8037ff', '#4671ff', '#0bcaff'],
+
+    // Excel import limits (php.ini must allow uploads this large: upload_max_filesize 25M, post_max_size 30M, memory_limit 512M).
+    'import' => [
+        'max_kilobytes' => 25 * 1024,
+        'max_rows' => 20000,
+    ],
 ];
