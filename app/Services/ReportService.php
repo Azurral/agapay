@@ -1,0 +1,127 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\InterventionRecord;
+use App\Models\InventoryItem;
+use App\Models\InventoryMovement;
+use App\Support\ReportCriteria;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+
+/**
+ * Distribution monitoring report for one cycle (spec rule 12; paper §1.4.1): per-intervention and per-barangay
+ * assigned / claimed / unclaimed, the beneficiary list and the inventory used.
+ */
+final class ReportService
+{
+    /**
+     * @return array{
+     *     criteria: array<string, string>,
+     *     summary: array{beneficiaries: int, assigned: int, claimed: int, unclaimed: int},
+     *     interventions: list<array{source: string, name: string, unit: string, assigned: int, claimed: int, unclaimed: int, quantity: float}>,
+     *     barangays: list<array{name: string, beneficiaries: int, assigned: int, claimed: int, unclaimed: int, quantity: float}>,
+     *     beneficiaries: list<array{name: string, rsbsa: string, barangay: string, program: string, quantity: string, validation: string, claim: string, date: string}>,
+     *     inventory: list<array{item: string, unit_label: string, used: float}>
+     * }
+     */
+    public function build(ReportCriteria $criteria): array
+    {
+        $records = $this->records($criteria)
+            ->with(['beneficiary' => fn ($q) => $q->withTrashed()->with('barangay:id,name'), 'intervention'])
+            ->get()
+            ->sortBy(fn (InterventionRecord $r) => [
+                (string) $r->beneficiary->barangay?->name, mb_strtolower($r->beneficiary->last_name),
+                mb_strtolower($r->beneficiary->first_name), $r->intervention->source, $r->intervention->name,
+            ])
+            ->values();
+
+        return [
+            'criteria' => $criteria->labels(),
+            'summary' => [
+                'beneficiaries' => $records->pluck('beneficiary_id')->unique()->count(),
+                ...$this->counts($records),
+            ],
+            'interventions' => $records->groupBy('intervention_id')
+                ->map(fn (Collection $group) => [
+                    'source' => $group->first()->intervention->sourceLabel(),
+                    'name' => $group->first()->intervention->name,
+                    'unit' => (string) $group->first()->intervention->unit,
+                    ...$this->counts($group),
+                    'quantity' => $this->quantity($group),
+                ])
+                ->sortBy(fn (array $row) => [$row['source'], $row['name']])->values()->all(),
+            'barangays' => $records->groupBy(fn (InterventionRecord $r) => (string) $r->beneficiary->barangay?->name)
+                ->map(fn (Collection $group, string $name) => [
+                    'name' => $name,
+                    'beneficiaries' => $group->pluck('beneficiary_id')->unique()->count(),
+                    ...$this->counts($group),
+                    'quantity' => $this->quantity($group),
+                ])
+                ->sortKeys()->values()->all(),
+            'beneficiaries' => $records->map(fn (InterventionRecord $r) => [
+                'name' => $r->beneficiary->fullName(),
+                'rsbsa' => $r->beneficiary->rsbsaDisplay(),
+                'barangay' => (string) $r->beneficiary->barangay?->name,
+                'program' => $r->intervention->sourcedName(),
+                'quantity' => $r->quantityDisplay(),
+                'validation' => InterventionRecord::validationLabel($r->validation_status),
+                'claim' => $r->claimLabel(),
+                'date' => $r->date_distributed?->format('M j, Y') ?? '—',
+            ])->all(),
+            'inventory' => $this->inventory($records->modelKeys()),
+        ];
+    }
+
+    /** @return Builder<InterventionRecord> non-archived records of the cycle, program and date range */
+    public function records(ReportCriteria $criteria): Builder
+    {
+        return InterventionRecord::query()
+            ->where('distribution_cycle_id', $criteria->cycle->id)
+            ->when($criteria->program !== 'all', fn (Builder $q) => $q->ofSource($criteria->program))
+            ->when($criteria->start || $criteria->end, fn (Builder $q) => $q->where(fn (Builder $q) => $q
+                ->where('claim_status', InterventionRecord::CLAIM_UNCLAIMED)
+                ->orWhere(fn (Builder $q) => $q
+                    ->where('claim_status', InterventionRecord::CLAIM_CLAIMED)
+                    ->when($criteria->start, fn (Builder $q) => $q->whereDate('date_distributed', '>=', $criteria->start->toDateString()))
+                    ->when($criteria->end, fn (Builder $q) => $q->whereDate('date_distributed', '<=', $criteria->end->toDateString())))));
+    }
+
+    /** @return array{assigned: int, claimed: int, unclaimed: int} */
+    private function counts(Collection $records): array
+    {
+        $claimed = $records->filter(fn (InterventionRecord $r) => $r->isClaimed())->count();
+
+        return ['assigned' => $records->count(), 'claimed' => $claimed, 'unclaimed' => $records->count() - $claimed];
+    }
+
+    private function quantity(Collection $records): float
+    {
+        return round($records->filter(fn (InterventionRecord $r) => $r->isClaimed())->sum(fn (InterventionRecord $r) => (float) $r->quantity), 2);
+    }
+
+    /**
+     * Net automatic stock-out of the reported records, per item.
+     *
+     * @param  list<int>  $recordIds
+     * @return list<array{item: string, unit_label: string, used: float}>
+     */
+    private function inventory(array $recordIds): array
+    {
+        if ($recordIds === []) {
+            return [];
+        }
+
+        $net = InventoryMovement::query()
+            ->where('source', InventoryMovement::AUTO)
+            ->whereIn('intervention_record_id', $recordIds)
+            ->get(['inventory_item_id', 'direction', 'quantity'])
+            ->groupBy('inventory_item_id')
+            ->map(fn (Collection $moves) => round($moves->sum(fn ($m) => $m->direction === InventoryMovement::OUT ? (float) $m->quantity : -(float) $m->quantity), 2))
+            ->filter(fn (float $used) => $used != 0.0);
+
+        return InventoryItem::whereKey($net->keys())->orderBy('name')->get()
+            ->map(fn (InventoryItem $item) => ['item' => $item->name, 'unit_label' => $item->unit_label, 'used' => $net[$item->id]])
+            ->all();
+    }
+}
