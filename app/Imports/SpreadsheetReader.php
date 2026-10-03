@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Exceptions\ImportFileException;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use Throwable;
 
 /** Reads the first sheet of an .xlsx / .xls / .csv file into rows of trimmed strings. */
@@ -24,6 +25,9 @@ final class SpreadsheetReader
                 'xls' => 'Xls',
                 default => 'Xlsx',
             });
+            if ($reader instanceof Csv) {
+                $reader->setDelimiter(self::csvDelimiter($path));
+            }
             $sheet = $reader->load($path)->getSheet(0);
             $lastColumn = $sheet->getHighestDataColumn();
             $lastRow = $sheet->getHighestDataRow();
@@ -35,6 +39,18 @@ final class SpreadsheetReader
         $width = Coordinate::columnIndexFromString($lastColumn);
 
         return array_map(fn (array $row) => array_slice(array_map($this->cell(...), array_pad($row, $width, null)), 0, $width), $values);
+    }
+
+    /**
+     * PhpSpreadsheet guesses the delimiter from the first lines and can pick a space when a title line
+     * ("OMAG Masterlist 2026") sits above the table; only comma, semicolon and tab are real CSV delimiters.
+     */
+    private static function csvDelimiter(string $path): string
+    {
+        $lines = array_slice(array_filter(file($path, FILE_IGNORE_NEW_LINES) ?: [], fn (string $line) => trim($line) !== ''), 0, 20);
+        $widest = fn (string $delimiter) => max(array_map(fn (string $line) => substr_count($line, $delimiter), $lines) ?: [0]);
+
+        return collect([',', ';', "\t"])->sortByDesc($widest)->first(fn (string $delimiter) => $widest($delimiter) > 0) ?? ',';
     }
 
     public static function isError(?string $value): bool

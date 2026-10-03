@@ -16,6 +16,21 @@ it('reads xlsx and csv rows as strings', function (string $type) {
         ->toBe([['Name', 'Barangay'], ['Juan Dela Cruz', 'Poblacion']]);
 })->with(['xlsx', 'csv']);
 
+it('reads csv files whose title line has no commas', function (string $delimiter) {
+    $path = tempnam(sys_get_temp_dir(), 'agapay').'.csv';
+    $line = fn (array $cells) => implode($delimiter, $cells)."\n";
+    file_put_contents($path, "OMAG Masterlist 2026\n\n"
+        .$line(['Farmer Name', 'Date of Birth', 'Brgy.', 'RSBSA #', 'Contact'])
+        .$line(['Pablo Ramos', '05/10/1980', 'poblacion', 'RSBSA-0901', '9171234567']));
+
+    expect(app(SpreadsheetReader::class)->read($path, 'csv'))->toBe([
+        ['OMAG Masterlist 2026', null, null, null, null],
+        [null, null, null, null, null],
+        ['Farmer Name', 'Date of Birth', 'Brgy.', 'RSBSA #', 'Contact'],
+        ['Pablo Ramos', '05/10/1980', 'poblacion', 'RSBSA-0901', '9171234567'],
+    ]);
+})->with([',', ';', "\t"]);
+
 it('keeps numeric RSBSA and contact digits', function () {
     $rows = readSheet([['RSBSA No.', 'Contact', 'Qty', 'Area'], [171234567890, 9171234567, 3, 2.5]]);
 
