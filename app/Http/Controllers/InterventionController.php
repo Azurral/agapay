@@ -18,6 +18,22 @@ class InterventionController extends Controller
         return view('interventions.index');
     }
 
+    /** Figma 344:236 / 344:531: archived records of one source, newest deletion first. */
+    public function archived(Request $request, string $source): View
+    {
+        $q = mb_substr($request->queryText('q'), 0, 100);
+
+        return view('interventions.archived', [
+            'source' => $source,
+            'records' => InterventionRecord::onlyTrashed()
+                ->ofSource($source)
+                ->with(['beneficiary', 'intervention', 'cycle', 'deleter:id,username'])
+                ->when($q !== '', fn (Builder $query) => $query->whereHas('beneficiary', fn (Builder $b) => $b->search($q)))
+                ->orderByDesc('deleted_at')->orderByDesc('id')
+                ->paginate(15)->withQueryString(),
+        ]);
+    }
+
     public function list(Request $request, string $source): View
     {
         $interventions = Intervention::where('source', $source)->orderBy('name')->pluck('name', 'id');

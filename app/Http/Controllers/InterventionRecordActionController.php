@@ -36,13 +36,30 @@ class InterventionRecordActionController extends Controller
         return $this->attempt($record, fn () => $this->claims->unclaim($record, $request->user()), fn (InterventionRecord $r) => $r->claimLabel());
     }
 
+    public function archive(Request $request, InterventionRecord $record): RedirectResponse
+    {
+        $label = $record->auditRecordLabel();
+        $reason = $request->input('reason');
+
+        return $this->attempt($record, function () use ($record, $reason, $request) {
+            $this->claims->archive($record, is_string($reason) ? $reason : null, $request->user());
+
+            return $record;
+        }, fn () => 'Archived', $label);
+    }
+
+    public function restore(Request $request, InterventionRecord $record): RedirectResponse
+    {
+        return $this->attempt($record, fn () => $this->claims->restore($record, $request->user()), fn () => 'Restored');
+    }
+
     /**
      * Runs a service call; rule breaks and bad input return to the page in the "intervention" error bag.
      *
      * @param  Closure(): InterventionRecord  $action
      * @param  Closure(InterventionRecord): string  $stateLabel
      */
-    private function attempt(InterventionRecord $record, Closure $action, Closure $stateLabel): RedirectResponse
+    private function attempt(InterventionRecord $record, Closure $action, Closure $stateLabel, ?string $label = null): RedirectResponse
     {
         try {
             $updated = $action();
@@ -52,6 +69,6 @@ class InterventionRecordActionController extends Controller
             return back()->withInput()->withErrors($e->errors(), 'intervention')->with('intervention_failed', $record->id);
         }
 
-        return back()->with('status', "{$updated->auditRecordLabel()}: {$stateLabel($updated)}.");
+        return back()->with('status', ($label ?? $updated->auditRecordLabel()).": {$stateLabel($updated)}.");
     }
 }

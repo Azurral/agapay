@@ -43,6 +43,13 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/interventions/da', [InterventionController::class, 'list'])->defaults('source', Intervention::SOURCE_DA)->name('interventions.da');
         Route::get('/interventions/lgu', [InterventionController::class, 'list'])->defaults('source', Intervention::SOURCE_LGU)->name('interventions.lgu');
     });
+    Route::middleware('can:interventions.archive')->group(function () {
+        Route::get('/interventions/{source}/archived', [InterventionController::class, 'archived'])
+            ->whereIn('source', Intervention::SOURCES)->name('interventions.archived');
+        Route::post('/intervention-records/{record}/archive', [InterventionRecordActionController::class, 'archive'])->name('intervention-records.archive');
+        Route::post('/intervention-records/{record}/restore', [InterventionRecordActionController::class, 'restore'])
+            ->withTrashed()->name('intervention-records.restore');
+    });
     Route::get('/validation', ValidationQueueController::class)->middleware('can:interventions.validate')->name('validation.index');
     Route::post('/intervention-records/{record}/validation', [InterventionRecordActionController::class, 'validate'])
         ->middleware('can:interventions.validate')->name('intervention-records.validate');
