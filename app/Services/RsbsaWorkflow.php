@@ -35,29 +35,35 @@ final class RsbsaWorkflow
 
         [$from, $to, $label] = self::TRANSITIONS[$action];
 
-        if (! in_array($beneficiary->rsbsa_status, $from, true)) {
-            throw new InvalidRsbsaTransition(
-                "{$beneficiary->fullName()} is ".Beneficiary::rsbsaStatusLabel($beneficiary->rsbsa_status).' and cannot be '.self::pastTense($action).'.'
-            );
-        }
+        // The row is locked and its status re-read, so two staff acting on one application cannot both succeed;
+        // the audit row is part of the same transaction.
+        $current = DB::transaction(function () use ($beneficiary, $action, $input, $from, $to, $label) {
+            $current = Beneficiary::whereKey($beneficiary->getKey())->lockForUpdate()->firstOrFail();
 
-        $old = $beneficiary->only(['rsbsa_status', 'rsbsa_number', 'rsbsa_status_reason']);
+            if (! in_array($current->rsbsa_status, $from, true)) {
+                throw new InvalidRsbsaTransition(
+                    "{$current->fullName()} is ".Beneficiary::rsbsaStatusLabel($current->rsbsa_status).' and cannot be '.self::pastTense($action).'.'
+                );
+            }
 
-        DB::transaction(function () use ($beneficiary, $action, $input, $to) {
+            $old = $current->only(['rsbsa_status', 'rsbsa_number', 'rsbsa_status_reason']);
             match ($action) {
-                'record-number' => $beneficiary->rsbsa_number = self::validatedNumber($beneficiary, $input),
-                'return' => $beneficiary->forceFill(['rsbsa_status_reason' => $reason = self::validatedReason($input), 'encoding_issue' => $reason]),
-                'reject' => $beneficiary->rsbsa_status_reason = self::validatedReason($input),
-                'resubmit' => $beneficiary->forceFill(['rsbsa_status_reason' => null, 'encoding_issue' => null]),
+                'record-number' => $current->rsbsa_number = self::validatedNumber($current, $input),
+                'return' => $current->forceFill(['rsbsa_status_reason' => $reason = self::validatedReason($input), 'encoding_issue' => $reason]),
+                'reject' => $current->rsbsa_status_reason = self::validatedReason($input),
+                'resubmit' => $current->forceFill(['rsbsa_status_reason' => null, 'encoding_issue' => null]),
                 default => null,
             };
 
-            $beneficiary->rsbsa_status = $to;
-            $beneficiary->updated_by = auth()->id() ?? $beneficiary->updated_by;
-            $beneficiary->saveQuietly();
+            $current->rsbsa_status = $to;
+            $current->updated_by = auth()->id() ?? $current->updated_by;
+            $current->saveQuietly();
+            AuditLogger::record($label, $current, null, $old, $current->only(array_keys($old)));
+
+            return $current;
         });
 
-        AuditLogger::record($label, $beneficiary, null, $old, $beneficiary->only(array_keys($old)));
+        $beneficiary->setRawAttributes($current->getAttributes(), true);
 
         return $beneficiary;
     }

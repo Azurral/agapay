@@ -9,6 +9,7 @@ use App\Models\DistributionCycle;
 use App\Models\InterventionRecord;
 use App\Models\Role;
 use App\Services\AuditLogger;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -92,13 +93,18 @@ class BeneficiaryController extends Controller
             $beneficiary->encoding_issue = null;
         }
 
-        DB::transaction(function () use ($beneficiary, $recordsNumber, $old) {
-            $beneficiary->save();
+        try {
+            DB::transaction(function () use ($beneficiary, $recordsNumber, $old) {
+                $beneficiary->save();
 
-            if ($recordsNumber) {
-                AuditLogger::record('Recorded RSBSA Number', $beneficiary, null, $old, $beneficiary->only(array_keys($old)));
-            }
-        });
+                if ($recordsNumber) {
+                    AuditLogger::record('Recorded RSBSA Number', $beneficiary, null, $old, $beneficiary->only(array_keys($old)));
+                }
+            });
+        } catch (UniqueConstraintViolationException) {
+            // Someone saved the same number after this form passed validation.
+            return back()->withInput()->withErrors(['rsbsa_number' => "RSBSA No. {$beneficiary->rsbsa_number} is already used by another profile."]);
+        }
 
         return redirect()->route('beneficiaries.show', $beneficiary)->with('status', 'Profile saved.');
     }

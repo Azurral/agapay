@@ -7,6 +7,7 @@ use App\Http\Requests\StoreRsbsaRegistrationRequest;
 use App\Models\Barangay;
 use App\Models\Beneficiary;
 use App\Services\RsbsaWorkflow;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -42,6 +43,10 @@ class RsbsaRegistrationController extends Controller
             return back()->withErrors(['rsbsa' => $e->getMessage()], 'rsbsa');
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors(), 'rsbsa')->with('rsbsa_failed', "{$action}-{$beneficiary->id}");
+        } catch (UniqueConstraintViolationException) {
+            // Another profile got the same number after it was checked.
+            return back()->withErrors(['rsbsa_number' => 'That RSBSA No. is already used by another profile.'], 'rsbsa')
+                ->with('rsbsa_failed', "{$action}-{$beneficiary->id}");
         }
 
         return back()->with('status', "{$beneficiary->fullName()}: ".Beneficiary::rsbsaStatusLabel($beneficiary->rsbsa_status).'.');

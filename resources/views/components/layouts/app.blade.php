@@ -18,7 +18,9 @@
 
         <main class="bg-grid relative mt-[11px] min-h-[calc(100vh-81px)] flex-1 overflow-hidden rounded-tl-[20px] border-t-[1.5px] border-l-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px]">
             <x-app.greeting />
-            <x-app.search-bar class="mt-[34px]" />
+            @can('beneficiaries.view')
+                <x-app.search-bar class="mt-[34px]" />
+            @endcan
 
             <div class="mt-[28px] flex flex-col gap-[14px]">
                 {{ $slot }}
