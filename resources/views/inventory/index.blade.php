@@ -44,13 +44,6 @@
         </div>
     </x-ui.card>
 
-    @if ($canManage)
-        <div class="-mt-[2px]">
-            <button type="button" x-data @click="$dispatch('open-modal', 'manage-items')"
-                    class="border-gradient pill-button h-[39px] w-[174px] rounded-[50px] text-[18px] font-bold leading-[24px]">Manage Items</button>
-        </div>
-    @endif
-
     {{-- Figma 470:785 Recent Movements --}}
     <section class="mt-[3px] rounded-[20px] border-[1.5px] border-black/10 bg-white pt-[17px] pr-[26.5px] pb-[18px] pl-[21.5px]">
         <h2 class="text-[16px] font-bold leading-[20px]">Recent Movements</h2>
@@ -66,6 +59,15 @@
         </ul>
         <p class="mt-[14px] text-[12px] font-medium leading-[16px] text-muted">Stock-out from confirmed distributions is recorded automatically. Use + Record Movement for adjustments, deliveries, and manual corrections.</p>
     </section>
+
+    {{-- Not in Figma: kept below the mirrored cards (spec §2). --}}
+    @if ($canManage)
+        <div class="-mt-[2px]">
+            <button type="button" x-data @click="$dispatch('open-modal', 'manage-items')"
+                    class="border-gradient pill-button h-[39px] w-[174px] rounded-[50px] text-[18px] font-bold leading-[24px]">Manage Items</button>
+        </div>
+    @endif
+
 
     @if ($canManage)
         {{-- Figma 470:986 --}}

@@ -3,9 +3,11 @@
 use App\Models\Beneficiary;
 use App\Models\DistributionCycle;
 use App\Models\InterventionRecord;
+use App\Models\InventoryItem;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ClaimService;
+use App\Services\InventoryService;
 use App\Support\DashboardStats;
 use Database\Seeders\BarangaySeeder;
 use Database\Seeders\DatabaseSeeder;
@@ -74,4 +76,16 @@ it('counts active interventions and pending validations live', function () {
     expect(DashboardStats::value('active_interventions', $agritech))->toBe(4)
         ->and(DashboardStats::value('pending_validation', $agritech))->toBe(1)
         ->and($carlos->beneficiary->fresh()->latestRecord)->toBeNull();   // archived records never count as "latest"
+});
+
+it('counts low stock items live', function () {
+    $this->seed(DatabaseSeeder::class);
+    $encoder = User::where('username', 'Encoder_03')->sole();
+
+    expect(DashboardStats::value('low_stock_items', $encoder))->toBe(2);
+
+    app(InventoryService::class)->record(
+        InventoryItem::where('name', 'Certified Rice Seeds')->sole(), 'in', 20, today()->toDateString(), null, $encoder,
+    );
+    expect(DashboardStats::value('low_stock_items', $encoder))->toBe(1);
 });

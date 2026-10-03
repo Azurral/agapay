@@ -30,6 +30,10 @@ const SCREENS = [
     { frame: '407-603', route: '/interventions/lgu', as: 'Agritech_02' },
     { frame: '430-1603', route: '/intervention-records', as: 'Encoder_03' },
     { frame: '446-198', route: '/intervention-records/create', as: 'Encoder_03' },
+    { frame: '470-785', route: '/inventory', as: 'Admin_01' },
+    { frame: '470-986', route: '/inventory', as: 'Admin_01',
+      before: (page) => page.getByRole('button', { name: '+ Record Movement' }).click() },
+    { frame: '430-1745', route: '/inventory', as: 'Encoder_03' },
 ];
 
 // Juan Dela Cruz's profile URL, read from search results (ids differ between seeds).
