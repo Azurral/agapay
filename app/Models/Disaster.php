@@ -13,6 +13,8 @@ class Disaster extends Model
 {
     use Auditable;
 
+    protected string $auditSubject = 'Disaster';
+
     protected function casts(): array
     {
         return ['occurred_on' => 'date'];

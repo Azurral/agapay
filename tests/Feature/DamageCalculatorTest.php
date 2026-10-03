@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AuditLog;
 use App\Models\Crop;
 use App\Models\DamageReport;
 use App\Models\Disaster;
@@ -82,4 +83,12 @@ describe('seeded data', function () {
             ->and(User::where('username', 'Agritech_02')->sole()->can('damage.configure'))->toBeFalse()
             ->and(Role::where('slug', Role::ENCODER)->sole()->permissions()->where('slug', 'damage.configure')->exists())->toBeFalse();
     });
+});
+
+it('audits a new disaster', function () {
+    $this->actingAs(User::factory()->create());
+
+    Disaster::create(['name' => 'Typhoon Egay', 'occurred_on' => '2026-08-01']);
+
+    expect(AuditLog::where('action', 'Added Disaster')->sole()->record_label)->toBe('Typhoon Egay (Aug 1, 2026)');
 });
