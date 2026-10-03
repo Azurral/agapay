@@ -54,3 +54,12 @@ it('shows the latest intervention and its status, and filters by intervention', 
     $this->actingAs($this->encoder)->get('/beneficiaries?intervention='.$seeds->id)
         ->assertSee('Juan Dela Cruz')->assertDontSee('Maria Santos');
 });
+
+it('paginates with the light Agapay style', function () {
+    Beneficiary::factory()->count(20)->create(['barangay_id' => brgy('Samoki')]);
+
+    $this->actingAs($this->encoder)->get('/beneficiaries')->assertOk()
+        ->assertSee('data-agapay-pagination', false)
+        ->assertDontSee('dark:', false);
+    $this->actingAs($this->encoder)->get('/beneficiaries?page=2')->assertOk()->assertSee('data-agapay-pagination', false);
+});
