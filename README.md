@@ -1,58 +1,139 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# AGAPAY
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**A Centralized Agricultural Beneficiary Information and Intervention Management System** for the Office of the Municipal Agriculturist (OMAG), Bontoc, Mountain Province.
 
-## About Laravel
+AGAPAY replaces OMAG's separate Excel workbooks with one web system for:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- beneficiary profiles and RSBSA registration;
+- DA and LGU interventions, with household and eligibility rules;
+- inventory, with automatic stock deduction;
+- Excel import and export;
+- agricultural damage recording;
+- distribution reports;
+- a full audit trail.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+It has three roles: **Administrator** (Municipal Agriculturist), **Agricultural Technologist** and **Data Encoder**.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Built with Laravel 13 (PHP 8.5), MariaDB, Blade, Tailwind CSS 4 and Alpine.js. Its screens follow the "Agapay - Wireframes" Figma file.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Requirements
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| | Version |
+|---|---|
+| XAMPP (or any PHP + MariaDB/MySQL) | PHP **8.5**, MariaDB 10.4+ |
+| Composer | 2.x |
+| Node.js | 20+ (for building the CSS/JS) |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+**PHP extensions** (enable them in `php.ini`): `pdo_mysql`, `mbstring`, `fileinfo`, `intl`, `zip`, `gd`, `xml`/`dom`, `iconv`.
 
-## Agentic Development
+**php.ini limits** (needed for Excel uploads, damage photos and large PDFs):
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```ini
+upload_max_filesize = 25M
+post_max_size = 60M
+memory_limit = 512M
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Restart the web server or `php artisan serve` after changing `php.ini`.
 
-## Contributing
+## Setup
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+1. Create an empty database named `agapay` (phpMyAdmin → New).
+2. In the project folder:
 
-## Code of Conduct
+```bash
+composer install
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+npm install
+```
 
-## Security Vulnerabilities
+```bash
+copy .env.example .env
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan key:generate
+```
 
-## License
+3. Check the database settings in `.env` (`DB_DATABASE=agapay`, `DB_USERNAME=root`, `DB_PASSWORD=`).
+4. Create the tables and the starting data (the 16 barangays, roles, sample beneficiaries, interventions, inventory and damage records):
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan migrate --seed
+```
+
+5. Build the front end and start the server:
+
+```bash
+npm run build
+```
+
+```bash
+php artisan serve --port=8765
+```
+
+Open http://127.0.0.1:8765. Keep the terminal open while using AGAPAY.
+
+## Accounts
+
+The seeder creates these accounts. Their password is the value of `AGAPAY_SEED_PASSWORD` in `.env`; the default is in `.env.example`. **Change it, and each user's password, before real use.**
+
+| Username | Role | Can do |
+|---|---|---|
+| `Admin_01` | Administrator | Everything: users and role permissions, audit trail, RSBSA processing, claims, archive/restore, inventory, import/export, distribution cycles, disasters and crop values, reports |
+| `Agritech_02` | Agricultural Technologist | Validate eligibility, verify claims, file and validate damage reports, generate reports |
+| `Encoder_03` | Data Encoder | Register beneficiaries, edit profiles, encode intervention records, inventory, Excel import, file damage reports, generate reports |
+| `Encoder_04` | (no role, inactive) | Shows how blocked accounts behave |
+
+The Administrator can change what each role may do under **User Management → Configure Roles**.
+
+## Everyday use
+
+- **Distribution cycles:** go to Interventions → Distribution Cycles (Administrator) to add the next cycle, e.g. `2026-Q4`. Only one cycle is "ongoing" at a time. Cycles are kept in date order.
+- **Excel import:** use Upload Excel. The sheet needs Name (or First Name + Last Name), Birthdate and Barangay columns; RSBSA No., Address, Contact and an Intervention column are optional. Check the Processing Feedback and preview, then press **Confirm & Import**.
+- **Reports:** use Reports, then choose a cycle, a program, the dates and PDF or Excel. Every generated file stays under Generated Reports so it can be downloaded again.
+- **Damage reports:** go to Disaster Reports → + New Damage Report. Loss and cost are computed from the crop values, which the Administrator edits under "Disasters & Crop Values".
+
+## Using it on the office network
+
+Run AGAPAY on one office PC and open it from the others:
+
+```bash
+php artisan serve --host=0.0.0.0 --port=8765
+```
+
+The other PCs then open `http://<that PC's IP address>:8765`. Allow port 8765 in Windows Firewall. For a permanent setup, point an Apache virtual host at the `public/` folder instead of using `php artisan serve`. Also set `APP_URL` in `.env` to the address people use.
+
+The **"Use my location"** button on the damage form only works over `https://` or on the PC itself (`localhost`). Over plain `http://` on the network, type the coordinates in.
+
+## Backups
+
+Back up two things regularly:
+
+1. **The database:** phpMyAdmin → `agapay` → Export, or:
+
+```bash
+mysqldump -u root agapay > agapay-backup.sql
+```
+
+2. **Uploaded and generated files:** the folder `storage/app/private`. It holds damage photos and generated reports.
+
+## Tests
+
+| What | Command |
+|---|---|
+| Feature tests (Pest, in-memory SQLite) | `php artisan test --compact` |
+| Visual comparison with all 46 Figma frames | `npm run visual` |
+| End-to-end flows for each role | `npm run e2e` |
+
+`npm run visual` and `npm run e2e` use Microsoft Edge and their own database, `agapay_visual`. Create it once in phpMyAdmin. They never touch the `agapay` database. Run them one at a time.
+
+## Known limits
+
+- The distribution report PDF lists up to 1,000 beneficiary rows, and the damage report PDF up to 1,000 reports. The summaries count everything; choose Excel for the full lists.
+- Damage photos are JPG/PNG, up to 10 per report, each up to 5 MB (or less if `upload_max_filesize` is lower).
+- Excel imports are limited to 25 MB and 20,000 rows per file.
