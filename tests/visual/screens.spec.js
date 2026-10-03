@@ -42,6 +42,9 @@ const SCREENS = [
     { frame: '470-1863', route: '/damage-reports', as: 'Encoder_03' },
     { frame: '423-786', route: '/damage-reports/create', as: 'Admin_01' },
     { frame: '423-306', route: '/damage-reports/create', as: 'Agritech_02' },
+    { frame: '340-51', route: '/reports', as: 'Admin_01' },
+    { frame: '407-1694', route: '/reports', as: 'Agritech_02' },
+    { frame: '470-2205', route: '/reports', as: 'Encoder_03' },
 ];
 
 // Juan Dela Cruz's profile URL, read from search results (ids differ between seeds).
