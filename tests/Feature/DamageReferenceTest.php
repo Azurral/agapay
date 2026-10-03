@@ -6,8 +6,11 @@ use App\Models\Crop;
 use App\Models\DamageReport;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
+    Storage::fake('local');
     $this->seed(DatabaseSeeder::class);
     $this->admin = User::where('username', 'Admin_01')->sole();
 });
@@ -58,6 +61,7 @@ it('applies new values to new reports only', function () {
     $this->post('/damage-reports', [
         'disaster_id' => $filed->disaster_id, 'beneficiary_id' => $ana->id, 'barangay_id' => $ana->barangay_id,
         'crop_id' => $filed->crop_id, 'crop_stage' => 'vegetative', 'total_area_ha' => '1', 'partial_area_ha' => '0',
+        'photos' => [UploadedFile::fake()->image('field.jpg')],
     ])->assertSessionHasNoErrors();
 
     expect($filed->fresh()->cost)->toEqual('108000.00')

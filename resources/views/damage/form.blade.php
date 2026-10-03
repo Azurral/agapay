@@ -219,7 +219,7 @@
             @if ($errors->any() && ! $tooLarge)
                 <p class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger">Choose the photos again — the browser does not keep them after an error.</p>
             @endif
-            <p class="mt-[4px] pl-[4px] text-[12px] font-medium text-muted">Up to 10 JPG or PNG photos, each at most {{ \App\Http\Requests\DamageReportRequest::photoLimitLabel() }}.</p>
+            <p class="mt-[4px] pl-[4px] text-[12px] font-medium text-muted">At least 1 and up to 10 JPG or PNG photos, each at most {{ \App\Http\Requests\DamageReportRequest::photoLimitLabel() }}.</p>
             <div class="mt-[16px] flex justify-center">
                 <button type="button" @click="$refs.photos.click()"
                         class="bg-brand-bar gradient-button flex h-[39px] w-[220px] items-center justify-center gap-[2px] rounded-[50px] text-[20px] font-bold leading-[24px] text-white">

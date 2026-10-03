@@ -135,5 +135,5 @@ mysqldump -u root agapay > agapay-backup.sql
 ## Known limits
 
 - The distribution report PDF lists up to 1,000 beneficiary rows, and the damage report PDF up to 1,000 reports. The summaries count everything; choose Excel for the full lists.
-- Damage photos are JPG/PNG, up to 10 per report, each up to 5 MB (or less if `upload_max_filesize` is lower).
+- Damage photos are JPG/PNG, at least 1 and up to 10 per report (photographic documentation is mandatory, per OMAG), each up to 5 MB (or less if `upload_max_filesize` is lower).
 - Excel imports are limited to 25 MB and 20,000 rows per file.
