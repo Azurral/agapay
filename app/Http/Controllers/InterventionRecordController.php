@@ -149,7 +149,7 @@ class InterventionRecordController extends Controller
                 ->when($record?->intervention && ! $record->intervention->is_active, fn ($list) => $list->push(
                     $record->intervention->replicate()->forceFill(['id' => $record->intervention->id, 'name' => $record->intervention->name.' (inactive)'])
                 )),
-            'cycles' => DistributionCycle::orderByDesc('code')->get(['id', 'code', 'label']),
+            'cycles' => DistributionCycle::orderByDesc('schedule_date')->orderByDesc('id')->get(['id', 'code', 'label']),
             'currentCycleId' => DistributionCycle::current()?->id,
         ]);
     }

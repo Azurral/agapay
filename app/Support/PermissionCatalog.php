@@ -21,6 +21,7 @@ final class PermissionCatalog
         'interventions.claim' => ['Process intervention claims', 'Interventions'],
         'interventions.archive' => ['Archive and restore intervention records', 'Interventions'],
         'intervention_records.manage' => ['Encode intervention records', 'Interventions'],
+        'cycles.manage' => ['Manage distribution cycles', 'Interventions'],
         'inventory.view' => ['View inventory', 'Inventory'],
         'inventory.manage' => ['Record stock movements', 'Inventory'],
         'damage.view' => ['View agricultural damage reports', 'Damage Recording'],

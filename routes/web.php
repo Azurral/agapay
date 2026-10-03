@@ -10,6 +10,7 @@ use App\Http\Controllers\DamageReferenceController;
 use App\Http\Controllers\DamageReportActionController;
 use App\Http\Controllers\DamageReportController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DistributionCycleController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InterventionController;
@@ -100,6 +101,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/damage-reference/disasters', [DamageReferenceController::class, 'storeDisaster'])->name('damage.disasters.store');
         Route::post('/damage-reports/{report}/archive', [DamageReportActionController::class, 'archive'])->name('damage.archive');
         Route::post('/damage-reports/{report}/restore', [DamageReportActionController::class, 'restore'])->withTrashed()->name('damage.restore');
+    });
+
+    Route::middleware('can:cycles.manage')->group(function () {
+        Route::get('/distribution-cycles', [DistributionCycleController::class, 'index'])->name('cycles.index');
+        Route::post('/distribution-cycles', [DistributionCycleController::class, 'store'])->name('cycles.store');
+        Route::put('/distribution-cycles/{cycle}', [DistributionCycleController::class, 'update'])->name('cycles.update');
     });
 
     Route::middleware('can:reports.generate')->group(function () {
