@@ -8,6 +8,11 @@ use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -61,4 +66,30 @@ function record(Beneficiary $beneficiary, Intervention $intervention, array $att
 function program(string $source, string $name): Intervention
 {
     return Intervention::where(['source' => $source, 'name' => $name])->sole();
+}
+
+/**
+ * A temporary uploaded spreadsheet built from rows of cell values (0-based, row-major).
+ * A cell given as ['error' => '#REF!'] is written as an Excel error value; null leaves the cell empty.
+ */
+function spreadsheet(array $rows, string $type = 'xlsx', string $name = 'masterlist'): UploadedFile
+{
+    $book = new Spreadsheet;
+    $sheet = $book->getActiveSheet();
+
+    foreach ($rows as $r => $row) {
+        foreach ($row as $c => $value) {
+            $coordinate = Coordinate::stringFromColumnIndex($c + 1).($r + 1);
+            if (is_array($value) && isset($value['error'])) {
+                $sheet->setCellValueExplicit($coordinate, $value['error'], DataType::TYPE_ERROR);
+            } elseif ($value !== null) {
+                $sheet->setCellValue($coordinate, $value);
+            }
+        }
+    }
+
+    $path = tempnam(sys_get_temp_dir(), 'agapay').'.'.$type;
+    IOFactory::createWriter($book, $type === 'csv' ? 'Csv' : 'Xlsx')->save($path);
+
+    return new UploadedFile($path, "{$name}.{$type}", null, null, true);
 }
