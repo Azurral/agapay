@@ -29,6 +29,11 @@ final class ClaimService
             if ($record->isClaimed() && ! in_array($status, InterventionRecord::CLAIMABLE, true)) {
                 throw new InterventionRuleViolation('Unclaim it first.');
             }
+            // A deceased beneficiary's claim needs a proxy and proof (spec rule 6), also when the status changes after claiming.
+            if ($record->isClaimed() && $status === InterventionRecord::VALIDATION_DECEASED
+                && (trim((string) $record->proxy_claimant) === '' || trim((string) $record->proof_note) === '')) {
+                throw new InterventionRuleViolation('Unclaim it first, or record the proxy.');
+            }
 
             $old = $record->only(['validation_status']);
             $record->forceFill(['validation_status' => $status, 'validated_by' => $actor->id])->saveQuietly();
@@ -83,7 +88,10 @@ final class ClaimService
             $proxy = trim((string) ($input['proxy_claimant'] ?? ''));
             $proof = trim((string) ($input['proof_note'] ?? ''));
             if ($deceased && ($proxy === '' || $proof === '')) {
-                throw new InterventionRuleViolation('A deceased beneficiary can only be claimed by a proxy with a proof note.');
+                // Only the Administrator's Process Claim has the proxy fields.
+                throw new InterventionRuleViolation($actor->role?->slug === Role::ADMIN
+                    ? 'A deceased beneficiary can only be claimed by a proxy with a proof note.'
+                    : 'Only the Administrator can record a proxy claim for a deceased beneficiary.');
             }
 
             $override = trim((string) ($input['override_reason'] ?? ''));
@@ -166,6 +174,14 @@ final class ClaimService
         return DB::transaction(function () use ($record, $actor) {
             $this->lockHousehold($record);
             $record = InterventionRecord::withTrashed()->lockForUpdate()->findOrFail($record->id);
+
+            // A second click finds it already restored; a record of an archived farmer would stay hidden.
+            if (! $record->trashed()) {
+                throw new InterventionRuleViolation('This record is not archived.');
+            }
+            if ($record->beneficiary?->trashed()) {
+                throw new InterventionRuleViolation("Restore {$record->beneficiary->fullName()}'s profile first.");
+            }
 
             $taken = InterventionRecord::where($record->only(['beneficiary_id', 'intervention_id', 'distribution_cycle_id']))
                 ->whereKeyNot($record->id)->exists();

@@ -49,19 +49,23 @@ class BeneficiaryController extends Controller
             ->orderByDesc('distribution_cycle_id')->orderByDesc('id')->get();
         $others = $beneficiary->otherHouseholdMembers();
         $cycle = DistributionCycle::current();
+        $claimable = $records->filter(fn (InterventionRecord $r) => ! $r->isClaimed()
+            && in_array($r->validation_status, InterventionRecord::CLAIMABLE, true))->values();
+        // The banner's claim check covers every cycle Process Claim offers, the current one first.
+        $cycleIds = $claimable->pluck('distribution_cycle_id')->push($cycle?->id)->filter()->unique()->values();
 
         return view('beneficiaries.show', [
             'beneficiary' => $beneficiary->load(['barangay:id,name', 'household']),
             'others' => $others,
             'records' => $records,
-            'claimable' => $records->filter(fn (InterventionRecord $r) => ! $r->isClaimed()
-                && in_array($r->validation_status, InterventionRecord::CLAIMABLE, true))->values(),
-            // The banner's claim check: a household member's claim in the current cycle.
-            'householdClaim' => $cycle && $others->isNotEmpty()
-                ? InterventionRecord::with(['beneficiary', 'intervention'])
+            'claimable' => $claimable,
+            'currentCycleId' => $cycle?->id,
+            'householdClaim' => $cycleIds->isNotEmpty() && $others->isNotEmpty()
+                ? InterventionRecord::with(['beneficiary', 'intervention', 'cycle'])
                     ->whereIn('beneficiary_id', $others->pluck('id'))
-                    ->where('distribution_cycle_id', $cycle->id)
+                    ->whereIn('distribution_cycle_id', $cycleIds)
                     ->where('claim_status', InterventionRecord::CLAIM_CLAIMED)
+                    ->orderByRaw('CASE WHEN distribution_cycle_id = ? THEN 0 ELSE 1 END', [$cycle?->id ?? 0])
                     ->latest('date_distributed')->latest('id')->first()
                 : null,
             // 430:1461 is the only Data Encoder profile frame, so encoders always edit;
