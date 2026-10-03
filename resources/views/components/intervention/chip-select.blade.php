@@ -1,9 +1,12 @@
-@props(['name', 'options', 'selected', 'tone' => 'ok', 'action' => null, 'actions' => []])
+@props(['name', 'options', 'selected', 'tone' => 'ok', 'action' => null, 'actions' => [], 'hidden' => []])
 {{-- Figma 407:323 dropdown chip: the 155x39 status chip as a select that submits on change.
      `actions` maps an option value to its own URL (claim / unclaim); otherwise the form posts to `action`. --}}
 <form method="POST" action="{{ $action ?? reset($actions) }}" class="w-[155px]"
       x-data="{ urls: @js($actions) }">
     @csrf
+    @foreach ($hidden as $field => $value)
+        <input type="hidden" name="{{ $field }}" value="{{ $value }}">
+    @endforeach
     <label class="relative block">
         <span class="sr-only">{{ \Illuminate\Support\Str::headline($name) }}</span>
         <select name="{{ $name }}"

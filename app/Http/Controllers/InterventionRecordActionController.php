@@ -26,8 +26,11 @@ class InterventionRecordActionController extends Controller
     public function claim(Request $request, InterventionRecord $record): RedirectResponse
     {
         $input = $request->only(['date_distributed', 'quantity', 'proxy_claimant', 'proof_note', 'override_reason']);
+        // The encoder's "Distributed" dropdown records a past distribution (same as the Add/Edit form).
+        $historical = $request->boolean('historical') && $request->user()->can('intervention_records.manage');
 
-        return $this->attempt($record, fn () => $this->claims->claim($record, $request->user(), array_filter($input, fn ($v) => $v !== null && $v !== '')),
+        return $this->attempt($record,
+            fn () => $this->claims->claim($record, $request->user(), array_filter($input, fn ($v) => $v !== null && $v !== ''), $historical),
             fn (InterventionRecord $r) => $r->claimLabel());
     }
 

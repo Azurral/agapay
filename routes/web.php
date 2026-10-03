@@ -3,9 +3,11 @@
 use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BeneficiaryController;
+use App\Http\Controllers\BeneficiaryLookupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InterventionController;
 use App\Http\Controllers\InterventionRecordActionController;
+use App\Http\Controllers\InterventionRecordController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RsbsaRegistrationController;
 use App\Http\Controllers\SearchController;
@@ -49,6 +51,14 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/intervention-records/{record}/archive', [InterventionRecordActionController::class, 'archive'])->name('intervention-records.archive');
         Route::post('/intervention-records/{record}/restore', [InterventionRecordActionController::class, 'restore'])
             ->withTrashed()->name('intervention-records.restore');
+    });
+    Route::middleware('can:intervention_records.manage')->group(function () {
+        Route::get('/intervention-records', [InterventionRecordController::class, 'index'])->name('intervention-records.index');
+        Route::get('/intervention-records/create', [InterventionRecordController::class, 'create'])->name('intervention-records.create');
+        Route::post('/intervention-records', [InterventionRecordController::class, 'store'])->name('intervention-records.store');
+        Route::get('/intervention-records/{record}/edit', [InterventionRecordController::class, 'edit'])->name('intervention-records.edit');
+        Route::put('/intervention-records/{record}', [InterventionRecordController::class, 'update'])->name('intervention-records.update');
+        Route::get('/beneficiary-lookup', BeneficiaryLookupController::class)->name('beneficiaries.lookup');
     });
     Route::get('/validation', ValidationQueueController::class)->middleware('can:interventions.validate')->name('validation.index');
     Route::post('/intervention-records/{record}/validation', [InterventionRecordActionController::class, 'validate'])
