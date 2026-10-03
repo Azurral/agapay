@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Beneficiary;
+use App\Models\DamageReport;
 use App\Models\DistributionCycle;
 use App\Models\InterventionRecord;
 use App\Models\User;
@@ -30,7 +31,7 @@ final class DashboardStats
                 : 0,
             'pending_validation' => InterventionRecord::where('validation_status', InterventionRecord::VALIDATION_PENDING)->count(),
             'low_stock_items' => app(InventoryService::class)->lowStockCount(),
-            'reports_filed_this_month' => 0,
+            'reports_filed_this_month' => DamageReport::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
         };
     }
 }
