@@ -154,7 +154,7 @@ it('excludes corrupted, nameless and under-age rows with reasons', function () {
         ->and(stagedRow($batch, 4)->issues)->toBe(['Under 18 (born '.today()->subYears(12)->format('M j, Y').')'])
         ->and(stagedRow($batch, 5)->issues)->toBe(['Missing birthdate'])
         ->and($batch->counts['unreadable'])->toBe(4)
-        ->and(collect($batch->feedback)->pluck('text'))->toContain('4 rows unreadable (corrupted cells) — excluded, see log');
+        ->and(collect($batch->feedback)->pluck('text'))->toContain('4 rows excluded — see the reasons in the preview');
 });
 
 it('skips blank rows inside the data', function () {

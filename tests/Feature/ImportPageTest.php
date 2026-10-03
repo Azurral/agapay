@@ -49,7 +49,7 @@ it('uploads a file and shows feedback and the preview', function () {
             '2 rows matched automatically (Name, Birthdate, Barangay, RSBSA No.)',
             "Column shift auto-corrected: 'Brgy' -&gt; mapped to 'Barangay'",
             '1 row missing RSBSA No. — flagged for manual review',
-            '1 row unreadable (corrupted cells) — excluded, see log',
+            '1 row excluded — see the reasons in the preview',
         ], false)
         ->assertSeeInOrder(['Preview', 'masterlist.xlsx', 'Pablo Ramos', 'RSBSA-0901', 'Ready', 'Gloria Ramos', 'Missing RSBSA', 'Ben Talawec', 'Excluded', "Unknown barangay 'Atlantis'"])
         ->assertSee('Discard')

@@ -15,9 +15,11 @@ use App\Models\ImportBatch;
 use App\Models\ImportRow;
 use App\Models\Intervention;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -121,7 +123,7 @@ final class ExcelImportService
      */
     public function confirm(ImportBatch $batch, User $actor): array
     {
-        return DB::transaction(function () use ($batch, $actor) {
+        $result = DB::transaction(function () use ($batch, $actor) {
             $batch = $this->lockStaged($batch);
             $result = ['created' => 0, 'updated' => 0, 'records' => 0, 'skipped' => 0];
             $cycles = DistributionCycle::all()->keyBy('id');
@@ -152,6 +154,9 @@ final class ExcelImportService
                     }
 
                     $row->update(['beneficiary_id' => $beneficiary->id]);
+                } catch (UniqueConstraintViolationException) {
+                    // Registered by someone else between the check and the insert.
+                    throw new ImportFileException("Row {$row->row_number}: RSBSA No. {$row->data['rsbsa_number']} was registered by someone else meanwhile.");
                 } catch (InterventionRuleViolation|ImportFileException $e) {
                     throw new ImportFileException("Row {$row->row_number}: {$e->getMessage()}");
                 } catch (ValidationException $e) {
@@ -164,6 +169,9 @@ final class ExcelImportService
 
             return $result;
         });
+        $this->deleteUpload($batch);
+
+        return $result;
     }
 
     /** Drops a staged batch; its rows stay for the record but can no longer be imported. */
@@ -174,6 +182,15 @@ final class ExcelImportService
             $batch->update(['status' => ImportBatch::DISCARDED]);
             AuditLogger::record('Discarded Excel Import', $batch, null, ['status' => ImportBatch::STAGED], ['status' => ImportBatch::DISCARDED], $actor);
         });
+        $this->deleteUpload($batch);
+    }
+
+    /** The masterlist holds personal data: once imported or discarded only its staged rows are kept as the record. */
+    private function deleteUpload(ImportBatch $batch): void
+    {
+        if ($batch->stored_path) {
+            Storage::disk('local')->delete($batch->stored_path);
+        }
     }
 
     public static function maxKilobytes(): int
@@ -306,7 +323,9 @@ final class ExcelImportService
                 };
             } elseif (isset($byIdentity[$identity])) {
                 $existing = $byIdentity[$identity];
-                if ($existing->rsbsa_number || ! $rsbsa || isset($seenRsbsa[$rsbsa])) {
+                if ($existing->rsbsa_number && $rsbsa && mb_strtolower(trim($existing->rsbsa_number)) !== $rsbsa) {
+                    $exclude("{$existing->fullName()} already has RSBSA No. {$existing->rsbsa_number} in AGAPAY");
+                } elseif ($existing->rsbsa_number || ! $rsbsa || isset($seenRsbsa[$rsbsa])) {
                     $skip('Already in AGAPAY');
                 } elseif ($existing->rsbsa_status !== Beneficiary::RSBSA_ENDORSED) {
                     // Spec rule 8: a number is recorded only after the application is endorsed to DA-RFO.
@@ -365,7 +384,8 @@ final class ExcelImportService
             $lines[] = ['ok' => false, 'text' => $n.' '.Str::plural('duplicate', $n).' skipped (already in AGAPAY or repeated in the file)'];
         }
         if ($n = $counts[ImportRow::UNREADABLE]) {
-            $lines[] = ['ok' => false, 'text' => $n.' '.Str::plural('row', $n).' unreadable (corrupted cells) — excluded, see log'];
+            // Not every exclusion is a corrupted cell (under-age, unknown barangay…); the preview gives each reason.
+            $lines[] = ['ok' => false, 'text' => $n.' '.Str::plural('row', $n).' excluded — see the reasons in the preview'];
         }
 
         return $lines;
