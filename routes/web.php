@@ -81,6 +81,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('/damage-reports/{report}', [DamageReportController::class, 'update'])->name('damage.update');
     });
     Route::middleware('can:damage.view')->group(function () {
+        Route::get('/damage-reports', [DamageReportController::class, 'index'])->name('damage.index');
         Route::get('/damage-reports/{report}', [DamageReportController::class, 'show'])->name('damage.show');
         Route::get('/damage-photos/{photo}', DamagePhotoController::class)->name('damage.photos.show');
     });
