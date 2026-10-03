@@ -8,7 +8,9 @@ use App\Models\User;
 use App\Services\ReportService;
 use App\Support\ReportCriteria;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -146,4 +148,37 @@ it('pluralises units and right-aligns figures in the pdf', function () {
 
     expect($html)->toContain('2 sacks')->not->toContain('2 sack<')->not->toContain('0 sack<')
         ->toContain('.rows th.num');
+});
+
+it('shows per-barangay counts without a mixed-unit quantity', function () {
+    $html = view('reports.pdf', [
+        ...app(ReportService::class)->build(new ReportCriteria($this->cycle)), 'generatedBy' => 'Tester', 'generatedAt' => now(), 'maxRows' => 1000,
+    ])->render();
+
+    expect(Str::between($html, 'Per Barangay', 'Inventory Used'))->not->toContain('Quantity Distributed');
+});
+
+it('refuses to record a report whose file could not be saved', function () {
+    $disk = Mockery::mock(FilesystemAdapter::class);
+    $disk->shouldReceive('put')->andReturnFalse();
+    $disk->shouldReceive('delete')->andReturnTrue();
+    Storage::set('local', $disk);
+
+    $this->actingAs($this->encoder)->from('/reports')->post('/reports', reportInput())
+        ->assertRedirect('/reports')
+        ->assertSessionHasErrors(['report' => 'The report file could not be saved. Check that the storage folder is writable, then try again.']);
+
+    expect(GeneratedReport::count())->toBe(0)->and(AuditLog::where('action', 'Generated Distribution Report')->count())->toBe(0);
+});
+
+it('disables generate while a report is being made', function () {
+    $this->actingAs($this->encoder)->get('/reports')
+        ->assertSee('x-data="{ busy: false }"', false)->assertSee(':disabled="busy"', false)->assertSee('Generating…');
+});
+
+it('audits the raw dates of a report', function () {
+    $this->actingAs($this->encoder)->post('/reports', reportInput(['start_date' => '2026-07-01', 'end_date' => '2026-07-31']));
+
+    expect(AuditLog::where('action', 'Generated Distribution Report')->sole()->new_values)
+        ->toMatchArray(['start' => '2026-07-01', 'end' => '2026-07-31', 'dates' => 'Jul 1, 2026 – Jul 31, 2026']);
 });

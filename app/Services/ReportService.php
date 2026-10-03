@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Exceptions\ReportFileException;
 use App\Exports\DistributionReportExport;
+use App\Models\Beneficiary;
 use App\Models\GeneratedReport;
 use App\Models\InterventionRecord;
 use App\Models\InventoryItem;
@@ -38,7 +40,7 @@ final class ReportService
     public function build(ReportCriteria $criteria): array
     {
         $records = $this->records($criteria)
-            ->with(['beneficiary' => fn ($q) => $q->withTrashed()->with('barangay:id,name'), 'intervention'])
+            ->with(['beneficiary.barangay:id,name', 'intervention'])
             ->get()
             ->sortBy(fn (InterventionRecord $r) => [
                 (string) $r->beneficiary->barangay?->name, mb_strtolower($r->beneficiary->last_name),
@@ -61,12 +63,12 @@ final class ReportService
                     'quantity' => $this->quantity($group),
                 ])
                 ->sortBy(fn (array $row) => [$row['source'], $row['name']])->values()->all(),
+            // Counts only: a barangay mixes sacks, liters and cash, so a quantity sum would mean nothing.
             'barangays' => $records->groupBy(fn (InterventionRecord $r) => (string) $r->beneficiary->barangay?->name)
                 ->map(fn (Collection $group, string $name) => [
                     'name' => $name,
                     'beneficiaries' => $group->pluck('beneficiary_id')->unique()->count(),
                     ...$this->counts($group),
-                    'quantity' => $this->quantity($group),
                 ])
                 ->sortKeys()->values()->all(),
             'beneficiaries' => $records->map(fn (InterventionRecord $r) => [
@@ -104,7 +106,10 @@ final class ReportService
             ])->setPaper('a4', 'landscape')->output();
 
         $path = 'reports/'.Str::uuid().'.'.$criteria->format;
-        Storage::disk(GeneratedReport::DISK)->put($path, $contents);
+        // The local disk does not throw on failure: a full disk or a permission problem must not leave a history row without a file.
+        if (! Storage::disk(GeneratedReport::DISK)->put($path, $contents)) {
+            throw new ReportFileException('The report file could not be saved. Check that the storage folder is writable, then try again.');
+        }
 
         try {
             return DB::transaction(function () use ($criteria, $actor, $fileName, $path, $data) {
@@ -122,6 +127,7 @@ final class ReportService
                 $labels = $criteria->labels();
                 AuditLogger::record('Generated Distribution Report', $report, $fileName, [], [
                     'cycle' => $labels['cycle'], 'program' => $labels['program'], 'dates' => $labels['dates'],
+                    'start' => $criteria->start?->toDateString(), 'end' => $criteria->end?->toDateString(),
                     'format' => $labels['format'], 'rows' => $report->rows,
                 ], $actor);
 
@@ -137,7 +143,10 @@ final class ReportService
     /** @return Builder<InterventionRecord> non-archived records of the cycle, program and date range */
     public function records(ReportCriteria $criteria): Builder
     {
+        // Records of archived farmers are left out, as in every working list (the record's relation includes
+        // archived profiles, so filter on the profile table's own scope).
         return InterventionRecord::query()
+            ->whereIn('beneficiary_id', Beneficiary::query()->select('id'))
             ->where('distribution_cycle_id', $criteria->cycle->id)
             ->when($criteria->program !== 'all', fn (Builder $q) => $q->ofSource($criteria->program))
             ->when($criteria->start || $criteria->end, fn (Builder $q) => $q->where(fn (Builder $q) => $q

@@ -98,8 +98,7 @@ it('reports quantity distributed from claimed records only', function () {
     $data = buildReport(new ReportCriteria($this->cycle));
     $expected = (float) InterventionRecord::where(['distribution_cycle_id' => $this->cycle->id, 'claim_status' => 'claimed'])->sum('quantity');
 
-    expect(round(array_sum(array_column($data['interventions'], 'quantity')), 2))->toBe(round($expected, 2))
-        ->and(round(array_sum(array_column($data['barangays'], 'quantity')), 2))->toBe(round($expected, 2));
+    expect(round(array_sum(array_column($data['interventions'], 'quantity')), 2))->toBe(round($expected, 2));
 });
 
 it('labels pending validation as a status, not an action', function () {
@@ -108,4 +107,19 @@ it('labels pending validation as a status, not an action', function () {
         ->first(fn ($r) => $r['name'] === $record->beneficiary->fullName() && $r['program'] === $record->intervention->sourcedName());
 
     expect($row['validation'])->toBe('Pending Validation');
+});
+
+it('does not add up quantities of different units per barangay', function () {
+    $barangays = buildReport(new ReportCriteria($this->cycle))['barangays'];
+
+    expect($barangays[0])->toHaveKeys(['name', 'beneficiaries', 'assigned', 'claimed', 'unclaimed'])->not->toHaveKey('quantity');
+});
+
+it('leaves records of archived farmers out like the working lists', function () {
+    $before = buildReport(new ReportCriteria($this->cycle))['summary']['assigned'];
+    $record = InterventionRecord::where('distribution_cycle_id', $this->cycle->id)->firstOrFail();
+    $count = InterventionRecord::where(['distribution_cycle_id' => $this->cycle->id, 'beneficiary_id' => $record->beneficiary_id])->count();
+    $record->beneficiary->delete();
+
+    expect(buildReport(new ReportCriteria($this->cycle))['summary']['assigned'])->toBe($before - $count);
 });

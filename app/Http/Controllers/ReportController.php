@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\ReportFileException;
 use App\Models\DistributionCycle;
 use App\Models\GeneratedReport;
 use App\Models\Role;
@@ -51,13 +52,17 @@ class ReportController extends Controller
             'end_date.date' => 'Enter a valid end date.',
         ]);
 
-        $report = $this->reports->generate(new ReportCriteria(
-            DistributionCycle::findOrFail($input['distribution_cycle_id']),
-            $input['program'],
-            ($input['start_date'] ?? null) ? CarbonImmutable::parse($input['start_date']) : null,
-            ($input['end_date'] ?? null) ? CarbonImmutable::parse($input['end_date']) : null,
-            $input['format'],
-        ), $request->user());
+        try {
+            $report = $this->reports->generate(new ReportCriteria(
+                DistributionCycle::findOrFail($input['distribution_cycle_id']),
+                $input['program'],
+                ($input['start_date'] ?? null) ? CarbonImmutable::parse($input['start_date']) : null,
+                ($input['end_date'] ?? null) ? CarbonImmutable::parse($input['end_date']) : null,
+                $input['format'],
+            ), $request->user());
+        } catch (ReportFileException $e) {
+            return back()->withInput()->withErrors(['report' => $e->getMessage()]);
+        }
 
         return Storage::disk(GeneratedReport::DISK)->download($report->path, $report->file_name);
     }

@@ -59,13 +59,13 @@
 
     <h2>Per Barangay</h2>
     <table class="rows">
-        <thead><tr><th>Barangay</th><th class="num">Beneficiaries</th><th class="num">Assigned</th><th class="num">Claimed</th><th class="num">Unclaimed</th><th class="num">Quantity Distributed</th></tr></thead>
+        <thead><tr><th>Barangay</th><th class="num">Beneficiaries</th><th class="num">Assigned</th><th class="num">Claimed</th><th class="num">Unclaimed</th></tr></thead>
         <tbody>
             @forelse ($barangays as $row)
                 <tr><td>{{ $row['name'] }}</td><td class="num">{{ $row['beneficiaries'] }}</td><td class="num">{{ $row['assigned'] }}</td>
-                    <td class="num">{{ $row['claimed'] }}</td><td class="num">{{ $row['unclaimed'] }}</td><td class="num">{{ $decimal($row['quantity']) }}</td></tr>
+                    <td class="num">{{ $row['claimed'] }}</td><td class="num">{{ $row['unclaimed'] }}</td></tr>
             @empty
-                <tr><td colspan="6" class="muted">No intervention records for these criteria.</td></tr>
+                <tr><td colspan="5" class="muted">No intervention records for these criteria.</td></tr>
             @endforelse
         </tbody>
     </table>

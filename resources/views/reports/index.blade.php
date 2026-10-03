@@ -14,7 +14,9 @@
     @endif
 
     <x-ui.card title="Reports" class="pb-[29px]">
-        <form method="POST" action="{{ route('reports.store') }}" class="mt-[19px] grid grid-cols-[707px_710px] gap-x-[19px] gap-y-[6px] pl-[1px]">
+        {{-- The file downloads without leaving the page: block a second click for a while so one click makes one report. --}}
+        <form method="POST" action="{{ route('reports.store') }}" class="mt-[19px] grid grid-cols-[707px_710px] gap-x-[19px] gap-y-[6px] pl-[1px]"
+              x-data="{ busy: false }" @submit="busy = true; setTimeout(() => busy = false, 15000)">
             @csrf
             <div>
                 <label for="program" class="{{ $label }}">Program</label>
@@ -63,9 +65,11 @@
             </div>
             <p class="self-end pb-[12px] text-[12px] font-medium leading-[16px] text-muted">Reports cover one distribution cycle. The dates narrow claimed distributions; unclaimed records are always listed.</p>
 
-            <button type="submit" class="bg-brand-bar gradient-button col-span-2 mt-[6px] flex h-[48px] items-center justify-center gap-[4px] rounded-[50px] text-[20px] font-bold leading-[24px] text-white">
-                <img src="{{ asset('images/figma/icons/plus.svg') }}" alt="" class="size-[21px] brightness-0 invert"> Generate Report
+            <button type="submit" :disabled="busy" class="bg-brand-bar gradient-button col-span-2 mt-[6px] flex h-[48px] items-center justify-center gap-[4px] rounded-[50px] text-[20px] font-bold leading-[24px] text-white disabled:opacity-70">
+                <img src="{{ asset('images/figma/icons/plus.svg') }}" alt="" class="size-[21px] brightness-0 invert">
+                <span x-text="busy ? 'Generating…' : 'Generate Report'">Generate Report</span>
             </button>
+            <span class="sr-only">Generating…</span>
         </form>
     </x-ui.card>
 
