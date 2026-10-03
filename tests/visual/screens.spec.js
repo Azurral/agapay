@@ -45,7 +45,33 @@ const SCREENS = [
     { frame: '340-51', route: '/reports', as: 'Admin_01' },
     { frame: '407-1694', route: '/reports', as: 'Agritech_02' },
     { frame: '470-2205', route: '/reports', as: 'Encoder_03' },
+    { frame: '313-1395', route: '/dashboard', as: 'Agritech_02', remember: ['Encoder_03', 'Admin_01'],
+      before: (page) => page.getByRole('button', { name: /Agritech_02/ }).click() },
+    { frame: '313-1162', route: '/dashboard', as: 'Encoder_03', remember: ['Agritech_02', 'Admin_01'],
+      before: (page) => page.getByRole('button', { name: /Encoder_03/ }).click() },
+    { frame: '407-2', route: '/interventions', as: 'Agritech_02' },
+    { frame: '400-4', route: paffList('/interventions/da'), as: 'Admin_01' },
+    { frame: '407-463', route: paffList('/interventions/da'), as: 'Agritech_02' },
+    { frame: '329-3407', route: '/interventions/lgu?registration=new', as: 'Admin_01' },
+    { frame: '407-743', route: '/interventions/lgu?registration=new', as: 'Agritech_02' },
+    { frame: '344-531', route: '/interventions/lgu/archived', as: 'Admin_01' },
+    { frame: '344-817', route: '/interventions/lgu/archived', as: 'Admin_01' },
+    { frame: '430-2029', route: '/rsbsa/register', as: 'Encoder_03' },
+    { frame: '440-166', route: paffList('/intervention-records'), as: 'Encoder_03' },
+    { frame: '446-3', route: '/inventory', as: 'Encoder_03',
+      before: (page) => page.getByRole('button', { name: '+ Record Movement' }).click() },
 ];
+
+// A list filtered to the PAFF program (Figma 400:4, 407:463, 440:166); its id is read from the filter (ids differ between seeds).
+function paffList(path) {
+    const route = async (page) => {
+        await page.goto(path);
+        const value = await page.locator('select[name="intervention"] option').filter({ hasText: /paff/i }).first().getAttribute('value');
+        return `${path}?intervention=${value}`;
+    };
+    Object.defineProperty(route, 'name', { value: `${path}?intervention=PAFF` });
+    return route;
+}
 
 // Juan Dela Cruz's profile URL, read from search results (ids differ between seeds).
 async function juanProfile(page) {

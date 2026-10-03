@@ -70,7 +70,7 @@ class InterventionRecordActionController extends Controller
         try {
             $updated = $action();
         } catch (InterventionRuleViolation $e) {
-            return back()->withErrors(['intervention' => $e->getMessage()], 'intervention')->with('intervention_failed', $record->id);
+            return back()->withInput()->withErrors(['intervention' => $e->getMessage()], 'intervention')->with('intervention_failed', $record->id);
         } catch (ValidationException $e) {
             return back()->withInput()->withErrors($e->errors(), 'intervention')->with('intervention_failed', $record->id);
         } catch (PDOException $e) {   // QueryException, or DeadlockException from a nested transaction

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Crop;
 use App\Models\DamageReport;
+use App\Services\DamageCalculator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -97,6 +99,12 @@ class DamageReportRequest extends FormRequest
 
                 if ($areas !== null && $areas <= 0) {
                     $validator->errors()->add('total_area_ha', 'Enter the damaged area.');
+                }
+
+                // The cost column holds up to ₱999,999,999,999.99; only absurd crop values get past it.
+                $crop = $areas > 0 && ! $validator->errors()->has('crop_id') ? Crop::find($this->integer('crop_id')) : null;
+                if ($crop && DamageCalculator::forCrop($crop, (float) $this->input('total_area_ha'), (float) $this->input('partial_area_ha'))['cost'] > 999_999_999_999.99) {
+                    $validator->errors()->add('total_area_ha', 'The computed cost is too large — check the crop values.');
                 }
             },
         ];

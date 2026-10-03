@@ -42,6 +42,16 @@ class UpdateBeneficiaryRequest extends FormRequest
     public function after(): array
     {
         return [
+            // Same person = same first + last name, birthdate and barangay as another active profile.
+            function (Validator $validator) {
+                if ($validator->errors()->hasAny(['first_name', 'last_name', 'birthdate', 'barangay_id'])) {
+                    return;
+                }
+                if (Beneficiary::isAlreadyRegistered((string) $this->input('first_name'), (string) $this->input('last_name'),
+                    (string) $this->input('birthdate'), (int) $this->input('barangay_id'), $this->route('beneficiary')->getKey())) {
+                    $validator->errors()->add('first_name', 'Another profile already has this name, birthdate and barangay.');
+                }
+            },
             function (Validator $validator) {
                 $number = $this->input('rsbsa_number');
                 if ($validator->errors()->has('rsbsa_number') || ! is_string($number) || $number === '') {

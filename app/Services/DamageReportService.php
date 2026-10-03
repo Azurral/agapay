@@ -32,6 +32,10 @@ final class DamageReportService
 
         try {
             return DB::transaction(function () use ($data, $photos, $actor, &$stored) {
+                // A deadlock retry starts over: the photos of the failed attempt go first.
+                Storage::disk(DamagePhoto::DISK)->delete($stored);
+                $stored = [];
+
                 // One filing per farmer at a time, so a double-clicked Submit cannot create the same report twice.
                 $beneficiary = Beneficiary::whereKey($data['beneficiary_id'])->lockForUpdate()->firstOrFail();
                 $this->ensureNotDuplicate($beneficiary, (int) $data['disaster_id'], (int) $data['crop_id']);
@@ -65,6 +69,10 @@ final class DamageReportService
 
         try {
             [$report, $removed] = DB::transaction(function () use ($report, $data, $newPhotos, $removePhotoIds, &$stored) {
+                // A deadlock retry starts over: the photos of the failed attempt go first.
+                Storage::disk(DamagePhoto::DISK)->delete($stored);
+                $stored = [];
+
                 Beneficiary::whereKey($data['beneficiary_id'])->lockForUpdate()->firstOrFail();
                 $report = DamageReport::whereKey($report->id)->lockForUpdate()->firstOrFail();
                 if ($report->isValidated()) {
@@ -185,16 +193,18 @@ final class DamageReportService
 
     private function ensureNotDuplicate(Beneficiary $beneficiary, int $disasterId, int $cropId, ?int $ignoreId = null): void
     {
-        $exists = DamageReport::where(['beneficiary_id' => $beneficiary->id, 'disaster_id' => $disasterId, 'crop_id' => $cropId])
+        $existing = DamageReport::where(['beneficiary_id' => $beneficiary->id, 'disaster_id' => $disasterId, 'crop_id' => $cropId])
             ->when($ignoreId, fn ($query) => $query->whereKeyNot($ignoreId))
-            ->exists();
+            ->first();
 
-        if ($exists) {
+        if ($existing) {
             $crop = Crop::findOrFail($cropId)->name;
             $disaster = Disaster::findOrFail($disasterId)->name;
 
             throw ValidationException::withMessages([
                 'beneficiary_id' => "{$beneficiary->fullName()} already has a {$crop} damage report for {$disaster}.",
+                // Read by the form to link the report that is already on file.
+                'existing_report' => route('damage.show', $existing),
             ]);
         }
     }

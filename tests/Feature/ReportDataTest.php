@@ -29,7 +29,8 @@ it('totals records per intervention, barangay and beneficiary', function () {
         'beneficiaries' => (clone $records)->distinct()->count('beneficiary_id'),
         'assigned' => (clone $records)->count(),
         'claimed' => (clone $records)->where('claim_status', 'claimed')->count(),
-        'unclaimed' => (clone $records)->where('claim_status', 'unclaimed')->count(),
+        'unclaimed' => (clone $records)->where('claim_status', 'unclaimed')->whereNotIn('validation_status', ReportService::NOT_CLAIMABLE)->count(),
+        'not_claimable' => (clone $records)->where('claim_status', 'unclaimed')->whereIn('validation_status', ReportService::NOT_CLAIMABLE)->count(),
     ])
         ->and(array_sum(array_column($data['interventions'], 'assigned')))->toBe($data['summary']['assigned'])
         ->and(array_sum(array_column($data['barangays'], 'assigned')))->toBe($data['summary']['assigned'])

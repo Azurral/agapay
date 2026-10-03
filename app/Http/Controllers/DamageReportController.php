@@ -10,13 +10,17 @@ use App\Models\Disaster;
 use App\Models\User;
 use App\Services\DamageReportService;
 use App\Support\DamageReportFilters;
+use Illuminate\Database\DetectsConcurrencyErrors;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use PDOException;
 
 /** Figma 329:2978 / 407:1554 / 470:1863 damage list and 423:786 / 423:306 New Damage Report (spec rule 11). */
 class DamageReportController extends Controller
 {
+    use DetectsConcurrencyErrors;
+
     public function __construct(private readonly DamageReportService $reports) {}
 
     public function index(Request $request): View
@@ -44,7 +48,11 @@ class DamageReportController extends Controller
 
     public function store(DamageReportRequest $request): RedirectResponse
     {
-        $report = $this->reports->file($request->validated(), $request->file('photos', []), $request->user());
+        try {
+            $report = $this->reports->file($request->validated(), $request->file('photos', []), $request->user());
+        } catch (PDOException $e) {
+            return $this->concurrentSave($e);
+        }
 
         return redirect()->route('damage.show', $report)->with('status', "Damage report filed for {$report->beneficiary->fullName()}.");
     }
@@ -70,10 +78,24 @@ class DamageReportController extends Controller
     {
         abort_unless(self::canEdit($request->user(), $report), 403);
 
-        $this->reports->update($report, $request->validated(), $request->file('photos', []),
-            array_map('intval', $request->validated('remove_photos') ?? []), $request->user());
+        try {
+            $this->reports->update($report, $request->validated(), $request->file('photos', []),
+                array_map('intval', $request->validated('remove_photos') ?? []), $request->user());
+        } catch (PDOException $e) {
+            return $this->concurrentSave($e);
+        }
 
         return redirect()->route('damage.show', $report)->with('status', 'Damage report saved.');
+    }
+
+    /** A deadlock that outlived the service's retries (QueryException, or DeadlockException from a nested transaction). */
+    private function concurrentSave(PDOException $e): RedirectResponse
+    {
+        if (! $this->causedByConcurrencyError($e)) {
+            throw $e;
+        }
+
+        return back()->withInput()->withErrors(['report' => 'Another save happened at the same moment. Please submit the report again.']);
     }
 
     /** Unvalidated reports can be corrected by whoever filed them, or by an Administrator. */

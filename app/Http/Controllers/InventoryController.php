@@ -9,6 +9,7 @@ use App\Models\InventoryMovement;
 use App\Models\Role;
 use App\Services\AuditLogger;
 use App\Services\InventoryService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -21,6 +22,8 @@ use Illuminate\View\View;
 /** Figma 470:785 (Admin) / 430:1745 (Data Encoder) inventory monitoring, and the 470:986 Record Stock Movement modal. */
 class InventoryController extends Controller
 {
+    private const NAME_TAKEN = 'An item with this name already exists.';
+
     public function __construct(private readonly InventoryService $inventory) {}
 
     public function index(Request $request): View
@@ -86,10 +89,10 @@ class InventoryController extends Controller
             ->mapWithKeys(fn (string $key) => [$key => trim(preg_replace('/\s+/', ' ', $request->input($key)))])->all());
 
         $data = Validator::make($request->all(), [
-            'name' => ['required', 'string', 'max:100', function (string $attribute, string $value, \Closure $fail) use ($item) {
-                $taken = InventoryItem::whereRaw('LOWER(name) = ?', [mb_strtolower($value)])->whereKeyNot($item->id)->exists();
+            'name' => ['required', 'string', 'max:100', function (string $attribute, mixed $value, \Closure $fail) use ($item) {
+                $taken = is_string($value) && InventoryItem::whereRaw('LOWER(name) = ?', [mb_strtolower($value)])->whereKeyNot($item->id)->exists();
                 if ($taken) {
-                    $fail('An item with this name already exists.');
+                    $fail(self::NAME_TAKEN);
                 }
             }],
             'unit' => ['required', 'string', 'max:20'],
@@ -99,19 +102,34 @@ class InventoryController extends Controller
             'interventions.*' => ['integer', Rule::exists('interventions', 'id')],
         ], ['interventions.*.exists' => 'Choose programs from the list.'])->validateWithBag('item');
 
-        DB::transaction(function () use ($item, $data, $request) {
-            $oldLinks = $item->exists ? $item->interventions()->orderBy('id')->get()->map->sourcedName()->all() : [];
-            $item->fill(Arr::only($data, ['name', 'unit', 'unit_label', 'low_stock_threshold']))->save();   // Auditable: Added / Updated
+        $links = fn (InventoryItem $i) => $i->interventions()->orderBy('id')->get()->map->sourcedName()->all();
 
-            $wanted = array_map('intval', $data['interventions'] ?? []);
-            Intervention::where('inventory_item_id', $item->id)->whereNotIn('id', $wanted)->update(['inventory_item_id' => null]);
-            Intervention::whereIn('id', $wanted)->update(['inventory_item_id' => $item->id]);
+        try {
+            DB::transaction(function () use ($item, $data, $request, $links) {
+                $oldLinks = $item->exists ? $links($item) : [];
+                $wanted = array_map('intval', $data['interventions'] ?? []);
+                // Items that lose a program to this one get their own audit row.
+                $losing = InventoryItem::whereIn('id', Intervention::whereIn('id', $wanted)->whereNotNull('inventory_item_id')
+                    ->when($item->exists, fn ($q) => $q->where('inventory_item_id', '!=', $item->id))->select('inventory_item_id'))->get()
+                    ->mapWithKeys(fn (InventoryItem $other) => [$other->id => [$other, $links($other)]]);
 
-            $newLinks = $item->interventions()->orderBy('id')->get()->map->sourcedName()->all();
-            if ($oldLinks !== $newLinks && $item->wasRecentlyCreated === false) {
-                AuditLogger::record('Updated Inventory Item', $item, null, ['interventions' => $oldLinks], ['interventions' => $newLinks], $request->user());
-            }
-        });
+                $item->fill(Arr::only($data, ['name', 'unit', 'unit_label', 'low_stock_threshold']))->save();   // Auditable: Added / Updated
+
+                Intervention::where('inventory_item_id', $item->id)->whereNotIn('id', $wanted)->update(['inventory_item_id' => null]);
+                Intervention::whereIn('id', $wanted)->update(['inventory_item_id' => $item->id]);
+
+                $newLinks = $links($item);
+                if ($oldLinks !== $newLinks && $item->wasRecentlyCreated === false) {
+                    AuditLogger::record('Updated Inventory Item', $item, null, ['interventions' => $oldLinks], ['interventions' => $newLinks], $request->user());
+                }
+                foreach ($losing as [$other, $before]) {
+                    AuditLogger::record('Updated Inventory Item', $other, null, ['interventions' => $before], ['interventions' => $links($other)], $request->user());
+                }
+            });
+        } catch (UniqueConstraintViolationException) {
+            // Someone added an item with this name after the form was checked.
+            return back()->withInput()->withErrors(['name' => self::NAME_TAKEN], 'item');
+        }
 
         return back()->with('status', "{$item->name} saved.");
     }

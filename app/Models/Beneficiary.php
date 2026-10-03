@@ -57,13 +57,55 @@ class Beneficiary extends Model
     /** Bookkeeping changes that are not user edits. */
     protected array $auditIgnore = ['household_id', 'updated_by'];
 
+    /** Free-text fields stored trimmed with single spaces, so typed and imported data match alike. */
+    public const SQUISHED = ['first_name', 'middle_name', 'last_name', 'address', 'farm_location', 'crop_type'];
+
     protected static function booted(): void
     {
         static::saving(function (Beneficiary $beneficiary) {
+            foreach (self::SQUISHED as $field) {
+                if (is_string($beneficiary->{$field})) {
+                    $beneficiary->{$field} = self::squish($beneficiary->{$field});
+                }
+            }
+            if ($beneficiary->isDirty('rsbsa_number')) {
+                $beneficiary->rsbsa_number = self::normalizeRsbsa($beneficiary->rsbsa_number);
+            }
+
             if (! $beneficiary->exists || $beneficiary->isDirty(['address', 'barangay_id'])) {
                 HouseholdService::assign($beneficiary);
             }
         });
+
+        // A household nobody belongs to any more (archived members included) is removed after a move.
+        static::saved(function (Beneficiary $beneficiary) {
+            $old = $beneficiary->getOriginal('household_id');
+            if ($beneficiary->wasChanged('household_id') && $old && ! static::withTrashed()->where('household_id', $old)->exists()) {
+                Household::whereKey($old)->delete();
+            }
+        });
+    }
+
+    /** "  Dela\t Cruz " → "Dela Cruz"; blank → null. */
+    public static function squish(?string $value): ?string
+    {
+        $value = trim((string) preg_replace('/\s+/u', ' ', (string) $value));
+
+        return $value === '' ? null : $value;
+    }
+
+    /** Whether a unique-key violation is on the RSBSA number (other unique keys are not reported as an RSBSA clash). */
+    public static function isRsbsaClash(\Throwable $e): bool
+    {
+        return str_contains($e->getMessage(), 'rsbsa_number');
+    }
+
+    /** RSBSA numbers are stored trimmed and in upper case ("rsbsa-0777" → "RSBSA-0777"). */
+    public static function normalizeRsbsa(?string $number): ?string
+    {
+        $number = self::squish($number);
+
+        return $number === null ? null : mb_strtoupper($number);
     }
 
     protected function casts(): array
@@ -131,28 +173,42 @@ class Beneficiary extends Model
     /** Free-text search on name, full name, RSBSA number or barangay; LIKE wildcards in the term are literal. */
     public function scopeSearch(Builder $query, string $term): Builder
     {
-        $term = trim(preg_replace('/\s+/', ' ', $term));
+        // "Dela Cruz,Juan" and "Dela Cruz ,  Juan" both become "dela cruz, juan".
+        $term = trim(preg_replace(['/\s+/', '/\s*,\s*/'], [' ', ', '], $term));
         if ($term === '') {
             return $query;
         }
 
         // "!" is the LIKE escape character: a backslash escape behaves differently on MySQL and SQLite.
         $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($term)).'%';
-        $fullName = DB::getDriverName() === 'sqlite' ? "first_name || ' ' || last_name" : "CONCAT(first_name, ' ', last_name)";
+        $join = DB::getDriverName() === 'sqlite'
+            ? fn (string ...$parts) => implode(' || ', $parts)
+            : fn (string ...$parts) => 'CONCAT('.implode(', ', $parts).')';
+        // Names people type: "First Last", "First Middle Last", "Last First", "Last, First".
+        $names = [
+            $join('first_name', "' '", 'last_name'),
+            $join('first_name', "' '", 'COALESCE('.$join('middle_name', "' '").", '')", 'last_name'),
+            $join('last_name', "' '", 'first_name'),
+            $join('last_name', "', '", 'first_name'),
+        ];
         $matches = fn (string $column) => ["LOWER({$column}) LIKE ? ESCAPE '!'", [$like]];
 
-        return $query->where(fn (Builder $q) => $q
-            ->whereRaw(...$matches('first_name'))
-            ->orWhereRaw(...$matches('last_name'))
-            ->orWhereRaw(...$matches($fullName))
-            ->orWhereRaw(...$matches('rsbsa_number'))
-            ->orWhereHas('barangay', fn (Builder $b) => $b->whereRaw(...$matches('name'))));
+        return $query->where(function (Builder $q) use ($matches, $names) {
+            $q->whereRaw(...$matches('first_name'))
+                ->orWhereRaw(...$matches('last_name'))
+                ->orWhereRaw(...$matches('rsbsa_number'))
+                ->orWhereHas('barangay', fn (Builder $b) => $b->whereRaw(...$matches('name')));
+            foreach ($names as $name) {
+                $q->orWhereRaw(...$matches($name));
+            }
+        });
     }
 
     /** Same person = same first and last name (any case), birthdate and barangay. */
-    public static function isAlreadyRegistered(string $firstName, string $lastName, string $birthdate, int $barangayId): bool
+    public static function isAlreadyRegistered(string $firstName, string $lastName, string $birthdate, int $barangayId, ?int $exceptId = null): bool
     {
         return static::query()
+            ->when($exceptId, fn (Builder $q) => $q->whereKeyNot($exceptId))
             ->whereRaw('LOWER(first_name) = ?', [mb_strtolower($firstName)])
             ->whereRaw('LOWER(last_name) = ?', [mb_strtolower($lastName)])
             ->whereDate('birthdate', $birthdate)

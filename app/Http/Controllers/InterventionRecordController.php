@@ -11,15 +11,21 @@ use App\Models\Intervention;
 use App\Models\InterventionRecord;
 use App\Services\ClaimService;
 use App\Services\InterventionAssignment;
+use Illuminate\Database\DetectsConcurrencyErrors;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use PDOException;
 
 /** Data Encoder "Intervention Records" (Figma 430:1603 list, 446:198 form). */
 class InterventionRecordController extends Controller
 {
+    use DetectsConcurrencyErrors;
+
+    private const CONCURRENT_SAVE = 'Another save for this record happened at the same moment. Check the list, then try again if it is missing.';
+
     public function __construct(private readonly InterventionAssignment $assignment, private readonly ClaimService $claims) {}
 
     public function index(Request $request): View
@@ -76,6 +82,12 @@ class InterventionRecordController extends Controller
             return back()->withInput()->withErrors(['quantity' => $e->getMessage()]);
         } catch (InterventionRuleViolation $e) {
             return back()->withInput()->withErrors([$stage => $e->getMessage()]);
+        } catch (PDOException $e) {   // QueryException, or DeadlockException from a nested transaction
+            if (! $this->causedByConcurrencyError($e)) {
+                throw $e;
+            }
+
+            return back()->withInput()->withErrors(['intervention_id' => self::CONCURRENT_SAVE]);
         }
 
         return redirect()->route('intervention-records.index')->with('status', 'Intervention record saved.');
@@ -110,6 +122,12 @@ class InterventionRecordController extends Controller
             return back()->withInput()->withErrors(['quantity' => $e->getMessage()]);
         } catch (InterventionRuleViolation $e) {
             return back()->withInput()->withErrors([$stage => $e->getMessage()]);
+        } catch (PDOException $e) {   // QueryException, or DeadlockException from a nested transaction
+            if (! $this->causedByConcurrencyError($e)) {
+                throw $e;
+            }
+
+            return back()->withInput()->withErrors(['intervention_id' => self::CONCURRENT_SAVE]);
         }
 
         return redirect()->route('intervention-records.index')->with('status', 'Intervention record saved.');
@@ -126,8 +144,12 @@ class InterventionRecordController extends Controller
     {
         return view('intervention-records.form', [
             'record' => $record,
-            'interventions' => Intervention::active()->orderBy('name')->get(['id', 'source', 'name']),
-            'cycles' => DistributionCycle::orderByDesc('code')->get(['id', 'code', 'label']),
+            // A record of a program deactivated since keeps showing its program, marked inactive.
+            'interventions' => Intervention::active()->orderBy('name')->get(['id', 'source', 'name'])
+                ->when($record?->intervention && ! $record->intervention->is_active, fn ($list) => $list->push(
+                    $record->intervention->replicate()->forceFill(['id' => $record->intervention->id, 'name' => $record->intervention->name.' (inactive)'])
+                )),
+            'cycles' => DistributionCycle::orderByDesc('schedule_date')->orderByDesc('id')->get(['id', 'code', 'label']),
             'currentCycleId' => DistributionCycle::current()?->id,
         ]);
     }

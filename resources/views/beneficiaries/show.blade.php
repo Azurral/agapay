@@ -27,7 +27,7 @@
             'border-ok' => $others->isEmpty(),
         ])>
             @if ($others->isNotEmpty())
-                {{ $others->count() }} other registered {{ $others->count() === 1 ? 'member shares' : 'members share' }} this address ({{ $others->map->fullName()->join(', ') }}) - {{ $householdClaim ? "{$householdClaim->beneficiary->fullName()} already claimed {$householdClaim->intervention->name} this cycle." : 'no other claims made yet.' }}
+                {{ $others->count() }} other registered {{ $others->count() === 1 ? 'member shares' : 'members share' }} this address ({{ $others->map->fullName()->join(', ') }}) - {{ $householdClaim ? "{$householdClaim->beneficiary->fullName()} already claimed {$householdClaim->intervention->name} ".($householdClaim->distribution_cycle_id === $currentCycleId ? 'this cycle.' : "in {$householdClaim->cycle->code}.") : 'no other claims made yet.' }}
             @else
                 No other registered members share this address.
             @endif

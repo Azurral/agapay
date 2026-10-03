@@ -8,6 +8,7 @@ use App\Models\DistributionCycle;
 use App\Models\InterventionRecord;
 use App\Models\User;
 use App\Services\InventoryService;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Live sidebar counters. Each module plan replaces its own match arm
@@ -26,12 +27,18 @@ final class DashboardStats
                 ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
             'records_to_update' => Beneficiary::whereNotNull('encoding_issue')->count(),
             // Programs with at least one active record in the current distribution cycle.
+            // Records of archived farmers are left out, as in the intervention lists.
             'active_interventions' => ($cycle = DistributionCycle::current())
-                ? InterventionRecord::where('distribution_cycle_id', $cycle->id)->distinct()->count('intervention_id')
+                ? self::activeRecords()->where('distribution_cycle_id', $cycle->id)->distinct()->count('intervention_id')
                 : 0,
-            'pending_validation' => InterventionRecord::where('validation_status', InterventionRecord::VALIDATION_PENDING)->count(),
+            'pending_validation' => self::activeRecords()->where('validation_status', InterventionRecord::VALIDATION_PENDING)->count(),
             'low_stock_items' => app(InventoryService::class)->lowStockCount(),
             'reports_filed_this_month' => DamageReport::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
         };
+    }
+
+    private static function activeRecords(): Builder
+    {
+        return InterventionRecord::query()->whereIn('beneficiary_id', Beneficiary::query()->select('id'));
     }
 }

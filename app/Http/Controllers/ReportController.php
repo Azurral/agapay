@@ -26,7 +26,7 @@ class ReportController extends Controller
     public function index(Request $request): View
     {
         return view('reports.index', [
-            'cycles' => DistributionCycle::orderByDesc('code')->get(),
+            'cycles' => DistributionCycle::orderByDesc('schedule_date')->orderByDesc('id')->get(),
             'currentCycleId' => DistributionCycle::current()?->id,
             'history' => $this->history($request->user())->with(['user:id,name', 'cycle:id,code,label'])
                 ->latest()->latest('id')->paginate(10)->withQueryString(),

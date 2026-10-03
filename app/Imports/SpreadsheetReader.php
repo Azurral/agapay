@@ -57,11 +57,20 @@ final class SpreadsheetReader
 
     private function reader(string $path, string $extension): IReader
     {
-        $reader = IOFactory::createReader(match (strtolower($extension)) {
+        $type = match (strtolower($extension)) {
             'csv' => 'Csv',
             'xls' => 'Xls',
             default => 'Xlsx',
-        });
+        };
+        // Workbooks are told apart by content: an .xls renamed .xlsx (or the reverse) is common in offices.
+        if ($type !== 'Csv') {
+            try {
+                $type = IOFactory::identify($path, ['Xlsx', 'Xls']);
+            } catch (Throwable) {
+                // Not a workbook at all: the chosen reader reports it.
+            }
+        }
+        $reader = IOFactory::createReader($type);
         $reader->setReadDataOnly(true);
 
         if ($reader instanceof Csv) {
