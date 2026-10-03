@@ -15,7 +15,7 @@ use Illuminate\Validation\Rule;
 /** Eligibility validation, claims, archive and restore of intervention records (paper rules 3, 5, 6). */
 final class ClaimService
 {
-    public function __construct(private readonly InterventionAssignment $assignment) {}
+    public function __construct(private readonly InterventionAssignment $assignment, private readonly InventoryService $inventory) {}
 
     public function validate(InterventionRecord $record, string $status, User $actor): InterventionRecord
     {
@@ -74,6 +74,11 @@ final class ClaimService
 
             $this->refuseRepeat($record);
 
+            // Spec rule 7: a stocked program's claim must say how much left the store.
+            if ($record->intervention->inventory_item_id && (float) ($input['quantity'] ?? $record->quantity) <= 0) {
+                throw new InterventionRuleViolation("Enter the quantity given out: {$record->intervention->name} is deducted from stock.");
+            }
+
             $deceased = $record->validation_status === InterventionRecord::VALIDATION_DECEASED;
             $proxy = trim((string) ($input['proxy_claimant'] ?? ''));
             $proof = trim((string) ($input['proof_note'] ?? ''));
@@ -101,7 +106,8 @@ final class ClaimService
                 'claimed_by' => $actor->id,
             ])->saveQuietly();
 
-            // Phase 5: inventory stock-out for the claimed quantity.
+            // Spec rule 7: deduct the stock (throws InsufficientStock, rolling the claim back).
+            $this->inventory->syncRecord($record, $actor);
 
             $keys = ['claim_status', 'validation_status', 'date_distributed', 'proxy_claimant', 'override_reason'];
             AuditLogger::record(
@@ -133,7 +139,7 @@ final class ClaimService
                 'date_distributed' => null, 'proxy_claimant' => null, 'proof_note' => null, 'override_reason' => null, 'claimed_by' => null,
             ])->saveQuietly();
 
-            // Phase 5: reverse the inventory stock-out.
+            $this->inventory->syncRecord($record, $actor, 'unclaimed');
 
             AuditLogger::record('Unclaimed Intervention', $record, null, $old, $record->only($keys), $actor);
 
@@ -151,6 +157,7 @@ final class ClaimService
             $record = $this->lockFresh($record);
             $record->forceFill(['delete_reason' => $reason, 'deleted_by' => $actor->id])->saveQuietly();
             $record->delete();   // Auditable: "Archived Intervention Record"
+            $this->inventory->syncRecord($record, $actor, 'archived');
         });
     }
 
@@ -176,6 +183,7 @@ final class ClaimService
 
             // Restored quietly so the trail gets one "Restored" row, not an extra "Updated" row for deleted_at.
             $record->forceFill(['delete_reason' => null, 'deleted_by' => null, 'deleted_at' => null])->saveQuietly();
+            $this->inventory->syncRecord($record, $actor);
             AuditLogger::record('Restored Intervention Record', $record, null, [], [], $actor);
 
             return $record;

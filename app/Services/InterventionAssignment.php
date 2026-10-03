@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 /** Creates and edits intervention records: one per beneficiary, intervention and cycle; LGU repeats flagged Duplicate. */
 final class InterventionAssignment
 {
+    public function __construct(private readonly InventoryService $inventory) {}
+
     /** @param array{quantity?: float|int|string|null, date_distributed?: string|null} $attrs */
     public function assign(Beneficiary $beneficiary, Intervention $intervention, DistributionCycle $cycle, array $attrs, User $actor): InterventionRecord
     {
@@ -22,6 +24,8 @@ final class InterventionAssignment
         }
 
         return DB::transaction(function () use ($beneficiary, $intervention, $cycle, $attrs, $actor) {
+            // One assignment per beneficiary at a time, so a double-submitted form cannot fill the same slot twice.
+            Beneficiary::whereKey($beneficiary->id)->lockForUpdate()->first();
             $this->ensureSlotFree($beneficiary, $intervention, $cycle);
 
             return InterventionRecord::create([
@@ -42,15 +46,21 @@ final class InterventionAssignment
     /** @param array{quantity?: float|int|string|null, date_distributed?: string|null, intervention_id?: int, distribution_cycle_id?: int} $attrs */
     public function reassign(InterventionRecord $record, array $attrs, User $actor): InterventionRecord
     {
-        $interventionId = (int) ($attrs['intervention_id'] ?? $record->intervention_id);
-        $cycleId = (int) ($attrs['distribution_cycle_id'] ?? $record->distribution_cycle_id);
-        $moved = $interventionId !== $record->intervention_id || $cycleId !== $record->distribution_cycle_id;
+        return DB::transaction(function () use ($record, $attrs, $actor) {
+            // Work on the current row, not the copy the caller loaded: someone may have unclaimed or archived it since.
+            $record = InterventionRecord::withTrashed()->lockForUpdate()->findOrFail($record->id);
+            if ($record->trashed()) {
+                throw new InterventionRuleViolation('This record is archived.');
+            }
 
-        if ($moved && $record->isClaimed()) {
-            throw new InterventionRuleViolation('Unclaim it first.');
-        }
+            $interventionId = (int) ($attrs['intervention_id'] ?? $record->intervention_id);
+            $cycleId = (int) ($attrs['distribution_cycle_id'] ?? $record->distribution_cycle_id);
+            $moved = $interventionId !== $record->intervention_id || $cycleId !== $record->distribution_cycle_id;
 
-        return DB::transaction(function () use ($record, $attrs, $interventionId, $cycleId, $moved) {
+            if ($moved && $record->isClaimed()) {
+                throw new InterventionRuleViolation('Unclaim it first.');
+            }
+
             $record->fill(Arr::only($attrs, ['quantity', 'date_distributed']));
 
             if ($moved) {
@@ -66,6 +76,7 @@ final class InterventionAssignment
             }
 
             $record->save();
+            $this->inventory->syncRecord($record, $actor, 'quantity reduced');
 
             return $record;
         });

@@ -6,6 +6,7 @@ use App\Models\Beneficiary;
 use App\Models\DistributionCycle;
 use App\Models\InterventionRecord;
 use App\Models\User;
+use App\Services\InventoryService;
 
 /**
  * Live sidebar counters. Each module plan replaces its own match arm
@@ -28,8 +29,8 @@ final class DashboardStats
                 ? InterventionRecord::where('distribution_cycle_id', $cycle->id)->distinct()->count('intervention_id')
                 : 0,
             'pending_validation' => InterventionRecord::where('validation_status', InterventionRecord::VALIDATION_PENDING)->count(),
-            'reports_filed_this_month',
-            'low_stock_items' => 0,
+            'low_stock_items' => app(InventoryService::class)->lowStockCount(),
+            'reports_filed_this_month' => 0,
         };
     }
 }

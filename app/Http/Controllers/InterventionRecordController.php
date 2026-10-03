@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\InsufficientStock;
 use App\Exceptions\InterventionRuleViolation;
 use App\Http\Requests\InterventionRecordRequest;
 use App\Models\Beneficiary;
@@ -71,6 +72,8 @@ class InterventionRecordController extends Controller
                     $this->claims->claim($record, $request->user(), ['date_distributed' => $data['date_distributed']], historical: true);
                 }
             });
+        } catch (InsufficientStock $e) {
+            return back()->withInput()->withErrors(['quantity' => $e->getMessage()]);
         } catch (InterventionRuleViolation $e) {
             return back()->withInput()->withErrors([$stage => $e->getMessage()]);
         }
@@ -103,6 +106,8 @@ class InterventionRecordController extends Controller
                     $this->claims->claim($record, $request->user(), ['date_distributed' => $data['date_distributed']], historical: true);
                 }
             });
+        } catch (InsufficientStock $e) {
+            return back()->withInput()->withErrors(['quantity' => $e->getMessage()]);
         } catch (InterventionRuleViolation $e) {
             return back()->withInput()->withErrors([$stage => $e->getMessage()]);
         }

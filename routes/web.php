@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InterventionController;
 use App\Http\Controllers\InterventionRecordActionController;
 use App\Http\Controllers\InterventionRecordController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RsbsaRegistrationController;
 use App\Http\Controllers\SearchController;
@@ -59,6 +60,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/intervention-records/{record}/edit', [InterventionRecordController::class, 'edit'])->name('intervention-records.edit');
         Route::put('/intervention-records/{record}', [InterventionRecordController::class, 'update'])->name('intervention-records.update');
         Route::get('/beneficiary-lookup', BeneficiaryLookupController::class)->name('beneficiaries.lookup');
+    });
+    Route::get('/inventory', [InventoryController::class, 'index'])->middleware('can:inventory.view')->name('inventory.index');
+    Route::post('/inventory/movements', [InventoryController::class, 'storeMovement'])->middleware('can:inventory.manage')->name('inventory.movements.store');
+    Route::middleware('can:inventory.manage')->group(function () {
+        Route::post('/inventory/items', [InventoryController::class, 'storeItem'])->name('inventory.items.store');
+        Route::put('/inventory/items/{item}', [InventoryController::class, 'updateItem'])->name('inventory.items.update');
     });
     Route::get('/validation', ValidationQueueController::class)->middleware('can:interventions.validate')->name('validation.index');
     Route::post('/intervention-records/{record}/validation', [InterventionRecordActionController::class, 'validate'])
