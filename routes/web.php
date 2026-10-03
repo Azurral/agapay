@@ -63,6 +63,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
     Route::get('/inventory', [InventoryController::class, 'index'])->middleware('can:inventory.view')->name('inventory.index');
     Route::post('/inventory/movements', [InventoryController::class, 'storeMovement'])->middleware('can:inventory.manage')->name('inventory.movements.store');
+    Route::middleware('can:inventory.manage')->group(function () {
+        Route::post('/inventory/items', [InventoryController::class, 'storeItem'])->name('inventory.items.store');
+        Route::put('/inventory/items/{item}', [InventoryController::class, 'updateItem'])->name('inventory.items.update');
+    });
     Route::get('/validation', ValidationQueueController::class)->middleware('can:interventions.validate')->name('validation.index');
     Route::post('/intervention-records/{record}/validation', [InterventionRecordActionController::class, 'validate'])
         ->middleware('can:interventions.validate')->name('intervention-records.validate');

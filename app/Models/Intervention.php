@@ -38,6 +38,12 @@ class Intervention extends Model
         return $query->where('is_active', true);
     }
 
+    /** "DA - Complete Fertilizer". */
+    public function sourcedName(): string
+    {
+        return "{$this->sourceLabel()} - {$this->name}";
+    }
+
     /** "DA" or "LGU". */
     public function sourceLabel(): string
     {

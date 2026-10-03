@@ -1,9 +1,12 @@
 <?php
 
 use App\Models\AuditLog;
+use App\Models\Beneficiary;
 use App\Models\InventoryItem;
 use App\Models\InventoryMovement;
 use App\Models\User;
+use App\Services\ClaimService;
+use App\Services\InventoryService;
 use Database\Seeders\DatabaseSeeder;
 
 beforeEach(function () {
@@ -97,4 +100,67 @@ it('renders without movements', function () {
     $this->actingAs($this->admin)->get('/inventory')->assertOk()
         ->assertSee('No stock movements yet.')
         ->assertSeeInOrder(['Certified Rice Seeds', 'sacks (20kg)', '0', '0', '0']);
+});
+
+it('adds an item and links interventions so claims deduct it', function () {
+    $molasses = program('da', 'Molasses');
+
+    $this->actingAs($this->encoder)->post('/inventory/items', [
+        'name' => 'Molasses', 'unit' => 'liter', 'unit_label' => 'liters', 'low_stock_threshold' => '10', 'interventions' => [$molasses->id],
+    ])->assertSessionHasNoErrors()->assertSessionHas('status', 'Molasses saved.');
+
+    $item = InventoryItem::where('name', 'Molasses')->sole();
+    expect($molasses->fresh()->inventory_item_id)->toBe($item->id)
+        ->and(AuditLog::where('action', 'Added Inventory Item')->value('record_label'))->toBe('Molasses');
+
+    app(InventoryService::class)->record($item, 'in', 100, today()->toDateString(), null, $this->admin);
+    $juan = Beneficiary::where(['first_name' => 'Juan', 'last_name' => 'Dela Cruz'])->sole();
+    $record = record($juan, $molasses, ['validation_status' => 'eligible', 'quantity' => 3]);
+    app(ClaimService::class)->claim($record, $this->admin);
+
+    expect($item->balance())->toBe(97.0);
+});
+
+it('updates a threshold and the low marker follows', function () {
+    $this->actingAs($this->admin)->put(route('inventory.items.update', $this->rice), [
+        'name' => 'Certified Rice Seeds', 'unit' => 'sack', 'unit_label' => 'sacks (20kg)', 'low_stock_threshold' => '30',
+        'interventions' => [program('da', 'Certified Rice Seeds')->id],
+    ])->assertSessionHasNoErrors();
+
+    expect($this->rice->fresh()->isLow())->toBeFalse()
+        ->and(AuditLog::where('action', 'Updated Inventory Item')->exists())->toBeTrue();
+    $this->actingAs($this->admin)->get('/inventory')->assertDontSee('title="Low stock (threshold 40)"', false);
+});
+
+it('refuses duplicate or incomplete items', function (array $input, string $field) {
+    $this->actingAs($this->admin)->post('/inventory/items', [
+        'name' => 'Seedling Trays', 'unit' => 'tray', 'unit_label' => 'trays', 'low_stock_threshold' => '5', ...$input,
+    ])->assertSessionHasErrorsIn('item', $field);
+})->with([
+    'duplicate ignoring case' => [['name' => '  certified RICE seeds '], 'name'],
+    'no name' => [['name' => ''], 'name'],
+    'no unit' => [['unit' => ''], 'unit'],
+    'negative threshold' => [['low_stock_threshold' => '-1'], 'low_stock_threshold'],
+    'unknown intervention' => [['interventions' => [99999]], 'interventions.0'],
+]);
+
+it('moves intervention links between items and unlinks the ones left out', function () {
+    $fertilizer = InventoryItem::where('name', 'Complete Fertilizer')->sole();
+
+    $this->actingAs($this->admin)->post('/inventory/items', [
+        'name' => 'Complete Fertilizer 14-14-14', 'unit' => 'sack', 'unit_label' => 'sacks (50kg)', 'low_stock_threshold' => '0',
+        'interventions' => [program('lgu', 'Complete Fertilizer')->id],
+    ])->assertSessionHasNoErrors();
+    expect(program('lgu', 'Complete Fertilizer')->inventory_item_id)->not->toBe($fertilizer->id)
+        ->and(program('da', 'Complete Fertilizer')->inventory_item_id)->toBe($fertilizer->id);
+
+    $this->actingAs($this->admin)->put(route('inventory.items.update', $fertilizer), [
+        'name' => 'Complete Fertilizer', 'unit' => 'sack', 'unit_label' => 'sacks (50kg)', 'low_stock_threshold' => '25', 'interventions' => [],
+    ])->assertSessionHasNoErrors();
+    expect(program('da', 'Complete Fertilizer')->inventory_item_id)->toBeNull();
+});
+
+it('shows the manage items modal to managers only', function () {
+    $this->actingAs($this->admin)->get('/inventory')->assertSee('Manage Items')->assertSee('Manage Inventory Items');
+    $this->actingAs($this->agritech)->post('/inventory/items', ['name' => 'X'])->assertForbidden();
 });

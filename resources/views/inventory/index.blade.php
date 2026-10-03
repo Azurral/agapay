@@ -44,6 +44,13 @@
         </div>
     </x-ui.card>
 
+    @if ($canManage)
+        <div class="-mt-[2px]">
+            <button type="button" x-data @click="$dispatch('open-modal', 'manage-items')"
+                    class="border-gradient pill-button h-[39px] w-[174px] rounded-[50px] text-[18px] font-bold leading-[24px]">Manage Items</button>
+        </div>
+    @endif
+
     {{-- Figma 470:785 Recent Movements --}}
     <section class="mt-[3px] rounded-[20px] border-[1.5px] border-black/10 bg-white pt-[17px] pr-[26.5px] pb-[18px] pl-[21.5px]">
         <h2 class="text-[16px] font-bold leading-[20px]">Recent Movements</h2>
@@ -94,6 +101,77 @@
                 </div>
                 <button type="submit" class="bg-brand-bar gradient-button mt-[12px] h-[44px] rounded-[50px] text-[18px] font-bold text-white">Save Stock Movement</button>
             </form>
+        </x-ui.modal>
+
+        {{-- No Figma frame: add items, set low-stock thresholds and choose which programs hand each item out. --}}
+        @php
+            $itemData = $allItems->map(fn ($i) => [
+                'id' => $i->id, 'name' => $i->name, 'unit' => $i->unit, 'unit_label' => $i->unit_label,
+                'low_stock_threshold' => \App\Models\InventoryItem::quantity($i->low_stock_threshold),
+                'interventions' => $i->interventions->pluck('id')->map(fn ($id) => (string) $id)->values(),
+                'url' => route('inventory.items.update', $i),
+            ])->values();
+            $itemFailed = $errors->item->any();
+            $oldForm = [
+                'id' => old('editing_id') ? (int) old('editing_id') : null, 'name' => old('name', ''), 'unit' => old('unit', ''),
+                'unit_label' => old('unit_label', ''), 'low_stock_threshold' => old('low_stock_threshold', '0'),
+                'interventions' => array_map('strval', (array) old('interventions', [])),
+            ];
+            $itemError = fn (string $name) => $errors->item->first($name);
+        @endphp
+        <x-ui.modal name="manage-items" title="Manage Inventory Items" :open="$itemFailed" width="760">
+            <div x-data="{
+                    items: @js($itemData), storeUrl: @js(route('inventory.items.store')),
+                    blank: { id: null, name: '', unit: '', unit_label: '', low_stock_threshold: '0', interventions: [] },
+                    form: @js($itemFailed ? $oldForm : null),
+                    init() { if (! this.form) this.form = { ...this.blank }; },
+                    edit(item) { this.form = { ...item, interventions: [...item.interventions] }; },
+                }" class="flex flex-col gap-[14px]">
+                <ul class="flex max-h-[180px] flex-col overflow-auto rounded-[10px] border border-field">
+                    <template x-for="item in items" :key="item.id">
+                        <li class="flex items-center justify-between border-b border-field px-[14px] py-[8px] text-[14px] font-bold last:border-b-0">
+                            <span><span x-text="item.name"></span> <span class="font-medium text-muted" x-text="'· ' + item.unit_label + ' · low at ' + item.low_stock_threshold"></span></span>
+                            <button type="button" @click="edit(item)" class="hover-tint rounded-[8px] px-[10px] py-[4px] text-brand">Edit</button>
+                        </li>
+                    </template>
+                </ul>
+
+                <form method="POST" :action="form.id ? items.find(i => i.id === form.id)?.url : storeUrl" class="flex flex-col gap-[12px]">
+                    @csrf
+                    <template x-if="form.id"><input type="hidden" name="_method" value="PUT"></template>
+                    <input type="hidden" name="editing_id" :value="form.id ?? ''">
+                    <p class="text-[14px] font-bold" x-text="form.id ? 'Edit ' + form.name : 'Add Item'"></p>
+                    <div class="grid grid-cols-2 gap-[12px]">
+                        @foreach ([['name', 'Name', 'e.g. Molasses'], ['unit', 'Unit (singular)', 'e.g. liter'], ['unit_label', 'Unit label', 'e.g. liters'], ['low_stock_threshold', 'Low stock at', '0 = never']] as [$field, $label, $hint])
+                            <div>
+                                <label @class([$box, 'border-field' => ! $itemError($field), 'border-bad' => $itemError($field)])>
+                                    <span class="shrink-0">{{ $label }}:</span>
+                                    <input type="{{ $field === 'low_stock_threshold' ? 'number' : 'text' }}" name="{{ $field }}" x-model="form.{{ $field }}"
+                                           placeholder="{{ $hint }}" required @if ($field === 'low_stock_threshold') min="0" step="0.01" @endif class="{{ $control }}">
+                                </label>
+                                @if ($itemError($field))<p class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger">{{ $itemError($field) }}</p>@endif
+                            </div>
+                        @endforeach
+                    </div>
+                    <fieldset class="rounded-[10px] border border-field px-[14px] py-[10px]">
+                        <legend class="px-[4px] text-[14px] font-bold">Programs that hand out this item</legend>
+                        <div class="grid grid-cols-2 gap-x-[12px] gap-y-[6px] text-[14px] font-medium">
+                            @foreach (\App\Models\Intervention::with('inventoryItem:id,name')->orderBy('source')->orderBy('name')->get() as $program)
+                                <label class="flex cursor-pointer items-center gap-[8px]">
+                                    <input type="checkbox" name="interventions[]" value="{{ $program->id }}" x-model="form.interventions" class="size-[16px] accent-brand">
+                                    <span>{{ $program->sourcedName() }}</span>
+                                    @if ($program->inventoryItem)<span class="text-[12px] text-muted">(now: {{ $program->inventoryItem->name }})</span>@endif
+                                </label>
+                            @endforeach
+                        </div>
+                        @if ($errors->item->has('interventions.*'))<p class="mt-[4px] text-[12px] font-semibold text-danger">{{ $errors->item->first('interventions.*') }}</p>@endif
+                    </fieldset>
+                    <div class="flex items-center gap-[12px]">
+                        <button type="submit" class="bg-brand-bar gradient-button h-[44px] flex-1 rounded-[50px] text-[16px] font-bold text-white" x-text="form.id ? 'Save Changes' : 'Add Item'">Add Item</button>
+                        <button type="button" x-show="form.id" @click="form = { ...blank }" class="text-[14px] font-medium text-muted hover:text-brand">New item instead</button>
+                    </div>
+                </form>
+            </div>
         </x-ui.modal>
     @endif
 </x-layouts.app>

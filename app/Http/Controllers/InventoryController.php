@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\InsufficientStock;
+use App\Models\Intervention;
 use App\Models\InventoryItem;
 use App\Models\InventoryMovement;
 use App\Models\Role;
+use App\Services\AuditLogger;
 use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -31,7 +35,7 @@ class InventoryController extends Controller
                 ]))
                 // Creation order, as in Figma 470:785 (new items appear at the end).
                 ->orderBy('id')->get(),
-            'allItems' => InventoryItem::orderBy('name')->get(['id', 'name', 'unit_label']),
+            'allItems' => InventoryItem::with('interventions:id,inventory_item_id')->orderBy('name')->get(),
             'movements' => InventoryMovement::with('item')->latest('movement_date')->latest('id')->limit(10)->get(),
         ]);
     }
@@ -59,5 +63,56 @@ class InventoryController extends Controller
         }
 
         return back()->with('status', "{$movement->signedLabel()} · {$movement->item->name} recorded.");
+    }
+
+    public function storeItem(Request $request): RedirectResponse
+    {
+        return $this->saveItem($request, new InventoryItem);
+    }
+
+    public function updateItem(Request $request, InventoryItem $item): RedirectResponse
+    {
+        return $this->saveItem($request, $item);
+    }
+
+    /**
+     * Add or edit an item (no Figma frame: a modal under the mirrored layout, spec §2).
+     * `interventions` is the full set of programs that hand this item out; programs left out are unlinked.
+     */
+    private function saveItem(Request $request, InventoryItem $item): RedirectResponse
+    {
+        $request->merge(collect(['name', 'unit', 'unit_label'])
+            ->filter(fn (string $key) => is_string($request->input($key)))
+            ->mapWithKeys(fn (string $key) => [$key => trim(preg_replace('/\s+/', ' ', $request->input($key)))])->all());
+
+        $data = Validator::make($request->all(), [
+            'name' => ['required', 'string', 'max:100', function (string $attribute, string $value, \Closure $fail) use ($item) {
+                $taken = InventoryItem::whereRaw('LOWER(name) = ?', [mb_strtolower($value)])->whereKeyNot($item->id)->exists();
+                if ($taken) {
+                    $fail('An item with this name already exists.');
+                }
+            }],
+            'unit' => ['required', 'string', 'max:20'],
+            'unit_label' => ['required', 'string', 'max:40'],
+            'low_stock_threshold' => ['required', 'numeric', 'min:0', 'max:99999'],
+            'interventions' => ['nullable', 'array'],
+            'interventions.*' => ['integer', Rule::exists('interventions', 'id')],
+        ], ['interventions.*.exists' => 'Choose programs from the list.'])->validateWithBag('item');
+
+        DB::transaction(function () use ($item, $data, $request) {
+            $oldLinks = $item->exists ? $item->interventions()->orderBy('id')->get()->map->sourcedName()->all() : [];
+            $item->fill(Arr::only($data, ['name', 'unit', 'unit_label', 'low_stock_threshold']))->save();   // Auditable: Added / Updated
+
+            $wanted = array_map('intval', $data['interventions'] ?? []);
+            Intervention::where('inventory_item_id', $item->id)->whereNotIn('id', $wanted)->update(['inventory_item_id' => null]);
+            Intervention::whereIn('id', $wanted)->update(['inventory_item_id' => $item->id]);
+
+            $newLinks = $item->interventions()->orderBy('id')->get()->map->sourcedName()->all();
+            if ($oldLinks !== $newLinks && $item->wasRecentlyCreated === false) {
+                AuditLogger::record('Updated Inventory Item', $item, null, ['interventions' => $oldLinks], ['interventions' => $newLinks], $request->user());
+            }
+        });
+
+        return back()->with('status', "{$item->name} saved.");
     }
 }
