@@ -81,6 +81,9 @@ return [
 
     'stat_colors' => ['#da37ff', '#8037ff', '#4671ff', '#0bcaff'],
 
+    // Rows in the damage report PDF table (DomPDF needs ~0.4 MB per row); the Excel export has no cap.
+    'damage_pdf_max_rows' => 1000,
+
     // Excel import limits (php.ini must allow uploads this large: upload_max_filesize 25M, post_max_size 30M, memory_limit 512M).
     'import' => [
         'max_kilobytes' => 25 * 1024,

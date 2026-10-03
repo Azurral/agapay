@@ -4,6 +4,11 @@ use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BeneficiaryController;
 use App\Http\Controllers\BeneficiaryLookupController;
+use App\Http\Controllers\DamageExportController;
+use App\Http\Controllers\DamagePhotoController;
+use App\Http\Controllers\DamageReferenceController;
+use App\Http\Controllers\DamageReportActionController;
+use App\Http\Controllers\DamageReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ImportController;
@@ -61,7 +66,6 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/intervention-records', [InterventionRecordController::class, 'store'])->name('intervention-records.store');
         Route::get('/intervention-records/{record}/edit', [InterventionRecordController::class, 'edit'])->name('intervention-records.edit');
         Route::put('/intervention-records/{record}', [InterventionRecordController::class, 'update'])->name('intervention-records.update');
-        Route::get('/beneficiary-lookup', BeneficiaryLookupController::class)->name('beneficiaries.lookup');
     });
     Route::get('/inventory', [InventoryController::class, 'index'])->middleware('can:inventory.view')->name('inventory.index');
     Route::post('/inventory/movements', [InventoryController::class, 'storeMovement'])->middleware('can:inventory.manage')->name('inventory.movements.store');
@@ -69,6 +73,34 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/inventory/items', [InventoryController::class, 'storeItem'])->name('inventory.items.store');
         Route::put('/inventory/items/{item}', [InventoryController::class, 'updateItem'])->name('inventory.items.update');
     });
+    // Farmer search for the Add Record and New Damage Report forms (existing profiles only).
+    Route::get('/beneficiary-lookup', BeneficiaryLookupController::class)
+        ->middleware('can.any:intervention_records.manage,damage.create')->name('beneficiaries.lookup');
+
+    Route::middleware('can:damage.create')->group(function () {
+        Route::get('/damage-reports/create', [DamageReportController::class, 'create'])->name('damage.create');
+        Route::post('/damage-reports', [DamageReportController::class, 'store'])->name('damage.store');
+        Route::get('/damage-reports/{report}/edit', [DamageReportController::class, 'edit'])->name('damage.edit');
+        Route::put('/damage-reports/{report}', [DamageReportController::class, 'update'])->name('damage.update');
+    });
+    Route::middleware('can:damage.view')->group(function () {
+        Route::get('/damage-reports', [DamageReportController::class, 'index'])->name('damage.index');
+        // Before /damage-reports/{report}, so "export" and "pdf" are not read as report ids.
+        Route::get('/damage-reports/export', [DamageExportController::class, 'excel'])->middleware('can:export.run')->name('damage.export');
+        Route::get('/damage-reports/pdf', [DamageExportController::class, 'pdf'])->name('damage.pdf');
+        Route::get('/damage-reports/{report}', [DamageReportController::class, 'show'])->withTrashed()->name('damage.show');
+        Route::get('/damage-photos/{photo}', DamagePhotoController::class)->name('damage.photos.show');
+    });
+
+    Route::post('/damage-reports/{report}/validate', [DamageReportActionController::class, 'validate'])
+        ->middleware('can:damage.validate')->name('damage.validate');
+    Route::middleware('can:damage.configure')->group(function () {
+        Route::put('/damage-reference/crops', [DamageReferenceController::class, 'updateCrops'])->name('damage.crops.update');
+        Route::post('/damage-reference/disasters', [DamageReferenceController::class, 'storeDisaster'])->name('damage.disasters.store');
+        Route::post('/damage-reports/{report}/archive', [DamageReportActionController::class, 'archive'])->name('damage.archive');
+        Route::post('/damage-reports/{report}/restore', [DamageReportActionController::class, 'restore'])->withTrashed()->name('damage.restore');
+    });
+
     Route::middleware('can:export.run')->group(function () {
         Route::get('/export', [ExportController::class, 'index'])->name('export.index');
         Route::get('/export/download', [ExportController::class, 'download'])->name('export.download');

@@ -26,9 +26,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
-        // A spreadsheet bigger than php.ini's post_max_size never reaches the controller (and has no session yet):
-        // send the uploader back to the upload card, which shows the size message.
-        $exceptions->render(fn (PostTooLargeException $e, Request $request) => $request->is('import')
-            ? redirect()->route('import.index', ['too_large' => 1])
-            : null);
+        // An upload bigger than php.ini's post_max_size never reaches the controller (and has no session yet):
+        // send the uploader back to the form, which shows the size message.
+        $exceptions->render(fn (PostTooLargeException $e, Request $request) => match (true) {
+            $request->is('import') => redirect()->route('import.index', ['too_large' => 1]),
+            $request->is('damage-reports') => redirect()->route('damage.create', ['too_large' => 1]),
+            $request->is('damage-reports/*') => redirect()->to('/damage-reports/'.(int) $request->segment(2).'/edit?too_large=1'),
+            default => null,
+        });
     })->create();

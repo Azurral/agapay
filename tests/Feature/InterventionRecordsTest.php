@@ -134,7 +134,8 @@ it('does not let the encoder dropdown skip Agri Tech validation', function () {
 
 it('returns beneficiary lookup results', function () {
     $this->actingAs($this->encoder)->getJson('/beneficiary-lookup?q=juan')->assertOk()
-        ->assertExactJson([['id' => ($this->person)('Juan', 'Dela Cruz')->id, 'name' => 'Juan Dela Cruz', 'rsbsa' => 'RSBSA-0231', 'barangay' => 'Poblacion']]);
+        ->assertExactJson([['id' => ($this->person)('Juan', 'Dela Cruz')->id, 'name' => 'Juan Dela Cruz', 'rsbsa' => 'RSBSA-0231', 'barangay' => 'Poblacion',
+            'barangay_id' => ($this->person)('Juan', 'Dela Cruz')->barangay_id, 'farm_location' => null, 'crop_type' => 'Rice']]);
 
     $this->actingAs($this->encoder)->getJson('/beneficiary-lookup?q[]=juan')->assertOk()->assertExactJson([]);
     $this->actingAs($this->encoder)->getJson('/beneficiary-lookup?q=%25')->assertOk()->assertExactJson([]);
@@ -149,6 +150,5 @@ it('shows the add form with Figma fields', function () {
 
 it('forbids agri techs', function () {
     $this->actingAs($this->agritech)->get('/intervention-records')->assertForbidden();
-    $this->actingAs($this->agritech)->get('/beneficiary-lookup?q=juan')->assertForbidden();
     $this->actingAs($this->agritech)->post('/intervention-records', recordInput())->assertForbidden();
 });
