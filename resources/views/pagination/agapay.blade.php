@@ -1,9 +1,10 @@
 {{-- Light pagination matching the app: white pills, field-grey border, brand indigo for the current page. --}}
 @if ($paginator->hasPages())
     @php
-        $pill = 'flex h-[36px] min-w-[36px] items-center justify-center rounded-[10px] border border-field bg-white px-[10px] text-[14px] font-bold';
-        $link = $pill.' text-ink transition-colors hover:border-brand-soft hover:bg-[#efeaff] hover:text-brand';
-        $off = $pill.' cursor-not-allowed text-muted';
+        $shape = 'flex h-[36px] min-w-[36px] items-center justify-center rounded-[10px] border px-[10px] text-[14px] font-bold';
+        $link = $shape.' border-field bg-white text-ink transition-colors hover:border-brand-soft hover:bg-[#efeaff] hover:text-brand';
+        $off = $shape.' border-field bg-white cursor-not-allowed text-muted';
+        $current = $shape.' border-brand bg-brand text-white';
     @endphp
     <nav data-agapay-pagination role="navigation" aria-label="Pagination" class="flex items-center justify-between gap-[12px]">
         <p class="text-[13px] font-medium text-muted">
@@ -23,7 +24,7 @@
                 @if (is_array($element))
                     @foreach ($element as $page => $url)
                         @if ($page == $paginator->currentPage())
-                            <span aria-current="page" class="{{ $pill }} border-brand bg-brand text-white">{{ $page }}</span>
+                            <span aria-current="page" class="{{ $current }}">{{ $page }}</span>
                         @else
                             <a href="{{ $url }}" class="{{ $link }}" aria-label="Go to page {{ $page }}">{{ $page }}</a>
                         @endif
