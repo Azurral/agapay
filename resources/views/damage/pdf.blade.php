@@ -8,14 +8,14 @@
         @page { margin: 28px 32px 40px; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 9.5px; color: #2f2f2f; }
         h1 { font-size: 16px; margin: 2px 0 0; }
-        .office { font-size: 11px; font-weight: bold; color: #5a5de3; }
+        .office { font-size: 11px; font-weight: bold; color: #000; }
         .filters { margin-top: 4px; color: #666; }
         table { width: 100%; border-collapse: collapse; }
         .summary { margin: 12px 0; }
-        .summary td { width: 25%; background: #f7f7f9; padding: 8px 10px; border: 3px solid #fff; }
+        .summary td { width: 25%; background: #fff; border: 1px solid #999; padding: 8px 10px; }
         .summary .label { color: #666; font-size: 9px; }
-        .summary .value { font-size: 15px; font-weight: bold; color: #5a5de3; }
-        .rows th { text-align: left; color: #7e80ff; font-weight: bold; border-bottom: 1.5px solid #ccc; padding: 5px 4px; }
+        .summary .value { font-size: 15px; font-weight: bold; color: #000; }
+        .rows th { text-align: left; color: #000; font-weight: bold; border-bottom: 1.5px solid #000; padding: 5px 4px; }
         .rows td { padding: 5px 4px; border-bottom: 0.5px solid #e2e2e2; vertical-align: top; }
         .rows tr { page-break-inside: avoid; }
         .num { text-align: right; }

@@ -16,6 +16,7 @@ use App\Http\Controllers\InterventionController;
 use App\Http\Controllers\InterventionRecordActionController;
 use App\Http\Controllers\InterventionRecordController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RsbsaRegistrationController;
 use App\Http\Controllers\SearchController;
@@ -99,6 +100,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/damage-reference/disasters', [DamageReferenceController::class, 'storeDisaster'])->name('damage.disasters.store');
         Route::post('/damage-reports/{report}/archive', [DamageReportActionController::class, 'archive'])->name('damage.archive');
         Route::post('/damage-reports/{report}/restore', [DamageReportActionController::class, 'restore'])->withTrashed()->name('damage.restore');
+    });
+
+    Route::middleware('can:reports.generate')->group(function () {
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+        Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
     });
 
     Route::middleware('can:export.run')->group(function () {
