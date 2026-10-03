@@ -6,6 +6,8 @@
     $label = 'mb-[6px] block text-[14px] font-bold leading-[20px]';
     $border = fn (string $name) => $errors->has($name) ? 'border-bad' : 'border-black/15';
     $arrow = asset('images/figma/icons/arrow-down.svg');
+    // A forged array in old input falls back to the default.
+    $old = fn (string $field, $default = '') => is_scalar($input = old($field)) ? (string) $input : $default;
 @endphp
 <x-layouts.app title="REPORT GENERATION">
     {{-- Figma 340:51 (Admin) / 407:1694 (Agri Tech) / 470:2205 (Data Encoder) --}}
@@ -23,7 +25,7 @@
                 <span class="{{ $pill }} {{ $border('program') }}">
                     <select id="program" name="program" class="{{ $field }}">
                         @foreach (ReportCriteria::PROGRAMS as $value => $text)
-                            <option value="{{ $value }}" @selected(old('program', 'all') === $value)>Program: {{ $text }}</option>
+                            <option value="{{ $value }}" @selected($old('program', 'all') === $value)>Program: {{ $text }}</option>
                         @endforeach
                     </select>
                     <img src="{{ $arrow }}" alt="" class="pointer-events-none absolute top-[12.5px] right-[17px] size-[18px]">
@@ -35,7 +37,7 @@
                 <span class="{{ $pill }} {{ $border('format') }}">
                     <select id="format" name="format" class="{{ $field }}">
                         @foreach (ReportCriteria::FORMATS as $value => $text)
-                            <option value="{{ $value }}" @selected(old('format', 'pdf') === $value)>Format: {{ $text }}</option>
+                            <option value="{{ $value }}" @selected($old('format', 'pdf') === $value)>Format: {{ $text }}</option>
                         @endforeach
                     </select>
                     <img src="{{ $arrow }}" alt="" class="pointer-events-none absolute top-[12.5px] right-[17px] size-[18px]">
@@ -46,7 +48,7 @@
                 <div>
                     <label for="{{ $name }}" class="{{ $label }}">{{ $text }}</label>
                     <span class="{{ $pill }} {{ $border($name) }}">
-                        <input id="{{ $name }}" type="date" name="{{ $name }}" value="{{ old($name) }}" max="{{ now()->toDateString() }}" class="{{ $field }} cursor-text pr-[16px]">
+                        <input id="{{ $name }}" type="date" name="{{ $name }}" value="{{ $old($name) }}" max="{{ now()->toDateString() }}" class="{{ $field }} cursor-text pr-[16px]">
                     </span>
                     @error($name)<p class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger">{{ $message }}</p>@enderror
                 </div>
@@ -56,7 +58,7 @@
                 <span class="{{ $pill }} {{ $border('distribution_cycle_id') }}">
                     <select id="distribution_cycle_id" name="distribution_cycle_id" required class="{{ $field }}">
                         @foreach ($cycles as $cycle)
-                            <option value="{{ $cycle->id }}" @selected((string) old('distribution_cycle_id', $currentCycleId) === (string) $cycle->id)>Cycle: {{ $cycle->label }}</option>
+                            <option value="{{ $cycle->id }}" @selected($old('distribution_cycle_id', (string) $currentCycleId) === (string) $cycle->id)>Cycle: {{ $cycle->label }}</option>
                         @endforeach
                     </select>
                     <img src="{{ $arrow }}" alt="" class="pointer-events-none absolute top-[12.5px] right-[17px] size-[18px]">

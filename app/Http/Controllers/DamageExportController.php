@@ -6,6 +6,7 @@ use App\Exports\DamageReportExport;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Support\DamageReportFilters;
+use App\Support\MemoryLimit;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -28,7 +29,7 @@ class DamageExportController extends Controller
     {
         // DomPDF needs ~0.4 MB per row; the row cap in pdfData() keeps a big event within this.
         set_time_limit(300);
-        ini_set('memory_limit', '512M');
+        MemoryLimit::atLeast('512M');   // DomPDF needs ~0.4 MB per table row
         $filters = DamageReportFilters::fromRequest($request);
         $data = self::pdfData($filters, $request->user());
         AuditLogger::record('Generated Damage Report PDF', null, 'Damage Reports', [], ['filters' => $filters->describe(), 'rows' => $data['totalRows']]);

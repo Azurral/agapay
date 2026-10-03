@@ -4,10 +4,12 @@
     $control = 'ml-[6px] h-full min-w-0 flex-1 bg-transparent font-bold outline-none placeholder:text-muted';
     $border = fn (string ...$fields) => $errors->hasAny($fields) ? 'border-bad' : 'border-field';
     $fieldError = fn (string $field) => $errors->first($field);
-    $value = fn (string $field, $default = '') => old($field, $report?->{$field} ?? $default);
-    $area = fn (string $field) => old($field, $report ? rtrim(rtrim((string) $report->{$field}, '0'), '.') : '');
-    $pickedId = old('beneficiary_id', $report?->beneficiary_id);
-    $picked = $pickedId ? \App\Models\Beneficiary::find($pickedId) : null;
+    // Old input is used only when it is a plain value: a forged array falls back to the saved or default value.
+    $old = fn (string $field, $default = '') => is_scalar($input = old($field)) ? $input : $default;
+    $value = fn (string $field, $default = '') => $old($field, $report?->{$field} ?? $default);
+    $area = fn (string $field) => $old($field, $report ? rtrim(rtrim((string) $report->{$field}, '0'), '.') : '');
+    $pickedId = $old('beneficiary_id', $report?->beneficiary_id);
+    $picked = $pickedId && ctype_digit((string) $pickedId) ? \App\Models\Beneficiary::find((int) $pickedId) : null;
     $cropValues = $crops->mapWithKeys(fn ($c) => [$c->id => [
         'name' => $c->name, 'yield' => (float) $c->yield_mt_per_ha, 'price' => (float) $c->price_per_mt, 'factor' => (float) $c->partial_loss_factor,
     ]]);
@@ -25,7 +27,7 @@
           x-data="{
               crops: @js($cropValues), crop: @js((string) $value('crop_id')), total: @js((string) $area('total_area_ha')), partial: @js((string) $area('partial_area_ha')),
               barangay: @js((string) $value('barangay_id')), farm: @js((string) $value('farm_location')),
-              lat: @js((string) old('latitude', $report?->latitude ? (float) $report->latitude : '')), lng: @js((string) old('longitude', $report?->longitude ? (float) $report->longitude : '')),
+              lat: @js((string) $old('latitude', $report?->latitude ? (float) $report->latitude : '')), lng: @js((string) $old('longitude', $report?->longitude ? (float) $report->longitude : '')),
               locating: false, locateError: '', files: [], over: false, busy: false,
               get estimate() {
                   const c = this.crops[this.crop]; const t = parseFloat(this.total) || 0; const p = parseFloat(this.partial) || 0;
@@ -130,7 +132,12 @@
                         </template>
                         <li x-show="results.length === 0" class="px-[16px] py-[8px] text-muted">No farmer found. Register them first under Add Beneficiary.</li>
                     </ul>
-                    @if ($fieldError('beneficiary_id'))<p class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger">{{ $fieldError('beneficiary_id') }}</p>@endif
+                    @if ($fieldError('beneficiary_id'))
+                        <p class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger">
+                            {{ $fieldError('beneficiary_id') }}
+                            @if ($errors->has('existing_report'))<a href="{{ $errors->first('existing_report') }}" class="text-brand underline">Open the existing report</a>@endif
+                        </p>
+                    @endif
                 </div>
                 <div>
                     <label @class([$box, $border('crop_id', 'farm_location')])>

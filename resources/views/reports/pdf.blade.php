@@ -17,7 +17,7 @@
         .criteria { margin-top: 4px; color: #666; }
         table { width: 100%; border-collapse: collapse; }
         .summary { margin-top: 12px; }
-        .summary td { width: 25%; background: #fff; border: 1px solid #999; padding: 8px 10px; }
+        .summary td { width: 20%; background: #fff; border: 1px solid #999; padding: 8px 10px; }
         .summary .label { color: #666; font-size: 9px; }
         .summary .value { font-size: 15px; font-weight: bold; color: #000; }
         .rows th { text-align: left; color: #000; border-bottom: 1.5px solid #000; padding: 4px; }
@@ -41,31 +41,32 @@
             <td><div class="label">Assigned</div><div class="value">{{ number_format($summary['assigned']) }}</div></td>
             <td><div class="label">Claimed</div><div class="value">{{ number_format($summary['claimed']) }}</div></td>
             <td><div class="label">Unclaimed</div><div class="value">{{ number_format($summary['unclaimed']) }}</div></td>
+            <td><div class="label">Not Claimable</div><div class="value">{{ number_format($summary['not_claimable']) }}</div></td>
         </tr>
     </table>
 
     <h2>Per Intervention</h2>
     <table class="rows">
-        <thead><tr><th>Program</th><th>Intervention</th><th class="num">Assigned</th><th class="num">Claimed</th><th class="num">Unclaimed</th><th class="num">Quantity Distributed</th></tr></thead>
+        <thead><tr><th>Program</th><th>Intervention</th><th class="num">Assigned</th><th class="num">Claimed</th><th class="num">Unclaimed</th><th class="num">Not Claimable</th><th class="num">Quantity Distributed</th></tr></thead>
         <tbody>
             @forelse ($interventions as $row)
                 <tr><td>{{ $row['source'] }}</td><td>{{ $row['name'] }}</td><td class="num">{{ $row['assigned'] }}</td><td class="num">{{ $row['claimed'] }}</td>
-                    <td class="num">{{ $row['unclaimed'] }}</td><td class="num">{{ $amount($row['quantity'], $row['unit']) }}</td></tr>
+                    <td class="num">{{ $row['unclaimed'] }}</td><td class="num">{{ $row['not_claimable'] }}</td><td class="num">{{ $amount($row['quantity'], $row['unit']) }}</td></tr>
             @empty
-                <tr><td colspan="6" class="muted">No intervention records for these criteria.</td></tr>
+                <tr><td colspan="7" class="muted">No intervention records for these criteria.</td></tr>
             @endforelse
         </tbody>
     </table>
 
     <h2>Per Barangay</h2>
     <table class="rows">
-        <thead><tr><th>Barangay</th><th class="num">Beneficiaries</th><th class="num">Assigned</th><th class="num">Claimed</th><th class="num">Unclaimed</th></tr></thead>
+        <thead><tr><th>Barangay</th><th class="num">Beneficiaries</th><th class="num">Assigned</th><th class="num">Claimed</th><th class="num">Unclaimed</th><th class="num">Not Claimable</th></tr></thead>
         <tbody>
             @forelse ($barangays as $row)
                 <tr><td>{{ $row['name'] }}</td><td class="num">{{ $row['beneficiaries'] }}</td><td class="num">{{ $row['assigned'] }}</td>
-                    <td class="num">{{ $row['claimed'] }}</td><td class="num">{{ $row['unclaimed'] }}</td></tr>
+                    <td class="num">{{ $row['claimed'] }}</td><td class="num">{{ $row['unclaimed'] }}</td><td class="num">{{ $row['not_claimable'] }}</td></tr>
             @empty
-                <tr><td colspan="5" class="muted">No intervention records for these criteria.</td></tr>
+                <tr><td colspan="6" class="muted">No intervention records for these criteria.</td></tr>
             @endforelse
         </tbody>
     </table>

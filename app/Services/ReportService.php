@@ -10,6 +10,7 @@ use App\Models\InterventionRecord;
 use App\Models\InventoryItem;
 use App\Models\InventoryMovement;
 use App\Models\User;
+use App\Support\MemoryLimit;
 use App\Support\ReportCriteria;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,12 +28,15 @@ use Throwable;
  */
 final class ReportService
 {
+    /** Validation statuses that end a record's claim (spec rule 6). */
+    public const NOT_CLAIMABLE = [InterventionRecord::VALIDATION_DUPLICATE, InterventionRecord::VALIDATION_RELOCATED, InterventionRecord::VALIDATION_INACTIVE];
+
     /**
      * @return array{
      *     criteria: array<string, string>,
-     *     summary: array{beneficiaries: int, assigned: int, claimed: int, unclaimed: int},
-     *     interventions: list<array{source: string, name: string, unit: string, assigned: int, claimed: int, unclaimed: int, quantity: float}>,
-     *     barangays: list<array{name: string, beneficiaries: int, assigned: int, claimed: int, unclaimed: int, quantity: float}>,
+     *     summary: array{beneficiaries: int, assigned: int, claimed: int, unclaimed: int, not_claimable: int},
+     *     interventions: list<array{source: string, name: string, unit: string, assigned: int, claimed: int, unclaimed: int, not_claimable: int, quantity: float}>,
+     *     barangays: list<array{name: string, beneficiaries: int, assigned: int, claimed: int, unclaimed: int, not_claimable: int, quantity: float}>,
      *     beneficiaries: list<array{name: string, rsbsa: string, barangay: string, program: string, quantity: string, validation: string, claim: string, date: string}>,
      *     inventory: list<array{item: string, unit_label: string, used: float}>
      * }
@@ -84,7 +88,7 @@ final class ReportService
                 'claim' => $r->claimLabel(),
                 'date' => $r->date_distributed?->format('M j, Y') ?? '—',
             ])->all(),
-            'inventory' => $this->inventory($records->modelKeys()),
+            'inventory' => $this->inventory($criteria),
         ];
     }
 
@@ -92,7 +96,7 @@ final class ReportService
     public function generate(ReportCriteria $criteria, User $actor): GeneratedReport
     {
         set_time_limit(300);
-        ini_set('memory_limit', '512M');   // DomPDF needs ~0.4 MB per table row
+        MemoryLimit::atLeast('512M');   // DomPDF needs ~0.4 MB per table row
 
         $data = $this->build($criteria);
         $fileName = sprintf('agapay-report-%s-%s-%s.%s', Str::slug($criteria->cycle->code), $criteria->program, today()->format('Y-m-d'), $criteria->format);
@@ -157,12 +161,18 @@ final class ReportService
                     ->when($criteria->end, fn (Builder $q) => $q->whereDate('date_distributed', '<=', $criteria->end->toDateString())))));
     }
 
-    /** @return array{assigned: int, claimed: int, unclaimed: int} */
+    /** @return array{assigned: int, claimed: int, unclaimed: int, not_claimable: int} */
     private function counts(Collection $records): array
     {
         $claimed = $records->filter(fn (InterventionRecord $r) => $r->isClaimed())->count();
+        // Duplicate / relocated / inactive records will never be claimed: they are not "waiting".
+        $notClaimable = $records->filter(fn (InterventionRecord $r) => ! $r->isClaimed()
+            && in_array($r->validation_status, self::NOT_CLAIMABLE, true))->count();
 
-        return ['assigned' => $records->count(), 'claimed' => $claimed, 'unclaimed' => $records->count() - $claimed];
+        return [
+            'assigned' => $records->count(), 'claimed' => $claimed,
+            'unclaimed' => $records->count() - $claimed - $notClaimable, 'not_claimable' => $notClaimable,
+        ];
     }
 
     private function quantity(Collection $records): float
@@ -173,18 +183,14 @@ final class ReportService
     /**
      * Net automatic stock-out of the reported records, per item.
      *
-     * @param  list<int>  $recordIds
+     * @param  ReportCriteria  $criteria  the same records as the report (a subquery, not a long id list)
      * @return list<array{item: string, unit_label: string, used: float}>
      */
-    private function inventory(array $recordIds): array
+    private function inventory(ReportCriteria $criteria): array
     {
-        if ($recordIds === []) {
-            return [];
-        }
-
         $net = InventoryMovement::query()
             ->where('source', InventoryMovement::AUTO)
-            ->whereIn('intervention_record_id', $recordIds)
+            ->whereIn('intervention_record_id', $this->records($criteria)->select('intervention_records.id'))
             ->get(['inventory_item_id', 'direction', 'quantity'])
             ->groupBy('inventory_item_id')
             ->map(fn (Collection $moves) => round($moves->sum(fn ($m) => $m->direction === InventoryMovement::OUT ? (float) $m->quantity : -(float) $m->quantity), 2))
