@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateBeneficiaryRequest;
 use App\Models\Barangay;
 use App\Models\Beneficiary;
+use App\Models\DistributionCycle;
+use App\Models\InterventionRecord;
 use App\Models\Role;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
@@ -39,9 +41,25 @@ class BeneficiaryController extends Controller
     {
         $user = $request->user();
 
+        $records = $beneficiary->interventionRecords()->with(['intervention', 'cycle'])
+            ->orderByDesc('distribution_cycle_id')->orderByDesc('id')->get();
+        $others = $beneficiary->otherHouseholdMembers();
+        $cycle = DistributionCycle::current();
+
         return view('beneficiaries.show', [
             'beneficiary' => $beneficiary->load(['barangay:id,name', 'household']),
-            'others' => $beneficiary->otherHouseholdMembers(),
+            'others' => $others,
+            'records' => $records,
+            'claimable' => $records->filter(fn (InterventionRecord $r) => ! $r->isClaimed()
+                && in_array($r->validation_status, InterventionRecord::CLAIMABLE, true))->values(),
+            // The banner's claim check: a household member's claim in the current cycle.
+            'householdClaim' => $cycle && $others->isNotEmpty()
+                ? InterventionRecord::with(['beneficiary', 'intervention'])
+                    ->whereIn('beneficiary_id', $others->pluck('id'))
+                    ->where('distribution_cycle_id', $cycle->id)
+                    ->where('claim_status', InterventionRecord::CLAIM_CLAIMED)
+                    ->latest('date_distributed')->latest('id')->first()
+                : null,
             // 430:1461 is the only Data Encoder profile frame, so encoders always edit;
             // Agri Techs verify eligibility (407:1181); Administrators process claims (329:2822).
             'variant' => match (true) {
