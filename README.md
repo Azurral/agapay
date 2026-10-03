@@ -132,6 +132,10 @@ mysqldump -u root agapay > agapay-backup.sql
 
 `npm run visual` and `npm run e2e` use Microsoft Edge and their own database, `agapay_visual`. Create it once in phpMyAdmin. They never touch the `agapay` database. Run them one at a time.
 
+## Project documents
+
+The design spec and the phase-by-phase implementation plans are in [`reference/design/`](reference/design/). Development tooling configuration is in [`reference/ai-tooling/`](reference/ai-tooling/). See [`reference/README.md`](reference/README.md).
+
 ## Known limits
 
 - The distribution report PDF lists up to 1,000 beneficiary rows, and the damage report PDF up to 1,000 reports. The summaries count everything; choose Excel for the full lists.
