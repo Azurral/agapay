@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BeneficiaryController;
 use App\Http\Controllers\BeneficiaryLookupController;
 use App\Http\Controllers\DamagePhotoController;
+use App\Http\Controllers\DamageReportActionController;
 use App\Http\Controllers\DamageReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
@@ -82,8 +83,15 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
     Route::middleware('can:damage.view')->group(function () {
         Route::get('/damage-reports', [DamageReportController::class, 'index'])->name('damage.index');
-        Route::get('/damage-reports/{report}', [DamageReportController::class, 'show'])->name('damage.show');
+        Route::get('/damage-reports/{report}', [DamageReportController::class, 'show'])->withTrashed()->name('damage.show');
         Route::get('/damage-photos/{photo}', DamagePhotoController::class)->name('damage.photos.show');
+    });
+
+    Route::post('/damage-reports/{report}/validate', [DamageReportActionController::class, 'validate'])
+        ->middleware('can:damage.validate')->name('damage.validate');
+    Route::middleware('can:damage.configure')->group(function () {
+        Route::post('/damage-reports/{report}/archive', [DamageReportActionController::class, 'archive'])->name('damage.archive');
+        Route::post('/damage-reports/{report}/restore', [DamageReportActionController::class, 'restore'])->withTrashed()->name('damage.restore');
     });
 
     Route::middleware('can:export.run')->group(function () {

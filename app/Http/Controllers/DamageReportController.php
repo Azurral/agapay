@@ -50,6 +50,8 @@ class DamageReportController extends Controller
 
     public function show(Request $request, DamageReport $report): View
     {
+        abort_if($report->trashed() && ! $request->user()->can('damage.configure'), 404);
+
         return view('damage.show', [
             'report' => $report->load(['disaster', 'beneficiary', 'barangay', 'crop', 'photos', 'reporter', 'validator']),
             'canEdit' => self::canEdit($request->user(), $report),

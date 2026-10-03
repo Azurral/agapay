@@ -12,6 +12,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -91,6 +92,79 @@ final class DamageReportService
         Storage::disk(DamagePhoto::DISK)->delete($removed->pluck('path')->all());
 
         return $report;
+    }
+
+    /**
+     * Spec rule 11: the Agricultural Technologist (or Admin) confirms the figures, adjusting them with a reason.
+     * Blank loss / cost keep the filed figures.
+     */
+    public function validate(DamageReport $report, ?string $lossMt, ?string $cost, ?string $note, User $actor): DamageReport
+    {
+        $input = Validator::make(['loss_mt' => $lossMt, 'cost' => $cost, 'adjustment_note' => $note], [
+            'loss_mt' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'cost' => ['nullable', 'numeric', 'min:0', 'max:999999999999.99'],
+            'adjustment_note' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'loss_mt.*' => 'Enter the loss in metric tons, e.g. 5.5.',
+            'cost.*' => 'Enter the cost in pesos, e.g. 110000.',
+        ])->validate();
+
+        return DB::transaction(function () use ($report, $input, $actor) {
+            $report = DamageReport::whereKey($report->id)->lockForUpdate()->firstOrFail();
+            if ($report->isValidated()) {
+                throw ValidationException::withMessages(['report' => 'This report is already validated.']);
+            }
+
+            $loss = $input['loss_mt'] !== null ? round((float) $input['loss_mt'], 2) : (float) $report->loss_mt;
+            $cost = $input['cost'] !== null ? round((float) $input['cost'], 2) : (float) $report->cost;
+            $adjusted = $loss !== (float) $report->loss_mt || $cost !== (float) $report->cost;
+            $note = trim((string) ($input['adjustment_note'] ?? ''));
+            if ($adjusted && $note === '') {
+                throw ValidationException::withMessages(['adjustment_note' => 'Explain why the figures were adjusted.']);
+            }
+
+            $keys = ['status', 'loss_mt', 'cost', 'adjustment_note'];
+            $old = $report->only($keys);
+            $report->forceFill([
+                'status' => DamageReport::VALIDATED,
+                'loss_mt' => $loss,
+                'cost' => $cost,
+                'adjustment_note' => $adjusted ? $note : null,
+                'validated_by' => $actor->id,
+                'validated_at' => now(),
+            ])->saveQuietly();
+            AuditLogger::record('Validated Damage Report', $report, null, $old, $report->fresh()->only($keys), $actor);
+
+            return $report;
+        });
+    }
+
+    /** Spec rule 3: a recoverable delete with a reason. */
+    public function archive(DamageReport $report, string $reason, User $actor): void
+    {
+        DB::transaction(function () use ($report, $reason, $actor) {
+            $report = DamageReport::whereKey($report->id)->lockForUpdate()->firstOrFail();
+            $report->forceFill(['delete_reason' => $reason, 'deleted_by' => $actor->id])->saveQuietly();
+            $report->delete();
+        });
+    }
+
+    public function restore(DamageReport $report, User $actor): DamageReport
+    {
+        return DB::transaction(function () use ($report) {
+            $report = DamageReport::onlyTrashed()->whereKey($report->id)->lockForUpdate()->firstOrFail();
+            Beneficiary::withTrashed()->whereKey($report->beneficiary_id)->lockForUpdate()->first();
+            try {
+                $this->ensureNotDuplicate($report->beneficiary, $report->disaster_id, $report->crop_id);
+            } catch (ValidationException $e) {
+                throw ValidationException::withMessages(['report' => $e->errors()['beneficiary_id'][0]]);
+            }
+
+            $report->forceFill(['delete_reason' => null, 'deleted_by' => null])->saveQuietly();
+            $report->restore();
+
+            return $report;
+        });
     }
 
     /** @return array<string, mixed> */
