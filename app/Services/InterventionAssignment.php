@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 /** Creates and edits intervention records: one per beneficiary, intervention and cycle; LGU repeats flagged Duplicate. */
 final class InterventionAssignment
 {
+    public function __construct(private readonly InventoryService $inventory) {}
+
     /** @param array{quantity?: float|int|string|null, date_distributed?: string|null} $attrs */
     public function assign(Beneficiary $beneficiary, Intervention $intervention, DistributionCycle $cycle, array $attrs, User $actor): InterventionRecord
     {
@@ -50,7 +52,7 @@ final class InterventionAssignment
             throw new InterventionRuleViolation('Unclaim it first.');
         }
 
-        return DB::transaction(function () use ($record, $attrs, $interventionId, $cycleId, $moved) {
+        return DB::transaction(function () use ($record, $attrs, $interventionId, $cycleId, $moved, $actor) {
             $record->fill(Arr::only($attrs, ['quantity', 'date_distributed']));
 
             if ($moved) {
@@ -66,6 +68,7 @@ final class InterventionAssignment
             }
 
             $record->save();
+            $this->inventory->syncRecord($record, $actor, 'quantity reduced');
 
             return $record;
         });
