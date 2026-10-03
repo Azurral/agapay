@@ -31,7 +31,7 @@
 
     <div class="-mt-[0.5px]">
         <a href="{{ route('export.download') }}"
-           class="pill-button flex h-[39px] w-[263px] items-center justify-center gap-[2px] rounded-[50px] border-[1.5px] border-brand-soft bg-white text-[20px] font-bold leading-[24px]">
+           class="border-gradient pill-button flex h-[39px] w-[263px] items-center justify-center gap-[2px] rounded-[50px] text-[20px] font-bold leading-[24px]">
             <img src="{{ asset('images/figma/icons/plus.svg') }}" alt="" class="size-[23px]"> Export as .xlsx
         </a>
     </div>

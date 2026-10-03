@@ -34,6 +34,9 @@ const SCREENS = [
     { frame: '470-986', route: '/inventory', as: 'Admin_01',
       before: (page) => page.getByRole('button', { name: '+ Record Movement' }).click() },
     { frame: '430-1745', route: '/inventory', as: 'Encoder_03' },
+    { frame: '470-540', route: '/import', as: 'Admin_01' },
+    { frame: '430-1887', route: '/import', as: 'Encoder_03' },
+    { frame: '329-3134', route: '/export', as: 'Admin_01' },
 ];
 
 // Juan Dela Cruz's profile URL, read from search results (ids differ between seeds).
