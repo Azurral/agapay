@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +40,13 @@ class Beneficiary extends Model
 
     /** Applications OMAG is still working on ("Pending RSBSA"). */
     public const RSBSA_IN_PROGRESS = [self::RSBSA_PENDING, self::RSBSA_VALIDATED, self::RSBSA_ENDORSED];
+
+    /** LGU registration filter value => RSBSA statuses. */
+    public const REGISTRATION_FILTERS = [
+        'registered' => [self::RSBSA_REGISTERED],
+        'new' => self::RSBSA_IN_PROGRESS,
+        'unregistered' => [self::RSBSA_RETURNED, self::RSBSA_REJECTED],
+    ];
 
     public const SOURCE_MANUAL = 'manual';
 
@@ -70,6 +79,27 @@ class Beneficiary extends Model
     public function household(): BelongsTo
     {
         return $this->belongsTo(Household::class);
+    }
+
+    public function interventionRecords(): HasMany
+    {
+        return $this->hasMany(InterventionRecord::class);
+    }
+
+    /** The newest active record (by cycle, then id). */
+    public function latestRecord(): HasOne
+    {
+        return $this->hasOne(InterventionRecord::class)->ofMany(['distribution_cycle_id' => 'max', 'id' => 'max']);
+    }
+
+    /** LGU "Registration" column (Figma 329:1423). */
+    public function registrationLabel(): string
+    {
+        return match (true) {
+            in_array($this->rsbsa_status, self::REGISTRATION_FILTERS['registered'], true) => 'Registered',
+            in_array($this->rsbsa_status, self::REGISTRATION_FILTERS['new'], true) => 'Registered (New)',
+            default => 'Unregistered (Eligible)',
+        };
     }
 
     public function creator(): BelongsTo

@@ -29,7 +29,10 @@ class BeneficiarySeeder extends Seeder
             ['Carlos', null, 'Ibanez', 47, 'Sitio Ili 5', 'Bontoc Ili', 'RSBSA-0099', Beneficiary::RSBSA_REGISTERED, ['crop_type' => 'Rice']],
             ['Teresa', null, 'Ibanez', 44, 'Sitio Ili 5', 'Bontoc Ili', 'RSBSA-0100', Beneficiary::RSBSA_REGISTERED, ['crop_type' => 'Rice']],
             ['Liza', null, 'Domingo', 33, 'Purok 6', 'Poblacion', 'RSBSA-0304', Beneficiary::RSBSA_REGISTERED, ['crop_type' => 'Sweet Potato']],
-            ['Ana', null, 'Gomez', 29, 'Purok 2', 'Poblacion', null, Beneficiary::RSBSA_PENDING, ['crop_type' => 'Cabbage']],
+            // Rejected from RSBSA but still eligible for municipal (LGU) aid: Figma's "Unregistered (Eligible)" row.
+            ['Ana', null, 'Gomez', 29, 'Purok 2', 'Poblacion', null, Beneficiary::RSBSA_REJECTED, [
+                'crop_type' => 'Cabbage', 'rsbsa_status_reason' => 'Not a landowner - farmworker under the municipal program',
+            ]],
             ['Federico', null, 'Wasing', 56, 'Sitio Bayyo', 'Bayyo', null, Beneficiary::RSBSA_ENDORSED, [
                 'source' => Beneficiary::SOURCE_IMPORT, 'encoding_issue' => 'Missing RSBSA Number', 'created_at' => '2026-07-20 09:00:00',
             ]],

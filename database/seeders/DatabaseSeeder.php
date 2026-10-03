@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
             BarangaySeeder::class,
             UserSeeder::class,
             BeneficiarySeeder::class,
+            InterventionSeeder::class,
+            InterventionRecordSeeder::class,
         ]);
     }
 }
