@@ -26,6 +26,7 @@ class DamageReportController extends Controller
 
         return view('damage.index', [
             'filters' => $filters,
+            'crops' => $request->user()->can('damage.configure') ? Crop::orderBy('name')->get() : collect(),
             'summary' => (clone $query)->toBase()->selectRaw(
                 'COUNT(DISTINCT beneficiary_id) AS farmers, COALESCE(SUM(total_area_ha + partial_area_ha), 0) AS area,'
                 .' COALESCE(SUM(loss_mt), 0) AS loss, COALESCE(SUM(cost), 0) AS cost'

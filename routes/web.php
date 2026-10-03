@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BeneficiaryController;
 use App\Http\Controllers\BeneficiaryLookupController;
 use App\Http\Controllers\DamagePhotoController;
+use App\Http\Controllers\DamageReferenceController;
 use App\Http\Controllers\DamageReportActionController;
 use App\Http\Controllers\DamageReportController;
 use App\Http\Controllers\DashboardController;
@@ -90,6 +91,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('/damage-reports/{report}/validate', [DamageReportActionController::class, 'validate'])
         ->middleware('can:damage.validate')->name('damage.validate');
     Route::middleware('can:damage.configure')->group(function () {
+        Route::put('/damage-reference/crops', [DamageReferenceController::class, 'updateCrops'])->name('damage.crops.update');
+        Route::post('/damage-reference/disasters', [DamageReferenceController::class, 'storeDisaster'])->name('damage.disasters.store');
         Route::post('/damage-reports/{report}/archive', [DamageReportActionController::class, 'archive'])->name('damage.archive');
         Route::post('/damage-reports/{report}/restore', [DamageReportActionController::class, 'restore'])->withTrashed()->name('damage.restore');
     });

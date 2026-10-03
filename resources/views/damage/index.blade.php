@@ -115,6 +115,60 @@
             </div>
         </x-ui.card>
 
+        @can('damage.configure')
+            {{-- Not in Figma: kept below the mirrored card (spec §2). --}}
+            <div class="mt-[14px]">
+                <button type="button" @click="$dispatch('open-modal', 'damage-reference')"
+                        class="border-gradient pill-button h-[39px] w-[262px] rounded-[50px] text-[18px] font-bold leading-[24px]">Disasters &amp; Crop Values</button>
+            </div>
+
+            @php
+                $referenceErrors = $errors->reference;
+                $cell = 'h-[36px] w-full rounded-[8px] border border-field bg-white px-[10px] text-[14px] font-bold outline-none focus:border-brand-soft';
+            @endphp
+            <x-ui.modal name="damage-reference" title="Disasters & Crop Values" :open="$referenceErrors->any()" width="900">
+                <div class="max-h-[60vh] overflow-y-auto pr-[4px]">
+                    @if ($referenceErrors->any())
+                        <ul class="mb-[12px] rounded-[10px] border-[1.5px] border-bad px-[14px] py-[8px] text-[13px] font-semibold text-danger" role="alert">
+                            @foreach ($referenceErrors->all() as $message)<li>{{ $message }}</li>@endforeach
+                        </ul>
+                    @endif
+
+                    <form method="POST" action="{{ route('damage.crops.update') }}">
+                        @csrf
+                        @method('PUT')
+                        <h3 class="text-[14px] font-bold">Crop Reference Values</h3>
+                        <p class="mt-[2px] text-[13px] font-medium text-muted">Loss = (Total + factor × Partial) × Yield · Cost = Loss × Price. Filed reports keep the values they were computed with.</p>
+                        <div class="mt-[10px] grid grid-cols-[1fr_170px_200px_170px] gap-x-[10px] gap-y-[8px] text-[13px] font-medium text-muted">
+                            <span>Crop</span><span>Yield (MT/ha)</span><span>Farmgate Price (₱/MT)</span><span>Partial Factor (0–1)</span>
+                            @foreach ($crops as $crop)
+                                <span class="self-center text-[14px] font-bold text-ink">{{ $crop->name }}</span>
+                                @foreach (['yield_mt_per_ha', 'price_per_mt', 'partial_loss_factor'] as $field)
+                                    <input type="text" inputmode="decimal" name="crops[{{ $crop->id }}][{{ $field }}]" aria-label="{{ $crop->name }} {{ $field }}"
+                                           value="{{ old("crops.{$crop->id}.{$field}", rtrim(rtrim((string) $crop->{$field}, '0'), '.')) }}" class="{{ $cell }}">
+                                @endforeach
+                            @endforeach
+                            <input type="text" name="new_crop[name]" maxlength="50" placeholder="+ Add a crop" value="{{ old('new_crop.name') }}" class="{{ $cell }}">
+                            @foreach (['yield_mt_per_ha' => 'e.g. 4', 'price_per_mt' => 'e.g. 20000', 'partial_loss_factor' => '0.5'] as $field => $placeholder)
+                                <input type="text" inputmode="decimal" name="new_crop[{{ $field }}]" placeholder="{{ $placeholder }}" value="{{ old("new_crop.{$field}") }}" class="{{ $cell }}">
+                            @endforeach
+                        </div>
+                        <button type="submit" class="bg-brand-bar gradient-button mt-[14px] h-[44px] w-full rounded-[50px] text-[18px] font-bold text-white">Save Crop Values</button>
+                    </form>
+
+                    <form method="POST" action="{{ route('damage.disasters.store') }}" class="mt-[22px]">
+                        @csrf
+                        <h3 class="text-[14px] font-bold">Add Disaster</h3>
+                        <div class="mt-[10px] grid grid-cols-[1fr_220px_200px] gap-[10px]">
+                            <input type="text" name="name" maxlength="100" required placeholder="e.g. Typhoon Egay" value="{{ old('name') }}" aria-label="Disaster name" class="{{ $cell }}">
+                            <input type="date" name="occurred_on" required max="{{ now()->toDateString() }}" value="{{ old('occurred_on') }}" aria-label="Date it struck" class="{{ $cell }}">
+                            <button type="submit" class="bg-brand-bar gradient-button h-[36px] rounded-[50px] text-[16px] font-bold text-white">Add Disaster</button>
+                        </div>
+                    </form>
+                </div>
+            </x-ui.modal>
+        @endcan
+
         {{-- Photo viewer for "(view)" --}}
         <div x-cloak x-show="photos.length" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70" @click.self="photos = []"
              role="dialog" aria-modal="true" aria-label="Damage photos">
