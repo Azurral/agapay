@@ -74,6 +74,11 @@ final class ClaimService
 
             $this->refuseRepeat($record);
 
+            // Spec rule 7: a stocked program's claim must say how much left the store.
+            if ($record->intervention->inventory_item_id && (float) ($input['quantity'] ?? $record->quantity) <= 0) {
+                throw new InterventionRuleViolation("Enter the quantity given out: {$record->intervention->name} is deducted from stock.");
+            }
+
             $deceased = $record->validation_status === InterventionRecord::VALIDATION_DECEASED;
             $proxy = trim((string) ($input['proxy_claimant'] ?? ''));
             $proof = trim((string) ($input['proof_note'] ?? ''));

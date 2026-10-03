@@ -164,3 +164,13 @@ it('shows the manage items modal to managers only', function () {
     $this->actingAs($this->admin)->get('/inventory')->assertSee('Manage Items')->assertSee('Manage Inventory Items');
     $this->actingAs($this->agritech)->post('/inventory/items', ['name' => 'X'])->assertForbidden();
 });
+
+it('lists a back-dated movement first in Recent Movements', function () {
+    $this->actingAs($this->admin)->post('/inventory/movements', movementInput(['movement_date' => '2026-01-15', 'notes' => 'Late encoding of January delivery']));
+
+    $html = $this->actingAs($this->admin)->get('/inventory')->getContent();
+    $recent = substr($html, strpos($html, 'Recent Movements'));
+    $late = strpos($recent, 'Late encoding of January delivery');
+    expect($late)->not->toBeFalse()
+        ->and($late)->toBeLessThan(strpos($recent, 'Auto-deducted: distribution to Juan Dela Cruz'));
+});

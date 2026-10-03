@@ -101,3 +101,21 @@ it('does not touch stock for cash aid', function () {
 
     expect(InventoryMovement::count())->toBe($before);
 });
+
+it('requires a quantity to claim a stocked program', function () {
+    $carlos = ($this->recordOf)('Carlos');
+    $carlos->forceFill(['validation_status' => 'eligible', 'quantity' => null])->saveQuietly();
+
+    $this->actingAs($this->admin)->post(route('intervention-records.claim', $carlos))
+        ->assertSessionHasErrorsIn('intervention', ['intervention' => 'Enter the quantity given out: Complete Fertilizer is deducted from stock.']);
+    expect($carlos->fresh()->claim_status)->toBe('unclaimed');
+
+    $this->actingAs($this->admin)->post(route('intervention-records.claim', $carlos), ['quantity' => 2])->assertSessionHasNoErrors();
+    expect(($this->balance)('Complete Fertilizer'))->toBe(28.0);
+});
+
+it('offers a quantity field in the Process Claim modal', function () {
+    $liza = Beneficiary::where('first_name', 'Liza')->sole();
+
+    $this->actingAs($this->admin)->get(route('beneficiaries.show', $liza))->assertSee('name="quantity"', false);
+});

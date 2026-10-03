@@ -6,6 +6,8 @@ use App\Models\InterventionRecord;
 use App\Models\InventoryItem;
 use App\Models\InventoryMovement;
 use App\Models\User;
+use App\Services\ClaimService;
+use App\Services\InterventionAssignment;
 use App\Services\InventoryService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Validation\ValidationException;
@@ -123,4 +125,34 @@ it('counts low stock items', function () {
 
     $this->inventory->record(($this->item)('Certified Rice Seeds'), 'in', 20, today()->toDateString(), null, $this->admin);
     expect($this->inventory->lowStockCount())->toBe(1);
+});
+
+it('reads committed data after taking locks on MySQL and MariaDB', function () {
+    // Under REPEATABLE READ a SUM after the item lock can read a stale snapshot and let two claims overdraw stock.
+    expect(config('database.connections.mysql.isolation_level'))->toBe('READ COMMITTED')
+        ->and(config('database.connections.mariadb.isolation_level'))->toBe('READ COMMITTED');
+});
+
+it('keeps a standing deduction on the item it came from after the program is relinked', function () {
+    $this->carlos->forceFill(['claim_status' => 'claimed', 'validation_status' => 'eligible'])->saveQuietly();
+    $this->inventory->syncRecord($this->carlos, $this->admin);   // 1 sack from Complete Fertilizer
+    $other = InventoryItem::create(['name' => 'Complete Fertilizer 14-14-14', 'unit' => 'sack', 'unit_label' => 'sacks (50kg)', 'low_stock_threshold' => 0]);
+    program('da', 'Complete Fertilizer')->update(['inventory_item_id' => $other->id]);
+
+    app(InterventionAssignment::class)->reassign($this->carlos->fresh(), ['date_distributed' => '2026-07-21'], $this->admin);
+
+    expect(balanceOf('Complete Fertilizer'))->toBe(29.0)
+        ->and($other->balance())->toBe(0.0)
+        ->and(InventoryMovement::where('inventory_item_id', $other->id)->exists())->toBeFalse();
+});
+
+it('re-reads the record before an edit adjusts stock', function () {
+    $this->carlos->forceFill(['claim_status' => 'claimed', 'validation_status' => 'eligible'])->saveQuietly();
+    $this->inventory->syncRecord($this->carlos, $this->admin);
+    $stale = InterventionRecord::find($this->carlos->id);              // loaded while still claimed
+    app(ClaimService::class)->unclaim($this->carlos, $this->admin);   // someone else unclaims
+
+    app(InterventionAssignment::class)->reassign($stale, ['quantity' => 5], $this->admin);
+
+    expect(balanceOf('Complete Fertilizer'))->toBe(30.0);   // nothing deducted for an unclaimed record
 });

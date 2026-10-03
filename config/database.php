@@ -59,6 +59,9 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // AGAPAY locks rows (household, record, inventory item) before checking balances and claims;
+            // READ COMMITTED makes the reads after those locks see committed data instead of an older snapshot.
+            'isolation_level' => env('DB_ISOLATION_LEVEL', 'READ COMMITTED'),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
@@ -79,6 +82,9 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // AGAPAY locks rows (household, record, inventory item) before checking balances and claims;
+            // READ COMMITTED makes the reads after those locks see committed data instead of an older snapshot.
+            'isolation_level' => env('DB_ISOLATION_LEVEL', 'READ COMMITTED'),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],

@@ -142,7 +142,7 @@
         @php($picked = (string) ($failedHere && $claimable->contains('id', $failed) ? $failed : $claimable->first()->id))
         <x-ui.modal name="process-claim" :title="'Process Claim - '.$beneficiary->fullName()" :open="$failedHere" width="620">
             <form method="POST" :action="urls[picked]" class="flex flex-col gap-[14px]"
-                  x-data="{ picked: @js($picked), urls: @js($claimable->mapWithKeys(fn ($r) => [$r->id => route('intervention-records.claim', $r)])), statuses: @js($claimable->pluck('validation_status', 'id')) }">
+                  x-data="{ picked: @js($picked), urls: @js($claimable->mapWithKeys(fn ($r) => [$r->id => route('intervention-records.claim', $r)])), statuses: @js($claimable->pluck('validation_status', 'id')), quantities: @js($claimable->mapWithKeys(fn ($r) => [$r->id => $r->quantity !== null ? \App\Models\InventoryItem::quantity($r->quantity) : ''])) }">
                 @csrf
                 <label class="flex h-[44px] items-center rounded-[10px] border border-field bg-white px-[16px] text-[14px] font-bold">
                     <span class="shrink-0">Intervention:</span>
@@ -152,6 +152,8 @@
                         @endforeach
                     </select>
                 </label>
+                <x-ui.inline-field label="Quantity" name="quantity" type="number" step="0.01" min="0" x-bind:value="quantities[picked]"
+                                   placeholder="Amount given out" :error="$errors->intervention->first('quantity')" />
                 <x-ui.inline-field label="Date Distributed" name="date_distributed" type="date" max="{{ now()->toDateString() }}"
                                    :value="old('date_distributed', now()->toDateString())" :error="$errors->intervention->first('date_distributed')" />
                 <div x-show="statuses[picked] === 'deceased'" class="flex flex-col gap-[14px]">

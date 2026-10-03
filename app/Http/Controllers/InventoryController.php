@@ -36,7 +36,7 @@ class InventoryController extends Controller
                 // Creation order, as in Figma 470:785 (new items appear at the end).
                 ->orderBy('id')->get(),
             'allItems' => InventoryItem::with('interventions:id,inventory_item_id')->orderBy('name')->get(),
-            'movements' => InventoryMovement::with('item')->latest('movement_date')->latest('id')->limit(10)->get(),
+            'movements' => InventoryMovement::with('item')->latest('id')->limit(10)->get(),   // newest recorded first, even when back-dated
         ]);
     }
 

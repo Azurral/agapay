@@ -65,18 +65,22 @@ final class InventoryService
     public function syncRecord(InterventionRecord $record, User $actor, string $reason = 'unclaimed'): void
     {
         $record->loadMissing(['intervention', 'beneficiary']);
-        $target = $record->intervention?->inventory_item_id;
-        $wanted = $target && $record->isClaimed() && ! $record->trashed() && (float) $record->quantity > 0
-            ? round((float) $record->quantity, 2)
-            : 0.0;
 
-        // Net auto deduction per item so far (an item link may have changed since the deduction).
+        // Net auto deduction per item so far.
         $current = InventoryMovement::where(['intervention_record_id' => $record->id, 'source' => InventoryMovement::AUTO])
             ->get(['inventory_item_id', 'direction', 'quantity'])
             ->groupBy('inventory_item_id')
             ->map(fn ($moves) => round($moves->sum(fn ($m) => $m->direction === InventoryMovement::OUT ? (float) $m->quantity : -(float) $m->quantity), 2));
 
-        $itemIds = $current->keys()->push($target)->filter()->unique();
+        // A deduction that still stands stays on the item it came from, even if the program was relinked since;
+        // only a record with nothing deducted yet follows the program's current item.
+        $stays = $record->isClaimed() && ! $record->trashed() && (float) $record->quantity > 0;
+        $deductedFrom = $current->filter(fn (float $net) => $net > 0)->keys()->first();
+        $target = $stays ? ($deductedFrom ?? $record->intervention?->inventory_item_id) : null;
+        $wanted = $target ? round((float) $record->quantity, 2) : 0.0;
+
+        // Sorted, so concurrent syncs always lock items in the same order.
+        $itemIds = $current->keys()->push($target)->filter()->unique()->sort()->values();
         $who = "{$record->beneficiary->fullName()} ({$record->beneficiary->rsbsaDisplay()})";
 
         foreach ($itemIds as $itemId) {
