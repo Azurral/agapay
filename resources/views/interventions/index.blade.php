@@ -2,7 +2,7 @@
     {{-- Figma 329:2475 / 407:2 --}}
     <x-ui.card title="Select Intervention Type" />
 
-    <div class="mt-[3px] grid grid-cols-2 gap-[23px]">
+    <div class="mt-[8px] grid grid-cols-2 gap-[23px]">
         @foreach ([
             ['Department of Agriculture [DA]', 'National', 'View DA Beneficiary List', route('interventions.da')],
             ['Local Government Unit [LGU]', 'Municipal', 'View LGU Beneficiary List', route('interventions.lgu')],

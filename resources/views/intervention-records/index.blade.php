@@ -14,9 +14,9 @@
             <x-ui.pill-input name="rsbsa" placeholder="RSBSA Number..." :value="request()->queryText('rsbsa')" width="230" />
             <x-ui.pill-select name="intervention" label="Intervention" :options="['' => 'All'] + $interventionOptions" :selected="request()->queryText('intervention')" width="377" />
             <span class="absolute left-[919.5px] text-[14px] font-medium text-muted">Qty / Unit</span>
-            <span class="absolute left-[1023.5px] text-[12px] font-medium text-muted">Date Distributed</span>
+            <span class="absolute left-[1042.5px] text-[12px] font-medium text-muted">Date Distributed</span>
             <span class="absolute left-[1157.5px] w-[155px] text-center text-[14px] font-medium text-muted">Action</span>
-            <span class="absolute left-[1325px] w-[137px] text-center text-[12px] font-medium text-muted">Distribution Status</span>
+            <span class="absolute left-[1333px] w-[137px] text-center text-[12px] font-medium text-muted">Distribution Status</span>
             <button type="submit" class="sr-only">Apply filters</button>
         </form>
 
@@ -34,7 +34,7 @@
                                                 :tone="$record->claimTone()" :hidden="['historical' => 1]"
                                                 :actions="['claimed' => route('intervention-records.claim', $record), 'unclaimed' => route('intervention-records.unclaim', $record)]" />
                     <a href="{{ route('intervention-records.edit', $record) }}"
-                       class="flex h-[39px] w-[98px] items-center justify-center rounded-[10px] border-4 border-[#7e80ff] bg-white transition-colors hover:bg-[#efeaff] hover:text-brand">Edit</a>
+                       class="flex h-[39px] w-[98px] items-center justify-center rounded-[10px] border-4 border-[#7e80ff] bg-white text-[11px] transition-colors hover:bg-[#efeaff] hover:text-brand">Edit</a>
                 </div>
             @empty
                 <p class="py-[14px] pl-[16.5px] text-[14px] font-bold">No intervention records match these filters.</p>

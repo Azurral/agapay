@@ -22,6 +22,14 @@ const SCREENS = [
     { frame: '407-1181', route: juanProfile, as: 'Agritech_02' },
     { frame: '430-1461', route: juanProfile, as: 'Encoder_03' },
     { frame: '430-1276', route: '/beneficiaries', as: 'Encoder_03' },
+    { frame: '329-2475', route: '/interventions', as: 'Admin_01' },
+    { frame: '329-1250', route: '/interventions/da', as: 'Admin_01' },
+    { frame: '344-236', route: '/interventions/da/archived', as: 'Admin_01' },
+    { frame: '329-1423', route: '/interventions/lgu', as: 'Admin_01' },
+    { frame: '407-323', route: '/interventions/da', as: 'Agritech_02' },
+    { frame: '407-603', route: '/interventions/lgu', as: 'Agritech_02' },
+    { frame: '430-1603', route: '/intervention-records', as: 'Encoder_03' },
+    { frame: '446-198', route: '/intervention-records/create', as: 'Encoder_03' },
 ];
 
 // Juan Dela Cruz's profile URL, read from search results (ids differ between seeds).
