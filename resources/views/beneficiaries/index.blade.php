@@ -6,8 +6,7 @@
             <x-ui.pill-input name="name" placeholder="Search Name..." :value="request()->queryText('name')" width="230" />
             <x-ui.pill-input name="rsbsa" placeholder="RSBSA Number..." :value="request()->queryText('rsbsa')" width="230" />
             <x-ui.pill-select name="barangay" label="Barangay" :options="['' => 'All'] + $barangays->all()" :selected="request()->queryText('barangay')" width="230" />
-            {{-- Interventions arrive in Phase 4. --}}
-            <x-ui.pill-select name="intervention" label="Intervention" :options="['' => 'All']" width="230" />
+            <x-ui.pill-select name="intervention" label="Intervention" :options="['' => 'All'] + $interventionOptions" :selected="request()->queryText('intervention')" width="230" />
             <span class="pl-[23px] text-muted">Household</span>
             <span class="text-center text-muted">Status</span>
             <span class="flex justify-end"><span class="w-[98px] text-center text-muted">Action</span></span>
@@ -21,9 +20,13 @@
                 <span class="truncate pr-[12px]">{{ $beneficiary->fullName() }}</span>
                 <span>{{ $beneficiary->rsbsaDisplay() }}</span>
                 <span>{{ $beneficiary->barangay?->name }}</span>
-                <span>—</span>
+                <span class="truncate pr-[12px]">{{ $beneficiary->latestRecord?->intervention->name ?? '—' }}</span>
                 <span>{{ $members }} {{ Str::plural('member', $members) }}</span>
-                <span class="text-center">—</span>
+                @if ($beneficiary->latestRecord)
+                    <span class="flex justify-center"><x-ui.status-chip :tone="$beneficiary->latestRecord->claimTone()">{{ $beneficiary->latestRecord->claimLabel() }}</x-ui.status-chip></span>
+                @else
+                    <span class="text-center">—</span>
+                @endif
                 <span class="flex justify-end">
                     <a @if (Route::has('beneficiaries.show')) href="{{ route('beneficiaries.show', ['beneficiary' => $beneficiary, 'edit' => 1]) }}" @endif
                        class="hover-tint flex h-[39px] w-[98px] items-center justify-center rounded-[10px] border-4 border-[#7e80ff] bg-white hover:bg-[#efeaff] hover:text-brand">Edit</a>

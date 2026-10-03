@@ -3,6 +3,7 @@
 use App\Models\Beneficiary;
 use App\Models\Role;
 use Database\Seeders\BarangaySeeder;
+use Database\Seeders\InterventionSeeder;
 
 beforeEach(function () {
     seedRoles();
@@ -39,4 +40,17 @@ it('filters by barangay', function () {
 
 it('is only for users who manage beneficiaries', function () {
     $this->actingAs(userWithRole(Role::AGRITECH))->get('/beneficiaries')->assertForbidden();
+});
+
+it('shows the latest intervention and its status, and filters by intervention', function () {
+    $this->seed(InterventionSeeder::class);
+    $seeds = program('da', 'Certified Rice Seeds');
+    record($this->juan, $seeds, ['validation_status' => 'eligible', 'claim_status' => 'claimed', 'date_distributed' => '2026-07-18']);
+
+    $this->actingAs($this->encoder)->get('/beneficiaries')
+        ->assertSee('DA - Certified Rice Seeds')   // filter option
+        ->assertSeeInOrder(['Juan Dela Cruz', 'RSBSA-0231', 'Poblacion', 'Certified Rice Seeds', '2 members', 'Claimed', 'Edit']);
+
+    $this->actingAs($this->encoder)->get('/beneficiaries?intervention='.$seeds->id)
+        ->assertSee('Juan Dela Cruz')->assertDontSee('Maria Santos');
 });

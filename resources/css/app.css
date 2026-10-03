@@ -91,11 +91,14 @@
         box-shadow: 0 4px 12px rgb(90 93 227 / 0.18);
     }
 
-    /* Filled brand-gradient buttons (LOGIN, Log out, Save ...): brighter, lifted, glowing. */
+    /* Filled brand-gradient buttons (LOGIN, Log out, Save ...): a deep indigo edge anchors the pale end
+       of the gradient; on hover they brighten, lift and glow and the edge deepens. */
     .gradient-button {
-        transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+        border: 2px solid #4b32c3;
+        transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
     }
     .gradient-button:hover {
+        border-color: #3a22a8;
         filter: brightness(1.07) saturate(1.1);
         transform: translateY(-1px);
         box-shadow: 0 6px 16px rgb(90 93 227 / 0.3);

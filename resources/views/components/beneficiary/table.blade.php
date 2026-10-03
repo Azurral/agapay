@@ -15,8 +15,12 @@
                 <span>{{ $beneficiary->rsbsaDisplay() }}</span>
                 <span>{{ $beneficiary->barangay?->name }}</span>
                 <span>{{ $members }} {{ Str::plural('member', $members) }}</span>
-                <span>—</span>
-                <span class="text-center">—</span>
+                <span class="truncate pr-[12px]">{{ $beneficiary->latestRecord?->intervention->name ?? '—' }}</span>
+                @if ($beneficiary->latestRecord)
+                    <x-ui.status-chip :tone="$beneficiary->latestRecord->claimTone()">{{ $beneficiary->latestRecord->claimLabel() }}</x-ui.status-chip>
+                @else
+                    <span class="text-center">—</span>
+                @endif
             </a>
         @empty
             <p class="py-[14px] text-[14px] font-bold">{{ $empty }}</p>

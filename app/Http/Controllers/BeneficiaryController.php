@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateBeneficiaryRequest;
 use App\Models\Barangay;
 use App\Models\Beneficiary;
+use App\Models\DistributionCycle;
+use App\Models\InterventionRecord;
 use App\Models\Role;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +21,7 @@ class BeneficiaryController extends Controller
         $name = mb_substr($request->queryText('name'), 0, 100);
         $rsbsa = mb_substr($request->queryText('rsbsa'), 0, 50);
         $barangay = ctype_digit($request->queryText('barangay')) ? (int) $request->queryText('barangay') : null;
+        $interventionId = ctype_digit($request->queryText('intervention')) ? (int) $request->queryText('intervention') : null;
 
         $beneficiaries = Beneficiary::forTable()
             ->when($name !== '', fn ($q) => $q->search($name))
@@ -26,12 +29,14 @@ class BeneficiaryController extends Controller
                 '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($rsbsa)).'%',
             ]))
             ->when($barangay, fn ($q) => $q->where('barangay_id', $barangay))
+            ->when($interventionId, fn ($q) => $q->whereHas('interventionRecords', fn ($r) => $r->where('intervention_id', $interventionId)))
             ->orderBy('last_name')->orderBy('first_name')->orderBy('id')
             ->paginate(15)->withQueryString();
 
         return view('beneficiaries.index', [
             'beneficiaries' => $beneficiaries,
             'barangays' => Barangay::orderBy('name')->pluck('name', 'id'),
+            'interventionOptions' => InterventionRecordController::interventionOptions(),
         ]);
     }
 
@@ -39,9 +44,25 @@ class BeneficiaryController extends Controller
     {
         $user = $request->user();
 
+        $records = $beneficiary->interventionRecords()->with(['intervention', 'cycle'])
+            ->orderByDesc('distribution_cycle_id')->orderByDesc('id')->get();
+        $others = $beneficiary->otherHouseholdMembers();
+        $cycle = DistributionCycle::current();
+
         return view('beneficiaries.show', [
             'beneficiary' => $beneficiary->load(['barangay:id,name', 'household']),
-            'others' => $beneficiary->otherHouseholdMembers(),
+            'others' => $others,
+            'records' => $records,
+            'claimable' => $records->filter(fn (InterventionRecord $r) => ! $r->isClaimed()
+                && in_array($r->validation_status, InterventionRecord::CLAIMABLE, true))->values(),
+            // The banner's claim check: a household member's claim in the current cycle.
+            'householdClaim' => $cycle && $others->isNotEmpty()
+                ? InterventionRecord::with(['beneficiary', 'intervention'])
+                    ->whereIn('beneficiary_id', $others->pluck('id'))
+                    ->where('distribution_cycle_id', $cycle->id)
+                    ->where('claim_status', InterventionRecord::CLAIM_CLAIMED)
+                    ->latest('date_distributed')->latest('id')->first()
+                : null,
             // 430:1461 is the only Data Encoder profile frame, so encoders always edit;
             // Agri Techs verify eligibility (407:1181); Administrators process claims (329:2822).
             'variant' => match (true) {
