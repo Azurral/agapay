@@ -84,8 +84,12 @@ final class DamageReportService
 
                 $removed = $report->photos()->whereIn('id', $removePhotoIds)->get();
                 $report->photos()->whereKey($removed->modelKeys())->delete();
-                if ($report->photos()->count() + count($newPhotos) > 10) {
+                $kept = $report->photos()->count() + count($newPhotos);
+                if ($kept > 10) {
                     throw ValidationException::withMessages(['photos' => 'Attach up to 10 photos.']);
+                }
+                if ($kept < 1) {
+                    throw ValidationException::withMessages(['photos' => 'Keep or attach at least one photo of the damage.']);
                 }
                 $this->storePhotos($report, $newPhotos, $stored);
 

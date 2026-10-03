@@ -31,7 +31,7 @@ function hardenedDamageInput(array $overrides = []): array
     return [
         'disaster_id' => Disaster::where('name', 'Southwest Monsoon Flooding')->value('id'), 'beneficiary_id' => $ana->id,
         'barangay_id' => $ana->barangay_id, 'crop_id' => Crop::where('name', 'Rice')->value('id'), 'crop_stage' => 'vegetative',
-        'total_area_ha' => '1', 'partial_area_ha' => '0', ...$overrides,
+        'total_area_ha' => '1', 'partial_area_ha' => '0', 'photos' => [UploadedFile::fake()->image('field.jpg')], ...$overrides,
     ];
 }
 

@@ -35,6 +35,7 @@ function damageInput(array $overrides = []): array
         'partial_area_ha' => '0.30',
         'latitude' => '17.0894',
         'longitude' => '120.9750',
+        'photos' => [UploadedFile::fake()->image('field.jpg')],
         ...$overrides,
     ];
 }
@@ -181,4 +182,23 @@ it('explains a photo PHP refused as too large', function () {
 
     $this->actingAs($this->encoder)->post('/damage-reports', damageInput(['photos' => [$photo]]))
         ->assertSessionHasErrors(['photos.0' => "Each photo must be JPG or PNG and at most {$limit}."]);
+});
+
+it('requires at least one photo on a new report', function () {
+    $this->actingAs($this->encoder)->post('/damage-reports', damageInput(['photos' => []]))
+        ->assertSessionHasErrors(['photos' => 'Attach at least one photo of the damage (JPG or PNG).']);
+});
+
+it('keeps at least one photo when editing', function () {
+    $this->actingAs($this->encoder)->post('/damage-reports', damageInput());
+    $report = DamageReport::latest('id')->firstOrFail();
+
+    $this->put(route('damage.update', $report), damageInput(['photos' => [], 'remove_photos' => $report->photos()->pluck('id')->all()]))
+        ->assertSessionHasErrors(['photos' => 'Keep or attach at least one photo of the damage.']);
+
+    expect($report->photos()->count())->toBe(1);
+});
+
+it('says on the form that a photo is required', function () {
+    $this->actingAs($this->encoder)->get('/damage-reports/create')->assertSee('At least 1 and up to 10 JPG or PNG photos');
 });

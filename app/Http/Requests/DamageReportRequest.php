@@ -31,7 +31,8 @@ class DamageReportRequest extends FormRequest
             'partial_area_ha' => $area,
             'latitude' => ['nullable', 'required_with:longitude', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'required_with:latitude', 'numeric', 'between:-180,180'],
-            'photos' => ['nullable', 'array', 'max:'.self::MAX_PHOTOS],
+            // Paper (interview, Section G Q9): photographic documentation is mandatory. An edit keeps the stored photos.
+            'photos' => [Rule::requiredIf(fn () => $this->isMethod('post')), 'array', 'max:'.self::MAX_PHOTOS],
             'photos.*' => ['file', 'mimes:jpg,jpeg,png', 'max:'.intdiv(self::photoLimitBytes(), 1024)],
             'remove_photos' => ['nullable', 'array'],
             'remove_photos.*' => ['integer'],
@@ -57,6 +58,7 @@ class DamageReportRequest extends FormRequest
             'longitude.numeric' => 'Enter the longitude in decimal degrees, e.g. 120.9750.',
             'latitude.*' => 'Latitude must be between -90 and 90.',
             'longitude.*' => 'Longitude must be between -180 and 180.',
+            'photos.required' => 'Attach at least one photo of the damage (JPG or PNG).',
             'photos.array' => 'Attach up to 10 photos.',
             'photos.max' => 'Attach up to 10 photos.',
             'photos.*.*' => $photo,
