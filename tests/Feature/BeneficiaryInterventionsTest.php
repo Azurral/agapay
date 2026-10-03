@@ -113,3 +113,14 @@ it('gives the encoder claim dropdowns in history outside the edit form', functio
     expect(substr_count(substr($edit, 0, strpos($edit, '</form>')), '<form'))->toBe(0)
         ->and($html)->toContain('form="profile-edit"');
 });
+
+it('shows each action result once on the profile', function () {
+    $carlos = ($this->person)('Carlos', 'Ibanez');
+    $record = $carlos->interventionRecords()->sole();
+
+    $html = $this->actingAs($this->agritech)->from(route('beneficiaries.show', $carlos))
+        ->followingRedirects()->post(route('intervention-records.validate', $record), ['validation_status' => 'eligible'])
+        ->assertOk()->getContent();
+
+    expect(substr_count($html, 'Carlos Ibanez - Complete Fertilizer (2026-Q3): Eligible.'))->toBe(1);
+});

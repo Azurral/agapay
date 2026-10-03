@@ -59,7 +59,8 @@ it('adds a distributed record as a historical claim', function () {
 
     $record = InterventionRecord::where('beneficiary_id', recordInput()['beneficiary_id'])->where('intervention_id', recordInput()['intervention_id'])->sole();
     expect($record)->validation_status->toBe('eligible')->claim_status->toBe('claimed')
-        ->and($record->date_distributed->toDateString())->toBe('2026-07-20');
+        ->and($record->date_distributed->toDateString())->toBe('2026-07-20')
+        ->and(AuditLog::where('action', 'Claimed Intervention (Historical Encoding)')->exists())->toBeTrue();
 });
 
 it('rolls back a distributed record that breaks the household rule', function () {
@@ -122,15 +123,13 @@ it('edits quantity and blocks intervention changes on claimed records', function
     expect($record->fresh()->claim_status)->toBe('unclaimed');
 });
 
-it('marks a record distributed from the list dropdown as a historical claim', function () {
+it('does not let the encoder dropdown skip Agri Tech validation', function () {
     $pedro = ($this->person)('Pedro', 'Reyes')->interventionRecords()->sole();
 
-    $this->actingAs($this->encoder)->post(route('intervention-records.claim', $pedro), ['historical' => 1])->assertSessionHasNoErrors();
-    expect($pedro->fresh())->claim_status->toBe('claimed')->validation_status->toBe('eligible');
-
-    $carlos = ($this->person)('Carlos', 'Ibanez')->interventionRecords()->sole();
-    $this->actingAs($this->agritech)->post(route('intervention-records.claim', $carlos), ['historical' => 1])
+    $this->actingAs($this->encoder)->get('/intervention-records')->assertDontSee('name="historical"', false);
+    $this->actingAs($this->encoder)->post(route('intervention-records.claim', $pedro), ['historical' => 1])
         ->assertSessionHasErrorsIn('intervention', ['intervention' => 'Validate eligibility first.']);
+    expect($pedro->fresh())->claim_status->toBe('unclaimed')->validation_status->toBe('pending');
 });
 
 it('returns beneficiary lookup results', function () {

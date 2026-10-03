@@ -4,6 +4,7 @@ use App\Models\Barangay;
 use App\Models\InterventionRecord;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Database\QueryException;
 
 beforeEach(function () {
     $this->seed(DatabaseSeeder::class);
@@ -112,4 +113,19 @@ it('keeps lists and actions behind their permissions', function () {
     $this->actingAs($this->encoder)->get('/interventions/da')->assertForbidden();
     $this->actingAs($this->encoder)->get('/validation')->assertForbidden();
     $this->actingAs($this->encoder)->post(route('intervention-records.validate', $carlos), ['validation_status' => 'eligible'])->assertForbidden();
+});
+
+it('turns a lock conflict during a claim into a try-again message', function () {
+    $juan = seededRecord('Juan', 'Dela Cruz');
+    $this->actingAs($this->admin)->post(route('intervention-records.unclaim', $juan));
+
+    // Simulate InnoDB choosing this claim as a deadlock victim on every attempt.
+    DB::connection()->beforeExecuting(function (string $sql) {
+        if (str_contains($sql, 'update "intervention_records"')) {
+            throw new QueryException('sqlite', $sql, [], new PDOException('Deadlock found when trying to get lock; try restarting transaction'));
+        }
+    });
+
+    $this->actingAs($this->admin)->post(route('intervention-records.claim', $juan->fresh()))
+        ->assertSessionHasErrorsIn('intervention', ['intervention' => 'Another claim for this household was being saved at the same moment. Please try again.']);
 });

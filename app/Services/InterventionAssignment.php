@@ -84,17 +84,26 @@ final class InterventionAssignment
         }
     }
 
-    /** LGU assistance already claimed in another cycle repeats unless the program allows repeats. */
     private function isRepeat(int $beneficiaryId, Intervention $intervention, int $cycleId, ?int $ignoreId = null): bool
     {
+        return $this->earlierClaim($beneficiaryId, $intervention, $cycleId, $ignoreId) !== null;
+    }
+
+    /**
+     * The beneficiary's claimed record of the same LGU assistance in another cycle — a repeat, unless the program allows repeats.
+     * Assignment flags it "Duplicate"; ClaimService refuses to pay it out or restore it.
+     */
+    public function earlierClaim(int $beneficiaryId, Intervention $intervention, int $cycleId, ?int $ignoreId = null): ?InterventionRecord
+    {
         if ($intervention->source !== Intervention::SOURCE_LGU || $intervention->allow_repeat) {
-            return false;
+            return null;
         }
 
-        return InterventionRecord::where(['beneficiary_id' => $beneficiaryId, 'intervention_id' => $intervention->id])
+        return InterventionRecord::with('cycle')
+            ->where(['beneficiary_id' => $beneficiaryId, 'intervention_id' => $intervention->id])
             ->where('distribution_cycle_id', '!=', $cycleId)
             ->where('claim_status', InterventionRecord::CLAIM_CLAIMED)
             ->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))
-            ->exists();
+            ->first();
     }
 }

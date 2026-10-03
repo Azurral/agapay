@@ -31,7 +31,7 @@
                     <span>{{ $record->quantityDisplay() }}</span>
                     <span>{{ $record->date_distributed?->format('M j, Y') ?? '-' }}</span>
                     <x-intervention.chip-select name="claim_status" :options="['unclaimed' => 'Unclaimed', 'claimed' => 'Claimed']" :selected="$record->claim_status"
-                                                :tone="$record->claimTone()" :hidden="['historical' => 1]"
+                                                :tone="$record->claimTone()"
                                                 :actions="['claimed' => route('intervention-records.claim', $record), 'unclaimed' => route('intervention-records.unclaim', $record)]" />
                     <a href="{{ route('intervention-records.edit', $record) }}"
                        class="flex h-[39px] w-[98px] items-center justify-center rounded-[10px] border-4 border-[#7e80ff] bg-white text-[11px] transition-colors hover:bg-[#efeaff] hover:text-brand">Edit</a>

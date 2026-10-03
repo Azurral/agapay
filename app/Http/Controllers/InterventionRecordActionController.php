@@ -6,13 +6,17 @@ use App\Exceptions\InterventionRuleViolation;
 use App\Models\InterventionRecord;
 use App\Services\ClaimService;
 use Closure;
+use Illuminate\Database\DetectsConcurrencyErrors;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use PDOException;
 
 /** Validation, claim and unclaim of one intervention record (dropdowns, profile modals). */
 class InterventionRecordActionController extends Controller
 {
+    use DetectsConcurrencyErrors;
+
     public function __construct(private readonly ClaimService $claims) {}
 
     public function validate(Request $request, InterventionRecord $record): RedirectResponse
@@ -26,11 +30,10 @@ class InterventionRecordActionController extends Controller
     public function claim(Request $request, InterventionRecord $record): RedirectResponse
     {
         $input = $request->only(['date_distributed', 'quantity', 'proxy_claimant', 'proof_note', 'override_reason']);
-        // The encoder's "Distributed" dropdown records a past distribution (same as the Add/Edit form).
-        $historical = $request->boolean('historical') && $request->user()->can('intervention_records.manage');
 
+        // Always a live claim: past distributions are encoded through the Add/Edit form, which requires their date.
         return $this->attempt($record,
-            fn () => $this->claims->claim($record, $request->user(), array_filter($input, fn ($v) => $v !== null && $v !== ''), $historical),
+            fn () => $this->claims->claim($record, $request->user(), array_filter($input, fn ($v) => $v !== null && $v !== '')),
             fn (InterventionRecord $r) => $r->claimLabel());
     }
 
@@ -70,6 +73,13 @@ class InterventionRecordActionController extends Controller
             return back()->withErrors(['intervention' => $e->getMessage()], 'intervention')->with('intervention_failed', $record->id);
         } catch (ValidationException $e) {
             return back()->withInput()->withErrors($e->errors(), 'intervention')->with('intervention_failed', $record->id);
+        } catch (PDOException $e) {   // QueryException, or DeadlockException from a nested transaction
+            if (! $this->causedByConcurrencyError($e)) {
+                throw $e;
+            }
+
+            return back()->withInput()->withErrors(['intervention' => 'Another claim for this household was being saved at the same moment. Please try again.'], 'intervention')
+                ->with('intervention_failed', $record->id);
         }
 
         return back()->with('status', ($label ?? $updated->auditRecordLabel()).": {$stateLabel($updated)}.");

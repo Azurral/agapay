@@ -231,3 +231,42 @@ it('keeps beneficiaries out of other households', function () {
 
     expect($this->claims->claim(record($juan, $paff, ['validation_status' => 'eligible']), $this->admin)->claim_status)->toBe('claimed');
 });
+
+it('refuses to restore a claimed record when the household has claimed again since', function () {
+    [$juan, $maria] = sameHousehold(['Juan', 'Maria']);
+    $paff = program('da', 'PAFF');
+    $mistake = $this->claims->claim(record($juan, $paff, ['validation_status' => 'eligible']), $this->admin);
+    $this->claims->archive($mistake, 'Archived by mistake', $this->admin);
+    $this->claims->claim(record($maria, $paff, ['validation_status' => 'eligible']), $this->admin);
+
+    expect(fn () => $this->claims->restore(InterventionRecord::onlyTrashed()->find($mistake->id), $this->admin))
+        ->toThrow(InterventionRuleViolation::class, 'Maria Dela Cruz already claimed PAFF for this household in 2026-Q3.');
+    expect(InterventionRecord::onlyTrashed()->find($mistake->id))->not->toBeNull();
+});
+
+it('refuses to pay out a repeated LGU assistance at claim time', function () {
+    [$juan] = sameHousehold(['Juan']);
+    $subsidy = program('lgu', 'Municipal Cash Subsidy');
+    $q2 = record($juan, $subsidy, ['validation_status' => 'eligible', 'distribution_cycle_id' => $this->q2->id]);
+    $q3 = record($juan, $subsidy, ['validation_status' => 'eligible']);   // assigned while Q2 was still unclaimed
+    $this->claims->claim($q2, $this->admin);
+
+    expect(fn () => $this->claims->claim($q3, $this->admin))
+        ->toThrow(InterventionRuleViolation::class, 'Not eligible: Duplicate - Municipal Cash Subsidy was already received in 2026-Q2.');
+    expect($q3->fresh()->claim_status)->toBe('unclaimed');
+
+    $seedlings = program('lgu', 'Emergency Seedlings');   // repeats allowed
+    $this->claims->claim(record($juan, $seedlings, ['validation_status' => 'eligible', 'distribution_cycle_id' => $this->q2->id]), $this->admin);
+    expect($this->claims->claim(record($juan, $seedlings, ['validation_status' => 'eligible']), $this->admin)->claim_status)->toBe('claimed');
+});
+
+it('refuses to restore a claimed LGU repeat', function () {
+    [$juan] = sameHousehold(['Juan']);
+    $subsidy = program('lgu', 'Municipal Cash Subsidy');
+    $q3 = $this->claims->claim(record($juan, $subsidy, ['validation_status' => 'eligible']), $this->admin);
+    $this->claims->archive($q3, 'Wrong cycle', $this->admin);
+    $this->claims->claim(record($juan, $subsidy, ['validation_status' => 'eligible', 'distribution_cycle_id' => $this->q2->id]), $this->admin);
+
+    expect(fn () => $this->claims->restore(InterventionRecord::onlyTrashed()->find($q3->id), $this->admin))
+        ->toThrow(InterventionRuleViolation::class, 'Not eligible: Duplicate - Municipal Cash Subsidy was already received in 2026-Q2.');
+});

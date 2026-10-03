@@ -18,9 +18,6 @@
     ];
 @endphp
 <x-layouts.app title="BENEFICIARY PROFILE">
-    @if (session('status'))
-        <p class="rounded-[10px] border-[1.5px] border-ok bg-white px-[16px] py-[10px] text-[14px] font-bold" role="status">{{ session('status') }}</p>
-    @endif
 
     {{-- Figma 329:3398 household banner --}}
     <x-ui.card title="Beneficiary Profile" class="pb-[14px]">
@@ -105,7 +102,7 @@
                         <span>{{ $barangayName }}</span>
                         @if ($isEdit && auth()->user()->can('interventions.claim'))
                             <x-intervention.chip-select name="claim_status" :options="['unclaimed' => 'Unclaimed', 'claimed' => 'Claimed']" :selected="$record->claim_status"
-                                                        :tone="$record->claimTone()" :hidden="['historical' => 1]"
+                                                        :tone="$record->claimTone()"
                                                         :actions="['claimed' => route('intervention-records.claim', $record), 'unclaimed' => route('intervention-records.unclaim', $record)]" />
                         @else
                             <x-ui.status-chip :tone="$record->claimTone()">{{ $record->claimLabel() }}</x-ui.status-chip>

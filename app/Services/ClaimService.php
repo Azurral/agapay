@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\InterventionRuleViolation;
 use App\Models\Beneficiary;
+use App\Models\Household;
 use App\Models\InterventionRecord;
 use App\Models\Role;
 use App\Models\User;
@@ -14,6 +15,8 @@ use Illuminate\Validation\Rule;
 /** Eligibility validation, claims, archive and restore of intervention records (paper rules 3, 5, 6). */
 final class ClaimService
 {
+    public function __construct(private readonly InterventionAssignment $assignment) {}
+
     public function validate(InterventionRecord $record, string $status, User $actor): InterventionRecord
     {
         Validator::make(['validation_status' => $status], [
@@ -49,7 +52,9 @@ final class ClaimService
             'override_reason' => ['nullable', 'string', 'max:1000'],
         ], ['date_distributed.before_or_equal' => 'The distribution date cannot be in the future.'])->validate();
 
+        // Retried a few times: InnoDB may pick a simultaneous claim as a deadlock victim.
         return DB::transaction(function () use ($record, $actor, $input, $historical) {
+            $this->lockHousehold($record);
             $record = $this->lockFresh($record);
 
             if ($record->isClaimed()) {
@@ -67,6 +72,8 @@ final class ClaimService
                 throw new InterventionRuleViolation('Not eligible: '.InterventionRecord::validationLabel($record->validation_status).'.');
             }
 
+            $this->refuseRepeat($record);
+
             $deceased = $record->validation_status === InterventionRecord::VALIDATION_DECEASED;
             $proxy = trim((string) ($input['proxy_claimant'] ?? ''));
             $proof = trim((string) ($input['proof_note'] ?? ''));
@@ -78,9 +85,7 @@ final class ClaimService
             $overridden = false;
             if ($blocker = $this->householdClaim($record)) {
                 if ($override === '' || $actor->role?->slug !== Role::ADMIN) {
-                    throw new InterventionRuleViolation(
-                        "{$blocker->beneficiary->fullName()} already claimed {$record->intervention->name} for this household in {$record->cycle->code}."
-                    );
+                    throw $this->householdViolation($record, $blocker);
                 }
                 $overridden = true;
             }
@@ -100,12 +105,16 @@ final class ClaimService
 
             $keys = ['claim_status', 'validation_status', 'date_distributed', 'proxy_claimant', 'override_reason'];
             AuditLogger::record(
-                $overridden ? 'Claimed Intervention (Household Override)' : 'Claimed Intervention',
+                match (true) {
+                    $overridden => 'Claimed Intervention (Household Override)',
+                    $historical => 'Claimed Intervention (Historical Encoding)',
+                    default => 'Claimed Intervention',
+                },
                 $record, null, array_intersect_key($old, array_flip($keys)), $record->only($keys), $actor,
             );
 
             return $record;
-        });
+        }, attempts: 3);
     }
 
     public function unclaim(InterventionRecord $record, User $actor): InterventionRecord
@@ -148,12 +157,21 @@ final class ClaimService
     public function restore(InterventionRecord $record, User $actor): InterventionRecord
     {
         return DB::transaction(function () use ($record, $actor) {
+            $this->lockHousehold($record);
             $record = InterventionRecord::withTrashed()->lockForUpdate()->findOrFail($record->id);
 
             $taken = InterventionRecord::where($record->only(['beneficiary_id', 'intervention_id', 'distribution_cycle_id']))
                 ->whereKeyNot($record->id)->exists();
             if ($taken) {
                 throw new InterventionRuleViolation('An active record already exists for this intervention and cycle.');
+            }
+
+            // A claimed record comes back only if the household and repeat rules still allow its claim.
+            if ($record->isClaimed()) {
+                $this->refuseRepeat($record);
+                if ($blocker = $this->householdClaim($record)) {
+                    throw $this->householdViolation($record, $blocker);
+                }
             }
 
             // Restored quietly so the trail gets one "Restored" row, not an extra "Updated" row for deleted_at.
@@ -177,9 +195,19 @@ final class ClaimService
     }
 
     /**
-     * The household member's claimed record that blocks this claim, if any.
-     * Locks the household's records for this intervention and cycle so two simultaneous claims cannot both pass.
+     * Serializes claims within one household: every claim or restore first locks the household row,
+     * so two members' simultaneous claims queue up instead of both passing (or deadlocking) on the record rows.
      */
+    private function lockHousehold(InterventionRecord $record): void
+    {
+        $householdId = Beneficiary::withTrashed()->whereKey($record->beneficiary_id)->value('household_id');
+
+        if ($householdId) {
+            Household::whereKey($householdId)->lockForUpdate()->first();
+        }
+    }
+
+    /** The household member's claimed record that blocks this claim, if any (run after lockHousehold). */
     private function householdClaim(InterventionRecord $record): ?InterventionRecord
     {
         $householdId = $record->beneficiary->household_id;
@@ -191,8 +219,25 @@ final class ClaimService
         return InterventionRecord::with('beneficiary')
             ->where(['intervention_id' => $record->intervention_id, 'distribution_cycle_id' => $record->distribution_cycle_id])
             ->whereIn('beneficiary_id', Beneficiary::where('household_id', $householdId)->select('id'))
-            ->lockForUpdate()
-            ->get()
-            ->first(fn (InterventionRecord $other) => $other->id !== $record->id && $other->isClaimed());
+            ->where('claim_status', InterventionRecord::CLAIM_CLAIMED)
+            ->whereKeyNot($record->id)
+            ->first();
+    }
+
+    private function householdViolation(InterventionRecord $record, InterventionRecord $blocker): InterventionRuleViolation
+    {
+        return new InterventionRuleViolation(
+            "{$blocker->beneficiary->fullName()} already claimed {$record->intervention->name} for this household in {$record->cycle->code}."
+        );
+    }
+
+    /** Spec rule 6: identical LGU assistance is not paid out twice unless the program allows repeats. */
+    private function refuseRepeat(InterventionRecord $record): void
+    {
+        $earlier = $this->assignment->earlierClaim($record->beneficiary_id, $record->intervention, $record->distribution_cycle_id, $record->id);
+
+        if ($earlier) {
+            throw new InterventionRuleViolation("Not eligible: Duplicate - {$record->intervention->name} was already received in {$earlier->cycle->code}.");
+        }
     }
 }
