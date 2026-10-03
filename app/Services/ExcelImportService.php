@@ -102,6 +102,20 @@ final class ExcelImportService
         });
     }
 
+    /** Drops a staged batch; its rows stay for the record but can no longer be imported. */
+    public function discard(ImportBatch $batch, User $actor): void
+    {
+        DB::transaction(function () use ($batch, $actor) {
+            $batch = ImportBatch::whereKey($batch->id)->lockForUpdate()->firstOrFail();
+            if ($batch->status !== ImportBatch::STAGED) {
+                throw new ImportFileException($batch->status === ImportBatch::IMPORTED ? 'This import was already confirmed.' : 'This import was discarded.');
+            }
+
+            $batch->update(['status' => ImportBatch::DISCARDED]);
+            AuditLogger::record('Discarded Excel Import', $batch, null, ['status' => ImportBatch::STAGED], ['status' => ImportBatch::DISCARDED], $actor);
+        });
+    }
+
     public static function maxKilobytes(): int
     {
         return (int) config('agapay.import.max_kilobytes', 25 * 1024);

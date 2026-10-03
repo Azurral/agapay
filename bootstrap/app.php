@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureCanAny;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -25,4 +26,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+        // A spreadsheet bigger than php.ini's post_max_size never reaches the controller (and has no session yet):
+        // send the uploader back to the upload card, which shows the size message.
+        $exceptions->render(fn (PostTooLargeException $e, Request $request) => $request->is('import')
+            ? redirect()->route('import.index', ['too_large' => 1])
+            : null);
     })->create();
