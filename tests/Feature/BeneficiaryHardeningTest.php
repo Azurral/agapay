@@ -9,6 +9,7 @@ use App\Models\Permission;
 use App\Models\User;
 use App\Services\RsbsaWorkflow;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -138,4 +139,30 @@ it('keeps a household that an archived member still belongs to', function () {
     $b->update(['address' => 'Purok 3']);
 
     expect(Household::find($household))->not->toBeNull();
+});
+
+it('upper-cases RSBSA numbers recorded through the workflow', function () {
+    $federico = Beneficiary::where('first_name', 'Federico')->sole();   // endorsed
+
+    RsbsaWorkflow::apply($federico, 'record-number', ['rsbsa_number' => ' rsbsa-5555 ']);
+
+    expect($federico->fresh()->rsbsa_number)->toBe('RSBSA-5555');
+});
+
+it('keeps the old case when upper-casing would collide', function () {
+    DB::table('beneficiaries')->where('rsbsa_number', 'RSBSA-0232')->update(['rsbsa_number' => 'rsbsa-0231']);
+
+    (require database_path('migrations/2026_10_07_000001_normalise_beneficiary_text.php'))->up();
+
+    expect(DB::table('beneficiaries')->where('rsbsa_number', 'rsbsa-0231')->exists())->toBeTrue()
+        ->and(DB::table('beneficiaries')->where('rsbsa_number', 'RSBSA-0231')->count())->toBe(1);
+});
+
+it('does not report other unique clashes as an RSBSA clash', function () {
+    $maria = Beneficiary::where('rsbsa_number', 'RSBSA-0232')->sole();
+    Beneficiary::saving(fn () => throw new UniqueConstraintViolationException('mysql', 'update', [], new PDOException('Duplicate entry for key households_address_unique', 23000)));
+
+    $this->withoutExceptionHandling();
+    expect(fn () => $this->actingAs($this->encoder)->put(route('beneficiaries.update', $maria), editInput($maria)))
+        ->toThrow(UniqueConstraintViolationException::class);
 });

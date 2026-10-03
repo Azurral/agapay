@@ -69,3 +69,11 @@ it('is for administrators only', function (string $username) {
     $this->actingAs(User::where('username', $username)->sole())->get('/distribution-cycles')->assertForbidden();
     $this->post(route('cycles.store'), cycleInput())->assertForbidden();
 })->with(['Agritech_02', 'Encoder_03']);
+
+it('copes with an older cycle that has no schedule date', function () {
+    DistributionCycle::create(['code' => '2026-X', 'label' => 'Undated cycle', 'status' => 'completed']);
+
+    // A date already past makes the order check compare against the undated neighbour.
+    $this->actingAs($this->admin)->post(route('cycles.store'), cycleInput(['schedule_date' => '2026-09-01']))->assertRedirect(route('cycles.index'));
+    $this->get('/distribution-cycles')->assertOk()->assertSee('Undated cycle');
+});

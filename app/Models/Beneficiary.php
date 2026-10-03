@@ -94,6 +94,12 @@ class Beneficiary extends Model
         return $value === '' ? null : $value;
     }
 
+    /** Whether a unique-key violation is on the RSBSA number (other unique keys are not reported as an RSBSA clash). */
+    public static function isRsbsaClash(\Throwable $e): bool
+    {
+        return str_contains($e->getMessage(), 'rsbsa_number');
+    }
+
     /** RSBSA numbers are stored trimmed and in upper case ("rsbsa-0777" → "RSBSA-0777"). */
     public static function normalizeRsbsa(?string $number): ?string
     {

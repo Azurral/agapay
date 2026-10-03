@@ -42,7 +42,7 @@ it('refuses a cost larger than the column', function () {
         ->assertSessionHasErrors(['total_area_ha' => 'The computed cost is too large — check the crop values.']);
 });
 
-it('cleans photos of a retried attempt', function () {
+it('leaves no photos and a clear message when a save deadlocks', function () {
     $failed = false;
     DamagePhoto::created(function () use (&$failed) {
         if (! $failed) {
@@ -146,4 +146,14 @@ it('only reports on distribution cycles', function () {
 
     $this->actingAs($this->admin)->post('/reports', ['program' => 'all', 'format' => 'pdf'])
         ->assertSessionHasErrors(['distribution_cycle_id' => 'Choose a distribution cycle.']);
+});
+
+it('labels records that cannot be claimed in the beneficiary list', function () {
+    $cycle = DistributionCycle::current();
+    record($this->ana, program('lgu', 'Emergency Seedlings'), ['distribution_cycle_id' => $cycle->id, 'validation_status' => 'relocated']);
+
+    $row = collect(app(ReportService::class)->build(new ReportCriteria($cycle))['beneficiaries'])
+        ->first(fn ($r) => $r['name'] === 'Ana Dela Cruz' && str_contains($r['program'], 'Emergency Seedlings'));
+
+    expect($row['claim'])->toBe('Not Claimable');
 });

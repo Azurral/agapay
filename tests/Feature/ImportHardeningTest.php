@@ -36,7 +36,7 @@ it('turns a clash during confirm into a row message', function () {
     // Someone registers the same number between the check and the insert.
     Beneficiary::creating(function (Beneficiary $b) {
         if ($b->rsbsa_number === 'RSBSA-0901') {
-            throw new UniqueConstraintViolationException('mysql', 'insert', [], new PDOException('Duplicate entry', 23000));
+            throw new UniqueConstraintViolationException('mysql', 'insert', [], new PDOException("Duplicate entry 'RSBSA-0901' for key 'beneficiaries_rsbsa_number_unique'", 23000));
         }
     });
 
@@ -76,4 +76,13 @@ it('tells the user how to recover from a confirm error', function () {
     $this->actingAs($this->encoder)->followingRedirects()->post(route('import.confirm', $batch))
         ->assertSee('Row 2: RSBSA No. RSBSA-0901 is already used by')
         ->assertSee('Discard this upload, fix the file and upload it again.');
+});
+
+it('upper-cases RSBSA numbers an import records', function () {
+    $federico = Beneficiary::where('first_name', 'Federico')->sole();
+    $batch = stageHardening([['Name', 'Birthdate', 'Barangay', 'RSBSA No.'], ['Federico Wasing', $federico->birthdate->toDateString(), 'Bayyo', 'rsbsa-0777']]);
+
+    app(ExcelImportService::class)->confirm($batch, $this->encoder);
+
+    expect($federico->fresh()->rsbsa_number)->toBe('RSBSA-0777');
 });

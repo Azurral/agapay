@@ -85,7 +85,7 @@ final class ReportService
                 'validation' => $r->validation_status === InterventionRecord::VALIDATION_PENDING
                     ? 'Pending Validation'
                     : InterventionRecord::validationLabel($r->validation_status),
-                'claim' => $r->claimLabel(),
+                'claim' => ! $r->isClaimed() && in_array($r->validation_status, self::NOT_CLAIMABLE, true) ? 'Not Claimable' : $r->claimLabel(),
                 'date' => $r->date_distributed?->format('M j, Y') ?? '—',
             ])->all(),
             'inventory' => $this->inventory($criteria),

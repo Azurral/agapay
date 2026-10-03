@@ -11,7 +11,8 @@ export default defineConfig({
         deviceScaleFactor: 1,
     },
     webServer: {
-        command: 'php artisan migrate:fresh --seed --force && php artisan serve --port=8123',
+        // config:clear first: a cached config would ignore DB_DATABASE below and wipe the real database.
+        command: 'php artisan config:clear && php artisan migrate:fresh --seed --force && php artisan serve --port=8123',
         cwd: '../..',
         url: 'http://127.0.0.1:8123/login',
         reuseExistingServer: false,

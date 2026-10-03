@@ -92,7 +92,7 @@ final class RsbsaWorkflow
             throw ValidationException::withMessages(['rsbsa_number' => "RSBSA number {$number} is already assigned to another beneficiary."]);
         }
 
-        return $number;
+        return Beneficiary::normalizeRsbsa($number);   // saved quietly, so the model hook does not run
     }
 
     private static function pastTense(string $action): string

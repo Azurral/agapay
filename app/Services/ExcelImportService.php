@@ -154,7 +154,10 @@ final class ExcelImportService
                     }
 
                     $row->update(['beneficiary_id' => $beneficiary->id]);
-                } catch (UniqueConstraintViolationException) {
+                } catch (UniqueConstraintViolationException $e) {
+                    if (! Beneficiary::isRsbsaClash($e)) {
+                        throw $e;
+                    }
                     // Registered by someone else between the check and the insert.
                     throw new ImportFileException("Row {$row->row_number}: RSBSA No. {$row->data['rsbsa_number']} was registered by someone else meanwhile.");
                 } catch (InterventionRuleViolation|ImportFileException $e) {
@@ -245,7 +248,7 @@ final class ExcelImportService
         $keys = ['rsbsa_number', 'rsbsa_status', 'encoding_issue'];
         $old = $beneficiary->only($keys);
         $beneficiary->forceFill([
-            'rsbsa_number' => $row->data['rsbsa_number'],
+            'rsbsa_number' => Beneficiary::normalizeRsbsa($row->data['rsbsa_number']),   // saved quietly: no model hook
             'rsbsa_status' => Beneficiary::RSBSA_REGISTERED,
             'rsbsa_status_reason' => null,
             'encoding_issue' => $beneficiary->encoding_issue === 'Missing RSBSA Number' ? null : $beneficiary->encoding_issue,
@@ -258,7 +261,9 @@ final class ExcelImportService
 
     private function ensureNumberFree(?string $rsbsaNumber): void
     {
-        $owner = $rsbsaNumber ? Beneficiary::withTrashed()->where('rsbsa_number', $rsbsaNumber)->first() : null;
+        $owner = $rsbsaNumber
+            ? Beneficiary::withTrashed()->whereRaw('UPPER(TRIM(rsbsa_number)) = ?', [Beneficiary::normalizeRsbsa($rsbsaNumber)])->first()
+            : null;
         if ($owner) {
             throw new ImportFileException("RSBSA No. {$rsbsaNumber} is already used by {$owner->fullName()}.");
         }

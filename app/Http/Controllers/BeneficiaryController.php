@@ -105,7 +105,11 @@ class BeneficiaryController extends Controller
                     AuditLogger::record('Recorded RSBSA Number', $beneficiary, null, $old, $beneficiary->only(array_keys($old)));
                 }
             });
-        } catch (UniqueConstraintViolationException) {
+        } catch (UniqueConstraintViolationException $e) {
+            if (! Beneficiary::isRsbsaClash($e)) {
+                throw $e;
+            }
+
             // Someone saved the same number after this form passed validation.
             return back()->withInput()->withErrors(['rsbsa_number' => "RSBSA No. {$beneficiary->rsbsa_number} is already used by another profile."]);
         }

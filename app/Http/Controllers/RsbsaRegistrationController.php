@@ -43,7 +43,11 @@ class RsbsaRegistrationController extends Controller
             return back()->withErrors(['rsbsa' => $e->getMessage()], 'rsbsa');
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors(), 'rsbsa')->with('rsbsa_failed', "{$action}-{$beneficiary->id}");
-        } catch (UniqueConstraintViolationException) {
+        } catch (UniqueConstraintViolationException $e) {
+            if (! Beneficiary::isRsbsaClash($e)) {
+                throw $e;
+            }
+
             // Another profile got the same number after it was checked.
             return back()->withErrors(['rsbsa_number' => 'That RSBSA No. is already used by another profile.'], 'rsbsa')
                 ->with('rsbsa_failed', "{$action}-{$beneficiary->id}");

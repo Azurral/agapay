@@ -69,6 +69,10 @@ final class DamageReportService
 
         try {
             [$report, $removed] = DB::transaction(function () use ($report, $data, $newPhotos, $removePhotoIds, &$stored) {
+                // A deadlock retry starts over: the photos of the failed attempt go first.
+                Storage::disk(DamagePhoto::DISK)->delete($stored);
+                $stored = [];
+
                 Beneficiary::whereKey($data['beneficiary_id'])->lockForUpdate()->firstOrFail();
                 $report = DamageReport::whereKey($report->id)->lockForUpdate()->firstOrFail();
                 if ($report->isValidated()) {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DistributionCycle;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +42,10 @@ class DistributionCycleController extends Controller
     private function save(DistributionCycle $cycle, array $data): DistributionCycle
     {
         return DB::transaction(function () use ($cycle, $data) {
+            // Every cycle is locked first, so two saves at once cannot break the date order or leave two ongoing.
+            DistributionCycle::query()->lockForUpdate()->get(['id']);
+            $this->ensureDateOrder(CarbonImmutable::parse($data['schedule_date']), $cycle->exists ? $cycle : null);
+
             // One ongoing cycle at a time: starting one completes the previous.
             if ($data['status'] === DistributionCycle::STATUS_ONGOING) {
                 DistributionCycle::where('status', DistributionCycle::STATUS_ONGOING)
@@ -75,7 +80,6 @@ class DistributionCycleController extends Controller
             'schedule_date.*' => 'Enter the schedule date.',
             'status.*' => 'Choose a status.',
         ]);
-        $this->ensureDateOrder($request, $cycle);
 
         return $data;
     }
@@ -84,11 +88,12 @@ class DistributionCycleController extends Controller
      * Cycles stay in date order (lists and "latest record" sort by cycle): a new cycle comes after the latest,
      * an edited one stays between its neighbours.
      */
-    private function ensureDateOrder(Request $request, ?DistributionCycle $cycle): void
+    private function ensureDateOrder(CarbonImmutable $date, ?DistributionCycle $cycle): void
     {
-        $date = $request->date('schedule_date');
-        $before = DistributionCycle::when($cycle, fn ($q) => $q->where('id', '<', $cycle->id))->orderByDesc('id')->first();
-        $after = $cycle ? DistributionCycle::where('id', '>', $cycle->id)->orderBy('id')->first() : null;
+        // Older cycles without a schedule date (from before this screen) are not neighbours to compare with.
+        $dated = fn () => DistributionCycle::whereNotNull('schedule_date');
+        $before = $dated()->when($cycle, fn ($q) => $q->where('id', '<', $cycle->id))->orderByDesc('id')->first();
+        $after = $cycle ? $dated()->where('id', '>', $cycle->id)->orderBy('id')->first() : null;
 
         $message = match (true) {
             $before && $date->lte($before->schedule_date) => $cycle
