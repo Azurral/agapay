@@ -53,7 +53,13 @@ class InventorySeeder extends Seeder
                 $autoTotal += (float) $record->quantity;
             }
 
-            $this->movement($item, InventoryMovement::OUT, $out - $autoTotal, '2026-06-30', 'Distributed before AGAPAY (logbook)', $admin);
+            // The logbook line makes up the Figma stock-out; a dev database that claimed more than that gets none.
+            $logbook = round($out - $autoTotal, 2);
+            if ($logbook > 0) {
+                $this->movement($item, InventoryMovement::OUT, $logbook, '2026-06-30', 'Distributed before AGAPAY (logbook)', $admin);
+            } else {
+                InventoryMovement::where(['inventory_item_id' => $item->id, 'source' => InventoryMovement::MANUAL, 'notes' => 'Distributed before AGAPAY (logbook)'])->delete();
+            }
         }
     }
 

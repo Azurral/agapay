@@ -9,6 +9,7 @@ use App\Models\InventoryMovement;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /** Owns stock: manual movements and the automatic movements that follow claims (spec rule 7). */
@@ -123,7 +124,7 @@ final class InventoryService
     {
         InventoryMovement::create([
             'inventory_item_id' => $item->id, 'direction' => $direction, 'quantity' => $quantity, 'movement_date' => $date,
-            'notes' => $notes, 'source' => InventoryMovement::AUTO, 'intervention_record_id' => $record->id, 'user_id' => $actor->id,
+            'notes' => Str::limit($notes, 254, '…'), 'source' => InventoryMovement::AUTO, 'intervention_record_id' => $record->id, 'user_id' => $actor->id,
         ]);
     }
 }
