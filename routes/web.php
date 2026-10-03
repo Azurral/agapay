@@ -4,6 +4,7 @@ use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BeneficiaryController;
 use App\Http\Controllers\BeneficiaryLookupController;
+use App\Http\Controllers\DamageExportController;
 use App\Http\Controllers\DamagePhotoController;
 use App\Http\Controllers\DamageReferenceController;
 use App\Http\Controllers\DamageReportActionController;
@@ -84,6 +85,9 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
     Route::middleware('can:damage.view')->group(function () {
         Route::get('/damage-reports', [DamageReportController::class, 'index'])->name('damage.index');
+        // Before /damage-reports/{report}, so "export" and "pdf" are not read as report ids.
+        Route::get('/damage-reports/export', [DamageExportController::class, 'excel'])->middleware('can:export.run')->name('damage.export');
+        Route::get('/damage-reports/pdf', [DamageExportController::class, 'pdf'])->name('damage.pdf');
         Route::get('/damage-reports/{report}', [DamageReportController::class, 'show'])->withTrashed()->name('damage.show');
         Route::get('/damage-photos/{photo}', DamagePhotoController::class)->name('damage.photos.show');
     });

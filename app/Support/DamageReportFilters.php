@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Barangay;
 use App\Models\DamageReport;
 use App\Models\Disaster;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -32,11 +33,12 @@ final readonly class DamageReportFilters
         public bool $canSeeArchived,
     ) {}
 
-    public static function fromRequest(Request $request): self
+    public static function fromRequest(Request $request, ?User $user = null): self
     {
+        $user ??= $request->user();
         $disasters = Disaster::orderByDesc('occurred_on')->orderByDesc('id')->get();
         $barangays = Barangay::orderBy('name')->pluck('name', 'id');
-        $canSeeArchived = $request->user()->can('damage.configure');
+        $canSeeArchived = $user->can('damage.configure');
 
         $disaster = $request->query('disaster');
         $disasterId = match (true) {
@@ -92,7 +94,7 @@ final readonly class DamageReportFilters
         $disaster = $this->disaster();
 
         return ($disaster ? "{$disaster->name} ({$disaster->occurred_on->format('M j, Y')})" : 'All disasters')
-            .' · Barangay: '.($this->barangays[$this->barangayId] ?? 'All')
+            .' · Barangay: '.($this->barangayId !== null ? $this->barangays[$this->barangayId] : 'All')
             .' · Status: '.$this->statusOptions()[$this->status];
     }
 }
