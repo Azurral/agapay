@@ -125,7 +125,7 @@ class Beneficiary extends Model
     /** Eager loads for <x-beneficiary.table>: barangay name and household size without N+1 queries. */
     public function scopeForTable(Builder $query): Builder
     {
-        return $query->with(['barangay:id,name', 'household' => fn ($q) => $q->withCount('members')]);
+        return $query->with(['barangay:id,name', 'household' => fn ($q) => $q->withCount('members'), 'latestRecord.intervention']);
     }
 
     /** Free-text search on name, full name, RSBSA number or barangay; LIKE wildcards in the term are literal. */

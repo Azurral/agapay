@@ -1,9 +1,15 @@
 <?php
 
 use App\Models\Beneficiary;
+use App\Models\DistributionCycle;
+use App\Models\InterventionRecord;
 use App\Models\Role;
+use App\Models\User;
+use App\Services\ClaimService;
 use App\Support\DashboardStats;
 use Database\Seeders\BarangaySeeder;
+use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\InterventionSeeder;
 
 beforeEach(function () {
     seedRoles();
@@ -42,4 +48,30 @@ it('counts beneficiary stats live', function () {
         ->and(DashboardStats::value('encoded_this_month', $encoder))->toBe(2)
         ->and(DashboardStats::value('encoded_this_month', $admin))->toBe(0)
         ->and(DashboardStats::value('records_to_update', $encoder))->toBe(1);
+});
+
+it('shows each beneficiary\'s latest intervention and claim status', function () {
+    $this->seed(InterventionSeeder::class);
+    $juan = Beneficiary::factory()->create(['first_name' => 'Juan', 'middle_name' => null, 'last_name' => 'Dela Cruz', 'rsbsa_number' => 'RSBSA-0231', 'barangay_id' => brgy('Poblacion')]);
+    record($juan, program('da', 'Molasses'), ['distribution_cycle_id' => DistributionCycle::where('code', '2026-Q2')->value('id')]);
+    record($juan, program('da', 'Certified Rice Seeds'), ['validation_status' => 'eligible', 'claim_status' => 'claimed', 'date_distributed' => '2026-07-18']);
+
+    $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')
+        ->assertSeeInOrder(['Juan Dela Cruz', 'RSBSA-0231', 'Poblacion', '1 member', 'Certified Rice Seeds', 'Claimed'])
+        ->assertDontSee('Molasses');
+});
+
+it('counts active interventions and pending validations live', function () {
+    $this->seed(DatabaseSeeder::class);
+    $agritech = User::where('username', 'Agritech_02')->sole();
+
+    expect(DashboardStats::value('active_interventions', $agritech))->toBe(5)
+        ->and(DashboardStats::value('pending_validation', $agritech))->toBe(2);
+
+    $carlos = InterventionRecord::whereHas('beneficiary', fn ($q) => $q->where('first_name', 'Carlos'))->sole();
+    app(ClaimService::class)->archive($carlos, 'Wrong program', User::where('username', 'Admin_01')->sole());
+
+    expect(DashboardStats::value('active_interventions', $agritech))->toBe(4)
+        ->and(DashboardStats::value('pending_validation', $agritech))->toBe(1)
+        ->and($carlos->beneficiary->fresh()->latestRecord)->toBeNull();   // archived records never count as "latest"
 });

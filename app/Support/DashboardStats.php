@@ -3,6 +3,8 @@
 namespace App\Support;
 
 use App\Models\Beneficiary;
+use App\Models\DistributionCycle;
+use App\Models\InterventionRecord;
 use App\Models\User;
 
 /**
@@ -21,8 +23,11 @@ final class DashboardStats
             'encoded_this_month' => Beneficiary::where('created_by', $user->id)
                 ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
             'records_to_update' => Beneficiary::whereNotNull('encoding_issue')->count(),
-            'active_interventions',
-            'pending_validation',
+            // Programs with at least one active record in the current distribution cycle.
+            'active_interventions' => ($cycle = DistributionCycle::current())
+                ? InterventionRecord::where('distribution_cycle_id', $cycle->id)->distinct()->count('intervention_id')
+                : 0,
+            'pending_validation' => InterventionRecord::where('validation_status', InterventionRecord::VALIDATION_PENDING)->count(),
             'reports_filed_this_month',
             'low_stock_items' => 0,
         };

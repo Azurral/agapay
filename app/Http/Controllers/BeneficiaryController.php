@@ -21,6 +21,7 @@ class BeneficiaryController extends Controller
         $name = mb_substr($request->queryText('name'), 0, 100);
         $rsbsa = mb_substr($request->queryText('rsbsa'), 0, 50);
         $barangay = ctype_digit($request->queryText('barangay')) ? (int) $request->queryText('barangay') : null;
+        $interventionId = ctype_digit($request->queryText('intervention')) ? (int) $request->queryText('intervention') : null;
 
         $beneficiaries = Beneficiary::forTable()
             ->when($name !== '', fn ($q) => $q->search($name))
@@ -28,12 +29,14 @@ class BeneficiaryController extends Controller
                 '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($rsbsa)).'%',
             ]))
             ->when($barangay, fn ($q) => $q->where('barangay_id', $barangay))
+            ->when($interventionId, fn ($q) => $q->whereHas('interventionRecords', fn ($r) => $r->where('intervention_id', $interventionId)))
             ->orderBy('last_name')->orderBy('first_name')->orderBy('id')
             ->paginate(15)->withQueryString();
 
         return view('beneficiaries.index', [
             'beneficiaries' => $beneficiaries,
             'barangays' => Barangay::orderBy('name')->pluck('name', 'id'),
+            'interventionOptions' => InterventionRecordController::interventionOptions(),
         ]);
     }
 
