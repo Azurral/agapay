@@ -119,3 +119,15 @@ it('links the list buttons to the downloads with the current filters', function 
         ->assertSee(route('damage.export', ['disaster' => $this->typhoon->id, 'barangay' => 'all', 'status' => 'validated']))
         ->assertSee(route('damage.pdf', ['disaster' => $this->typhoon->id, 'barangay' => 'all', 'status' => 'validated']));
 });
+
+it('caps the pdf rows and points to excel for the rest', function () {
+    config(['agapay.damage_pdf_max_rows' => 3]);
+    $this->actingAs($this->admin);
+
+    $data = DamageExportController::pdfData(DamageReportFilters::fromRequest(request(), $this->admin), $this->admin);
+    $html = view('damage.pdf', $data)->render();
+
+    expect($data['reports'])->toHaveCount(3)
+        ->and($html)->toContain('Showing the first 3 of 6 reports — use Export to Excel for the full list.')
+        ->toContain('₱738,000');
+});

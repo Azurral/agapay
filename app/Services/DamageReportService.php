@@ -170,8 +170,9 @@ final class DamageReportService
     /** @return array<string, mixed> */
     private function attributes(array $data): array
     {
-        $total = (float) ($data['total_area_ha'] ?? 0);
-        $partial = (float) ($data['partial_area_ha'] ?? 0);
+        // Rounded as the columns store them, so the loss always matches the areas shown.
+        $total = round((float) ($data['total_area_ha'] ?? 0), 2);
+        $partial = round((float) ($data['partial_area_ha'] ?? 0), 2);
 
         return [
             ...Arr::only($data, self::FIELDS),

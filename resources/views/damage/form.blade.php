@@ -42,16 +42,28 @@
                       { enableHighAccuracy: true, timeout: 10000 },
                   );
               },
+              photoNote: '',
+              // Checked here because PHP drops an over-limit request before Laravel sees it (and with it every typed field).
               add(list) {
+                  const maxFile = Number(this.$root.dataset.maxPhotoBytes), maxPost = Number(this.$root.dataset.maxPostBytes) - 262144;
+                  const skipped = [];
                   for (const file of list) {
-                      if (this.files.length >= 10) break;
+                      const total = this.files.reduce((sum, f) => sum + f.file.size, 0) + file.size;
+                      if (this.files.length >= 10) { skipped.push(file.name + ' (10 photos at most)'); continue; }
+                      if (!/\.(jpe?g|png)$/i.test(file.name)) { skipped.push(file.name + ' (not JPG/PNG)'); continue; }
+                      if (file.size > maxFile) { skipped.push(file.name + ' (over ' + this.$root.dataset.maxPhotoLabel + ')'); continue; }
+                      if (maxPost > 0 && total > maxPost) { skipped.push(file.name + ' (the photos together are too large to send)'); continue; }
                       this.files.push({ file, url: URL.createObjectURL(file) });
                   }
+                  this.photoNote = skipped.length ? 'Not added: ' + skipped.join(', ') + '.' : '';
                   this.sync();
               },
               remove(index) { URL.revokeObjectURL(this.files[index].url); this.files.splice(index, 1); this.sync(); },
               sync() { const dt = new DataTransfer(); this.files.forEach((f) => dt.items.add(f.file)); this.$refs.photos.files = dt.files; },
-          }" @submit="busy = true" class="flex items-start gap-[21px]">
+          }" @submit="busy = true" class="flex items-start gap-[21px]"
+          data-max-photo-bytes="{{ \App\Http\Requests\DamageReportRequest::photoLimitBytes() }}"
+          data-max-photo-label="{{ \App\Http\Requests\DamageReportRequest::photoLimitLabel() }}"
+          data-max-post-bytes="{{ \App\Http\Requests\DamageReportRequest::bytes((string) ini_get('post_max_size')) }}">
         @csrf
         @if ($editing) @method('PUT') @endif
 
@@ -181,7 +193,7 @@
                    :class="over ? 'border-brand bg-brand-soft/20' : 'border-black/15 bg-brand-soft/10'"
                    class="mt-[8px] flex min-h-[130px] cursor-pointer flex-col items-center justify-center rounded-[15px] border-2 border-dashed px-[16px] py-[16px] text-center transition-colors">
                 <input x-ref="photos" type="file" name="photos[]" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple class="sr-only"
-                       @change="const picked = [...$event.target.files]; files.forEach(f => URL.revokeObjectURL(f.url)); files = []; add(picked)">
+                       @change="add([...$event.target.files])">
                 <span x-show="files.length === 0" class="text-[16px] font-bold leading-[20px]">Drag &amp; drop photos here (JPG/PNG)</span>
                 <span x-show="files.length === 0" class="mt-[2px] text-[13px] leading-[17px] text-black">or click to browse</span>
                 <span x-cloak x-show="files.length > 0" class="flex flex-wrap justify-center gap-[10px]">
@@ -196,6 +208,11 @@
             @foreach ($photoErrors as $message)
                 <p class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger">{{ $message }}</p>
             @endforeach
+            <p x-cloak x-show="photoNote" x-text="photoNote" class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger"></p>
+            @if ($errors->any() && ! $tooLarge)
+                <p class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger">Choose the photos again — the browser does not keep them after an error.</p>
+            @endif
+            <p class="mt-[4px] pl-[4px] text-[12px] font-medium text-muted">Up to 10 JPG or PNG photos, each at most {{ \App\Http\Requests\DamageReportRequest::photoLimitLabel() }}.</p>
             <div class="mt-[16px] flex justify-center">
                 <button type="button" @click="$refs.photos.click()"
                         class="bg-brand-bar gradient-button flex h-[39px] w-[220px] items-center justify-center gap-[2px] rounded-[50px] text-[20px] font-bold leading-[24px] text-white">

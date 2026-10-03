@@ -30,7 +30,7 @@ class DamageReportRequest extends FormRequest
             'latitude' => ['nullable', 'required_with:longitude', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'required_with:latitude', 'numeric', 'between:-180,180'],
             'photos' => ['nullable', 'array', 'max:'.self::MAX_PHOTOS],
-            'photos.*' => ['file', 'mimes:jpg,jpeg,png', 'max:'.self::MAX_PHOTO_KILOBYTES],
+            'photos.*' => ['file', 'mimes:jpg,jpeg,png', 'max:'.intdiv(self::photoLimitBytes(), 1024)],
             'remove_photos' => ['nullable', 'array'],
             'remove_photos.*' => ['integer'],
         ];
@@ -39,7 +39,7 @@ class DamageReportRequest extends FormRequest
     public function messages(): array
     {
         $area = 'Enter the area in hectares, e.g. 1.5.';
-        $photo = 'Photos must be JPG or PNG files up to 5 MB.';
+        $photo = 'Each photo must be JPG or PNG and at most '.self::photoLimitLabel().'.';
 
         return [
             'disaster_id.*' => 'Choose a disaster.',
@@ -51,12 +51,40 @@ class DamageReportRequest extends FormRequest
             'partial_area_ha.*' => $area,
             'latitude.required_with' => 'Enter both latitude and longitude.',
             'longitude.required_with' => 'Enter both latitude and longitude.',
+            'latitude.numeric' => 'Enter the latitude in decimal degrees, e.g. 17.0894.',
+            'longitude.numeric' => 'Enter the longitude in decimal degrees, e.g. 120.9750.',
             'latitude.*' => 'Latitude must be between -90 and 90.',
             'longitude.*' => 'Longitude must be between -180 and 180.',
             'photos.array' => 'Attach up to 10 photos.',
             'photos.max' => 'Attach up to 10 photos.',
             'photos.*.*' => $photo,
         ];
+    }
+
+    /** The largest photo accepted: 5 MB, or less when php.ini's upload_max_filesize is lower. */
+    public static function photoLimitBytes(): int
+    {
+        return min(self::MAX_PHOTO_KILOBYTES * 1024, self::bytes((string) ini_get('upload_max_filesize')) ?: PHP_INT_MAX);
+    }
+
+    /** "5 MB", "2 MB" */
+    public static function photoLimitLabel(): string
+    {
+        return rtrim(rtrim(number_format(self::photoLimitBytes() / 1048576, 1), '0'), '.').' MB';
+    }
+
+    /** php.ini size ("2M", "512K", "1G", "8388608") in bytes; 0 means no limit. */
+    public static function bytes(string $size): int
+    {
+        $size = trim($size);
+        $number = (int) $size;
+
+        return match (strtoupper(substr($size, -1))) {
+            'G' => $number * 1024 ** 3,
+            'M' => $number * 1024 ** 2,
+            'K' => $number * 1024,
+            default => $number,
+        };
     }
 
     public function after(): array

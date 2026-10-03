@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Requests\DamageReportRequest;
 use App\Models\AuditLog;
 use App\Models\Beneficiary;
 use App\Models\Crop;
@@ -11,7 +12,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake('local');
     $this->seed(DatabaseSeeder::class);
     $this->admin = User::where('username', 'Admin_01')->sole();
     $this->agritech = User::where('username', 'Agritech_02')->sole();
@@ -60,7 +61,7 @@ it('files a report with photos and computes loss', function () {
         ->loss_mt->toEqual('5.40')->cost->toEqual('108000.00')->yield_mt_per_ha->toEqual('4.00')
         ->latitude->toEqual('17.089400')->farm_location->toBe('Sitio Lanao')
         ->and($report->photos()->pluck('original_name')->all())->toBe(['field-1.jpg', 'field-2.png'])
-        ->and(Storage::disk('public')->allFiles("damage/{$report->id}"))->toHaveCount(2)
+        ->and(Storage::disk('local')->allFiles("damage/{$report->id}"))->toHaveCount(2)
         ->and(AuditLog::where('action', 'Added Damage Report')->sole()->record_label)->toBe('Ana Dela Cruz · Rice · Southwest Monsoon Flooding');
 });
 
@@ -72,7 +73,7 @@ it('rejects bad input with field errors and stores nothing', function (array $ov
         ->assertSessionHasErrors([$field => $message])
         ->assertSessionHasInput('farm_location', 'Sitio Lanao');
 
-    expect(DamageReport::count())->toBe($before)->and(Storage::disk('public')->allFiles())->toBe([]);
+    expect(DamageReport::count())->toBe($before)->and(Storage::disk('local')->allFiles())->toBe([]);
 })->with([
     'no farmer' => [['beneficiary_id' => null], 'beneficiary_id', 'Choose a farmer from the list.'],
     'archived farmer' => [fn () => ['beneficiary_id' => tap(Beneficiary::factory()->create())->delete()->id], 'beneficiary_id', 'Choose a farmer from the list.'],
@@ -81,10 +82,10 @@ it('rejects bad input with field errors and stores nothing', function (array $ov
     'no area' => [['total_area_ha' => '0', 'partial_area_ha' => '0'], 'total_area_ha', 'Enter the damaged area.'],
     'latitude only' => [['longitude' => null], 'longitude', 'Enter both latitude and longitude.'],
     'latitude out of range' => [['latitude' => '91'], 'latitude', 'Latitude must be between -90 and 90.'],
-    'degree sign' => [['latitude' => '17.0894° N'], 'latitude', 'Latitude must be between -90 and 90.'],
+    'degree sign' => [['latitude' => '17.0894° N'], 'latitude', 'Enter the latitude in decimal degrees, e.g. 17.0894.'],
     'unknown stage' => [['crop_stage' => 'flowering'], 'crop_stage', 'Choose a crop stage.'],
-    'big photo' => [fn () => ['photos' => [UploadedFile::fake()->image('big.jpg')->size(8000)]], 'photos.0', 'Photos must be JPG or PNG files up to 5 MB.'],
-    'pdf as jpg' => [fn () => ['photos' => [UploadedFile::fake()->create('scan.jpg', 100, 'application/pdf')]], 'photos.0', 'Photos must be JPG or PNG files up to 5 MB.'],
+    'big photo' => [fn () => ['photos' => [UploadedFile::fake()->image('big.jpg')->size(8000)]], 'photos.0', fn () => 'Each photo must be JPG or PNG and at most '.DamageReportRequest::photoLimitLabel().'.'],
+    'pdf as jpg' => [fn () => ['photos' => [UploadedFile::fake()->create('scan.jpg', 100, 'application/pdf')]], 'photos.0', fn () => 'Each photo must be JPG or PNG and at most '.DamageReportRequest::photoLimitLabel().'.'],
     'eleven photos' => [fn () => ['photos' => array_map(fn ($i) => UploadedFile::fake()->image("p{$i}.jpg"), range(1, 11))], 'photos', 'Attach up to 10 photos.'],
 ]);
 
@@ -110,7 +111,7 @@ it('lets the reporter edit an unvalidated report and recalculates', function () 
 
     expect($report->fresh())->loss_mt->toEqual('8.00')->cost->toEqual('160000.00')
         ->and($report->photos()->pluck('original_name')->sort()->values()->all())->toBe(['b.jpg', 'c.jpg'])
-        ->and(Storage::disk('public')->exists($removed->path))->toBeFalse();
+        ->and(Storage::disk('local')->exists($removed->path))->toBeFalse();
 });
 
 it('lets only the reporter or a configurer edit', function () {
@@ -149,4 +150,35 @@ it('turns a request too large for PHP into the photo message', function () {
 
     $this->get(route('damage.create', ['too_large' => 1]))
         ->assertSee('The photos are too large to upload at once — up to 10 photos of 5 MB each.');
+});
+
+it('rounds areas to the stored two decimals before computing', function () {
+    $this->actingAs($this->encoder)->post('/damage-reports', damageInput(['total_area_ha' => '0.125', 'partial_area_ha' => '0']))->assertSessionHasNoErrors();
+
+    expect(DamageReport::latest('id')->firstOrFail())->total_area_ha->toEqual('0.13')->loss_mt->toEqual('0.52')->cost->toEqual('10400.00');
+});
+
+it('tells the reporter to choose the photos again after an error', function () {
+    $this->actingAs($this->encoder)->from('/damage-reports/create')->followingRedirects()
+        ->post('/damage-reports', damageInput(['total_area_ha' => '0', 'partial_area_ha' => '0', 'photos' => [UploadedFile::fake()->image('a.jpg')]]))
+        ->assertSee('Choose the photos again — the browser does not keep them after an error.');
+
+    $this->get('/damage-reports/create')->assertDontSee('Choose the photos again');
+});
+
+it('tells the form the photo limits this server accepts', function () {
+    $perFile = min(5 * 1024 * 1024, DamageReportRequest::bytes(ini_get('upload_max_filesize')));
+
+    $this->actingAs($this->encoder)->get('/damage-reports/create')
+        ->assertSee('data-max-photo-bytes="'.$perFile.'"', false)
+        ->assertSee('data-max-post-bytes="'.DamageReportRequest::bytes(ini_get('post_max_size')).'"', false)
+        ->assertSee('@change="add([...$event.target.files])"', false);
+});
+
+it('explains a photo PHP refused as too large', function () {
+    $photo = new UploadedFile(UploadedFile::fake()->image('big.jpg')->getRealPath(), 'big.jpg', 'image/jpeg', UPLOAD_ERR_INI_SIZE, true);
+    $limit = DamageReportRequest::photoLimitLabel();
+
+    $this->actingAs($this->encoder)->post('/damage-reports', damageInput(['photos' => [$photo]]))
+        ->assertSessionHasErrors(['photos.0' => "Each photo must be JPG or PNG and at most {$limit}."]);
 });

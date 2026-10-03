@@ -39,6 +39,10 @@
         </tr>
     </table>
 
+    @if ($totalRows > $reports->count())
+        <p class="muted">Showing the first {{ $reports->count() }} of {{ $totalRows }} reports — use Export to Excel for the full list.</p>
+    @endif
+
     <table class="rows">
         <thead>
             <tr>

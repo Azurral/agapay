@@ -26,10 +26,12 @@ class DamageExportController extends Controller
 
     public function pdf(Request $request): Response
     {
+        // DomPDF needs ~0.4 MB per row; the row cap in pdfData() keeps a big event within this.
         set_time_limit(300);
+        ini_set('memory_limit', '512M');
         $filters = DamageReportFilters::fromRequest($request);
         $data = self::pdfData($filters, $request->user());
-        AuditLogger::record('Generated Damage Report PDF', null, 'Damage Reports', [], ['filters' => $filters->describe(), 'rows' => $data['reports']->count()]);
+        AuditLogger::record('Generated Damage Report PDF', null, 'Damage Reports', [], ['filters' => $filters->describe(), 'rows' => $data['totalRows']]);
 
         return Pdf::loadView('damage.pdf', $data)->setPaper('a4', 'landscape')->download(self::fileName($filters, 'pdf'));
     }
@@ -38,14 +40,18 @@ class DamageExportController extends Controller
     public static function pdfData(DamageReportFilters $filters, User $user): array
     {
         $query = $filters->query();
+        $maxRows = (int) config('agapay.damage_pdf_max_rows', 1000);
 
         return [
             'filters' => $filters,
+            'totalRows' => (clone $query)->count(),
+            'maxRows' => $maxRows,
             'summary' => (clone $query)->toBase()->selectRaw(
                 'COUNT(DISTINCT beneficiary_id) AS farmers, COALESCE(SUM(total_area_ha + partial_area_ha), 0) AS area,'
                 .' COALESCE(SUM(loss_mt), 0) AS loss, COALESCE(SUM(cost), 0) AS cost'
             )->first(),
-            'reports' => $query->with(['beneficiary', 'barangay:id,name', 'crop:id,name'])->orderBy('barangay_id')->oldest()->get(),
+            // The summary covers every report; the table stops at the cap (Excel has the full list).
+            'reports' => $query->with(['beneficiary', 'barangay:id,name', 'crop:id,name'])->orderBy('barangay_id')->oldest()->limit($maxRows)->get(),
             'generatedBy' => $user->name,
             'generatedAt' => now(),
         ];
