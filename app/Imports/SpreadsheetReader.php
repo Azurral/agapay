@@ -3,9 +3,11 @@
 namespace App\Imports;
 
 use App\Exceptions\ImportFileException;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
+use PhpOffice\PhpSpreadsheet\Reader\IReader;
 use Throwable;
 
 /** Reads the first sheet of an .xlsx / .xls / .csv file into rows of trimmed strings. */
@@ -20,18 +22,20 @@ final class SpreadsheetReader
     public function read(string $path, string $extension): array
     {
         try {
-            $reader = IOFactory::createReader(match (strtolower($extension)) {
-                'csv' => 'Csv',
-                'xls' => 'Xls',
-                default => 'Xlsx',
-            });
-            if ($reader instanceof Csv) {
-                $reader->setDelimiter(self::csvDelimiter($path));
-            }
-            $sheet = $reader->load($path)->getSheet(0);
+            $sheet = $this->reader($path, $extension)->load($path)->getSheet(0);
             $lastColumn = $sheet->getHighestDataColumn();
             $lastRow = $sheet->getHighestDataRow();
-            $values = $sheet->rangeToArray("A1:{$lastColumn}{$lastRow}", null, true, false, false);
+            $values = $sheet->rangeToArray("A1:{$lastColumn}{$lastRow}", null, false, false, false);
+
+            // Formulas one cell at a time: one that can't be worked out (a link to another workbook)
+            // keeps Excel's last saved result, or becomes an error cell, instead of failing the file.
+            foreach ($sheet->getCoordinates() as $coordinate) {
+                $cell = $sheet->getCell($coordinate);
+                if ($cell->isFormula()) {
+                    [$column, $row] = Coordinate::indexesFromString($coordinate);
+                    $values[$row - 1][$column - 1] = $this->formulaValue($cell);
+                }
+            }
         } catch (Throwable) {
             throw new ImportFileException("This file couldn't be read as a spreadsheet.");
         }
@@ -39,6 +43,45 @@ final class SpreadsheetReader
         $width = Coordinate::columnIndexFromString($lastColumn);
 
         return array_map(fn (array $row) => array_slice(array_map($this->cell(...), array_pad($row, $width, null)), 0, $width), $values);
+    }
+
+    /** Rows in the first sheet, read from the file's index without loading the cells (for the row limit). */
+    public function rowCount(string $path, string $extension): int
+    {
+        try {
+            return (int) ($this->reader($path, $extension)->listWorksheetInfo($path)[0]['totalRows'] ?? 0);
+        } catch (Throwable) {
+            throw new ImportFileException("This file couldn't be read as a spreadsheet.");
+        }
+    }
+
+    private function reader(string $path, string $extension): IReader
+    {
+        $reader = IOFactory::createReader(match (strtolower($extension)) {
+            'csv' => 'Csv',
+            'xls' => 'Xls',
+            default => 'Xlsx',
+        });
+        $reader->setReadDataOnly(true);
+
+        if ($reader instanceof Csv) {
+            $reader->setDelimiter(self::csvDelimiter($path));
+            // Excel's "CSV (Comma delimited)" on Windows is Windows-1252, not UTF-8 ("Peña", "Santo Niño").
+            if (! mb_check_encoding((string) file_get_contents($path), 'UTF-8')) {
+                $reader->setInputEncoding('CP1252');
+            }
+        }
+
+        return $reader;
+    }
+
+    private function formulaValue(Cell $cell): mixed
+    {
+        try {
+            return $cell->getCalculatedValue();
+        } catch (Throwable) {
+            return $cell->getOldCalculatedValue() ?? '#REF!';
+        }
     }
 
     /**

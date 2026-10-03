@@ -90,7 +90,7 @@
 
             <p class="mt-[6px] text-[14px] font-medium leading-[20px] text-muted">
                 {{ $batch->original_name }} · {{ $total }} {{ Str::plural('row', $total) }} · uploaded {{ $batch->created_at->format('M j, Y g:i A') }}
-                @if ($total > $rows->count()) · showing the first {{ $previewLimit }} @endif
+                @if ($problemsFirst) · showing {{ $previewLimit }}; rows that need attention are listed first @endif
             </p>
 
             <div class="mt-[16px] grid {{ $previewCols }} text-[14px] font-medium leading-[20px] text-muted" aria-hidden="true">

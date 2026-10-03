@@ -6,6 +6,8 @@ use App\Models\Beneficiary;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 beforeEach(function () {
     $this->seed(DatabaseSeeder::class);
@@ -38,6 +40,19 @@ it('downloads the xlsx with the privacy columns', function () {
             && $first === ['Ana Dela Cruz', 'RSBSA-0233', 'Purok 3, Poblacion']
             && $export->map(Beneficiary::where('first_name', 'Estrella')->sole()) === ['Estrella Domogen', '(pending)', 'Sitio Maligcong'];
     });
+});
+
+it('writes every value as text so nothing runs as a formula', function () {
+    Beneficiary::factory()->create(['first_name' => '=HYPERLINK("http://x","Click")', 'last_name' => 'Aaa', 'rsbsa_number' => '05170100100012']);
+    $path = tempnam(sys_get_temp_dir(), 'agapay').'.xlsx';
+    file_put_contents($path, Excel::raw(new BeneficiaryListExport, Maatwebsite\Excel\Excel::XLSX));
+
+    $sheet = IOFactory::load($path)->getActiveSheet();
+
+    expect($sheet->getCell('A2')->getDataType())->toBe(DataType::TYPE_STRING)
+        ->and($sheet->getCell('A2')->getValue())->toStartWith('=HYPERLINK')
+        ->and($sheet->getCell('B2')->getDataType())->toBe(DataType::TYPE_STRING)
+        ->and($sheet->getCell('B2')->getValue())->toBe('05170100100012');
 });
 
 it('leaves archived profiles out', function () {

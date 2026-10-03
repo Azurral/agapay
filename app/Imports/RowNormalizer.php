@@ -19,6 +19,12 @@ final class RowNormalizer
     /** Surname particles that stay with the last name ("Dela Cruz", "de los Santos"). */
     private const PARTICLES = ['de', 'del', 'dela', 'della', 'delos', 'di', 'da', 'dos', 'la', 'las', 'los', 'san', 'santa', 'santo', 'sta', 'sto', 'van', 'von'];
 
+    /** Column sizes of the beneficiaries table (as in BeneficiaryRules); MariaDB refuses longer values. */
+    private const MAX_LENGTHS = [
+        'first_name' => 100, 'middle_name' => 100, 'last_name' => 100,
+        'address' => 255, 'farm_location' => 255, 'crop_type' => 255, 'rsbsa_number' => 50,
+    ];
+
     private const DATE_FORMATS = ['Y-m-d', 'm/d/Y', 'M j, Y', 'F j, Y', 'M d, Y', 'F d, Y', 'j M Y', 'd-M-Y', 'Y/m/d'];
 
     /**
@@ -60,7 +66,7 @@ final class RowNormalizer
         if ($raw['birthdate'] ?? null) {
             $data['birthdate'] = self::date($raw['birthdate']);
             if ($data['birthdate'] === null) {
-                $blocking[] = "Unreadable birthdate '{$raw['birthdate']}'";
+                $blocking[] = "Unreadable birthdate '{$raw['birthdate']}'".(self::isYear($raw['birthdate']) ? ' (year only)' : '');
             } elseif (CarbonImmutable::parse($data['birthdate'])->age < 18) {
                 $blocking[] = 'Under 18 (born '.CarbonImmutable::parse($data['birthdate'])->format('M j, Y').')';
             }
@@ -94,6 +100,12 @@ final class RowNormalizer
 
         $this->intervention($raw, $data, $issues);
 
+        foreach (self::MAX_LENGTHS as $field => $max) {
+            if (mb_strlen((string) ($data[$field] ?? '')) > $max) {
+                $blocking[] = ColumnMapper::label($field)." is longer than {$max} characters";
+            }
+        }
+
         if ($blocking !== []) {
             return ['status' => 'unreadable', 'data' => $data, 'issues' => $blocking];
         }
@@ -112,7 +124,8 @@ final class RowNormalizer
     /** Excel serial numbers and common office formats → Y-m-d; null when it can't be read. */
     public static function date(string $value): ?string
     {
-        if (ctype_digit($value) && (int) $value > 0 && (int) $value < 80000) {
+        // "1975" is a year, not Excel day 1975 (May 1905).
+        if (ctype_digit($value) && ! self::isYear($value) && (int) $value > 0 && (int) $value < 80000) {
             return ExcelDate::excelToDateTimeObject((int) $value)->format('Y-m-d');
         }
 
@@ -131,6 +144,11 @@ final class RowNormalizer
         }
 
         return null;
+    }
+
+    private static function isYear(string $value): bool
+    {
+        return preg_match('/^\d{4}$/', $value) === 1 && (int) $value >= 1900 && (int) $value <= 2100;
     }
 
     /** "9171234567" (a number that lost its 0) → "09171234567"; unusable values → null. */
@@ -253,6 +271,11 @@ final class RowNormalizer
 
                 return;
             }
+        }
+        if ($cycleId === null) {
+            $issues[] = 'Intervention skipped: no distribution cycle exists yet';
+
+            return;
         }
 
         $data['intervention_id'] = $matches->first()->id;

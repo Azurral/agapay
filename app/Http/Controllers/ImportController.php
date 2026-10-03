@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\ImportFileException;
 use App\Models\ImportBatch;
+use App\Models\ImportRow;
 use App\Services\ExcelImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,9 +29,18 @@ class ImportController extends Controller
             ? $batches->whereKey((int) $request->query('batch'))->firstOrFail()
             : $batches->where('status', ImportBatch::STAGED)->latest('id')->first();
 
+        // A long sheet lists the rows that need attention first, so every exclusion reason stays visible.
+        $problemsFirst = $batch && array_sum($batch->counts) > self::PREVIEW_ROWS;
+
         return view('import.index', [
             'batch' => $batch,
-            'rows' => $batch?->rows()->orderBy('row_number')->limit(self::PREVIEW_ROWS)->get() ?? collect(),
+            'rows' => $batch?->rows()->reorder()
+                ->when($problemsFirst, fn ($query) => $query->orderByRaw(
+                    'CASE status WHEN ? THEN 0 WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 ELSE 4 END',
+                    [ImportRow::UNREADABLE, ImportRow::DUPLICATE, ImportRow::FLAGGED, ImportRow::UPDATE],
+                ))
+                ->orderBy('row_number')->limit(self::PREVIEW_ROWS)->get() ?? collect(),
+            'problemsFirst' => $problemsFirst,
             'previewLimit' => self::PREVIEW_ROWS,
             'tooLarge' => $request->boolean('too_large') ? ExcelImportService::tooLargeMessage() : null,
         ]);

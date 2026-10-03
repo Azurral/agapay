@@ -6,12 +6,26 @@ use App\Models\Beneficiary;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 
 /** Spec rule 10: the list sent to OMAG / DA carries only Name, RSBSA No. and Address. */
-class BeneficiaryListExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping
+class BeneficiaryListExport implements FromQuery, ShouldAutoSize, WithCustomValueBinder, WithHeadings, WithMapping
 {
+    /**
+     * Every cell is text: a name typed as "=HYPERLINK(…)" must not become a live formula in the file sent to DA,
+     * and an all-digit RSBSA No. must not turn into a number shown as 5.17E+13.
+     */
+    public function bindValue(Cell $cell, mixed $value): bool
+    {
+        $cell->setValueExplicit((string) $value, DataType::TYPE_STRING);
+
+        return true;
+    }
+
     public function query(): Builder
     {
         return Beneficiary::query()->with('barangay:id,name')->orderBy('last_name')->orderBy('first_name')->orderBy('id');

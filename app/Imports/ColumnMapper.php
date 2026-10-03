@@ -33,20 +33,42 @@ final class ColumnMapper
         'intervention' => 'Intervention', 'quantity' => 'Quantity', 'cycle' => 'Cycle', 'date_distributed' => 'Date Distributed',
     ];
 
-    private const HEADER_SCAN_ROWS = 15;
+    public const HEADER_SCAN_ROWS = 15;
 
-    /** @param list<list<string|null>> $rows */
+    /**
+     * The header is the row (of the first 15) that maps the most columns; on a tie the later row wins, so the
+     * column names under a row of group headings ("Name" over Last / First / Middle) are chosen.
+     *
+     * @param  list<list<string|null>>  $rows
+     */
     public function map(array $rows): MappedHeader
     {
+        $best = null;
         foreach (array_slice($rows, 0, self::HEADER_SCAN_ROWS) as $index => $row) {
             [$columns, $corrections] = $this->mapRow($row);
-
-            if (count($columns) >= 2) {
-                return new MappedHeader($index, $columns, $corrections);
+            if (count($columns) >= 2 && count($columns) >= count($best[1] ?? [])) {
+                $best = [$index, $columns, $corrections];
             }
         }
 
-        throw new ImportFileException("Couldn't find a header row. Make sure one row has column names such as Name, Barangay and RSBSA No.");
+        if ($best === null) {
+            throw new ImportFileException("Couldn't find a header row. Make sure one row has column names such as Name, Barangay and RSBSA No.");
+        }
+
+        [$index, $columns, $corrections] = $best;
+        if ($index > 0) {
+            // Two-tier header: a group heading whose cell below is empty names that column itself ("Birthdate" merged down).
+            [$groupColumns, $groupCorrections] = $this->mapRow($rows[$index - 1]);
+            foreach ($groupColumns as $column => $field) {
+                if (($rows[$index][$column] ?? null) === null && ! in_array($field, $columns, true)) {
+                    $columns[$column] = $field;
+                    $corrections = [...$corrections, ...array_values(array_filter($groupCorrections, fn ($c) => $c['field'] === $field))];
+                }
+            }
+            ksort($columns);
+        }
+
+        return new MappedHeader($index, $columns, $corrections);
     }
 
     public static function label(string $field): string

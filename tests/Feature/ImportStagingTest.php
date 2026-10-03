@@ -1,12 +1,15 @@
 <?php
 
 use App\Exceptions\ImportFileException;
+use App\Imports\MappedHeader;
+use App\Imports\RowNormalizer;
 use App\Models\AuditLog;
 use App\Models\Barangay;
 use App\Models\Beneficiary;
 use App\Models\DistributionCycle;
 use App\Models\ImportBatch;
 use App\Models\ImportRow;
+use App\Models\Intervention;
 use App\Models\User;
 use App\Services\ExcelImportService;
 use Database\Seeders\DatabaseSeeder;
@@ -94,6 +97,34 @@ it('excludes unreadable birthdates', function () {
     expect(stagedRow($batch, 2))->status->toBe('unreadable')->issues->toBe(["Unreadable birthdate '31/31/1990'"]);
 });
 
+it('excludes a birthdate that is only a year', function () {
+    $batch = stageRows([['Name', 'Birthdate', 'Barangay'], ['Pablo Ramos', 1975, 'Poblacion']]);
+
+    expect(stagedRow($batch, 2))->status->toBe('unreadable')->issues->toBe(["Unreadable birthdate '1975' (year only)"]);
+});
+
+it('excludes values longer than their field', function () {
+    $batch = stageRows([
+        ['First Name', 'Last Name', 'Birthdate', 'Barangay', 'RSBSA No.', 'Address'],
+        [str_repeat('a', 101), 'Ramos', '1980-05-10', 'Poblacion', str_repeat('9', 51), str_repeat('b', 256)],
+        [str_repeat('a', 100), 'Ramos', '1980-05-10', 'Poblacion', str_repeat('9', 50), str_repeat('b', 255)],
+    ]);
+
+    expect(stagedRow($batch, 2))->status->toBe('unreadable')->issues->toBe([
+        'First Name is longer than 100 characters', 'Address is longer than 255 characters', 'RSBSA No. is longer than 50 characters',
+    ])->and(stagedRow($batch, 3)->status)->toBe('ready');
+});
+
+it('notes why an intervention is skipped when no cycle exists', function () {
+    $normalizer = new RowNormalizer(Barangay::pluck('name', 'id'), Intervention::all(), collect(), null);
+    $header = new MappedHeader(0, [0 => 'full_name', 1 => 'birthdate', 2 => 'barangay', 3 => 'intervention'], []);
+
+    $row = $normalizer->normalize(['Pablo Ramos', '1980-05-10', 'Poblacion', 'DA - Certified Rice Seeds'], $header, 2);
+
+    expect($row['issues'])->toBe(['Intervention skipped: no distribution cycle exists yet'])
+        ->and($row['data']['intervention_id'])->toBeNull();
+});
+
 it('fuzzy-matches barangays', function (string $cell, ?string $barangay) {
     $batch = stageRows([['Name', 'Birthdate', 'Barangay'], ['Pablo Ramos', '1980-05-10', $cell]]);
     $row = stagedRow($batch, 2);
@@ -149,6 +180,33 @@ it('dedupes against AGAPAY and within the file', function () {
         ->and(stagedRow($batch, 5))->status->toBe('unreadable')->issues->toBe(['RSBSA No. rsbsa-0198 belongs to Maria Santos'])
         ->and(stagedRow($batch, 6)->status)->toBe('duplicate')
         ->and(collect($batch->feedback)->pluck('text'))->toContain('3 duplicates skipped (already in AGAPAY or repeated in the file)');
+});
+
+it('excludes a second person who carries the same RSBSA No. in the file', function () {
+    $batch = stageRows([
+        ['Name', 'Birthdate', 'Barangay', 'RSBSA No.'],
+        ['Pablo Ramos', '1980-05-10', 'Poblacion', 'RSBSA-0901'],
+        ['Ben Talawec', '1975-01-03', 'Samoki', 'rsbsa-0901'],
+        ['Pablo Ramos', '1980-05-10', 'Poblacion', null],
+    ]);
+
+    expect(stagedRow($batch, 3))->status->toBe('unreadable')->issues->toBe(['RSBSA No. rsbsa-0901 is also on row 2 (Pablo Ramos)'])
+        ->and(stagedRow($batch, 4))->status->toBe('duplicate')->issues->toBe(['Same person as row 2']);
+});
+
+it('notes what a duplicate repeats', function () {
+    $juan = Beneficiary::where('rsbsa_number', 'RSBSA-0231')->sole();
+    $batch = stageRows([['Name', 'Birthdate', 'Barangay', 'RSBSA No.'], ['Juan Dela Cruz', $juan->birthdate->toDateString(), 'Poblacion', null]]);
+
+    expect(stagedRow($batch, 2)->issues)->toBe(['Already in AGAPAY']);
+});
+
+it('records a number only for an endorsed RSBSA application', function () {
+    $estrella = Beneficiary::where('first_name', 'Estrella')->sole();   // Returned, no number
+    $batch = stageRows([['Name', 'Birthdate', 'Barangay', 'RSBSA No.'], ['Estrella Domogen', $estrella->birthdate->toDateString(), 'Maligcong', 'RSBSA-0778']]);
+
+    expect(stagedRow($batch, 2))->status->toBe('unreadable')
+        ->issues->toBe(["Estrella Domogen's RSBSA application is Returned — the number can be recorded once it is endorsed"]);
 });
 
 it('excludes rows whose RSBSA No. belongs to an archived profile', function () {

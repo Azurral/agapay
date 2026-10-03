@@ -43,6 +43,13 @@ final class ExcelImportService
             throw new ImportFileException(self::tooLargeMessage());
         }
 
+        $maxRows = (int) config('agapay.import.max_rows', 20000);
+        $tooManyRows = new ImportFileException('The sheet has more than '.number_format($maxRows).' rows. Split it into smaller files.');
+        // Checked from the file's index first: loading a sheet far over the limit could run PHP out of memory.
+        if ($this->reader->rowCount($file->getRealPath(), $extension) > $maxRows + ColumnMapper::HEADER_SCAN_ROWS) {
+            throw $tooManyRows;
+        }
+
         $rows = $this->reader->read($file->getRealPath(), $extension);
         $header = $this->mapper->map($rows);
         $this->ensureRequiredColumns($header);
@@ -54,9 +61,8 @@ final class ExcelImportService
         if ($dataRows === []) {
             throw new ImportFileException('The sheet has no data rows under its header.');
         }
-        $maxRows = (int) config('agapay.import.max_rows', 20000);
         if (count($dataRows) > $maxRows) {
-            throw new ImportFileException('The sheet has more than '.number_format($maxRows).' rows. Split it into smaller files.');
+            throw $tooManyRows;
         }
 
         $normalizer = new RowNormalizer(
@@ -261,7 +267,7 @@ final class ExcelImportService
         $byRsbsa = [];
         $byIdentity = [];
         // RSBSA numbers are unique across archived profiles too; identity only counts active ones.
-        foreach (Beneficiary::withTrashed()->get(['id', 'first_name', 'middle_name', 'last_name', 'birthdate', 'barangay_id', 'rsbsa_number', 'deleted_at']) as $b) {
+        foreach (Beneficiary::withTrashed()->get(['id', 'first_name', 'middle_name', 'last_name', 'birthdate', 'barangay_id', 'rsbsa_number', 'rsbsa_status', 'deleted_at']) as $b) {
             if ($b->rsbsa_number) {
                 $byRsbsa[mb_strtolower(trim($b->rsbsa_number))] = $b;
             }
@@ -280,33 +286,51 @@ final class ExcelImportService
             $rsbsa = $data['rsbsa_number'] ? mb_strtolower($data['rsbsa_number']) : null;
             $identity = self::identity($data['first_name'], $data['last_name'], $data['birthdate'], $data['barangay_id']);
 
+            $samePerson = fn (string $first, string $last) => mb_strtolower($first) === mb_strtolower($data['first_name'])
+                && mb_strtolower($last) === mb_strtolower($data['last_name']);
+            $exclude = function (string $reason) use (&$row) {
+                $row['status'] = ImportRow::UNREADABLE;
+                $row['issues'] = [$reason];
+            };
+            $skip = function (string $note) use (&$row) {
+                $row['status'] = ImportRow::DUPLICATE;
+                $row['issues'] = [$note];
+            };
+
             if ($rsbsa && isset($byRsbsa[$rsbsa])) {
                 $owner = $byRsbsa[$rsbsa];
-                if ($owner->trashed()) {
-                    $row['status'] = ImportRow::UNREADABLE;
-                    $row['issues'] = ["RSBSA No. {$data['rsbsa_number']} belongs to the archived profile of {$owner->fullName()}"];
-                } elseif (mb_strtolower($owner->first_name) === mb_strtolower($data['first_name']) && mb_strtolower($owner->last_name) === mb_strtolower($data['last_name'])) {
-                    $row['status'] = ImportRow::DUPLICATE;
-                } else {
-                    $row['status'] = ImportRow::UNREADABLE;
-                    $row['issues'] = ["RSBSA No. {$data['rsbsa_number']} belongs to {$owner->fullName()}"];
-                }
+                match (true) {
+                    $owner->trashed() => $exclude("RSBSA No. {$data['rsbsa_number']} belongs to the archived profile of {$owner->fullName()}"),
+                    $samePerson($owner->first_name, $owner->last_name) => $skip('Already in AGAPAY'),
+                    default => $exclude("RSBSA No. {$data['rsbsa_number']} belongs to {$owner->fullName()}"),
+                };
             } elseif (isset($byIdentity[$identity])) {
                 $existing = $byIdentity[$identity];
-                if (! $existing->rsbsa_number && $data['rsbsa_number'] && ! isset($seenRsbsa[$rsbsa])) {
+                if ($existing->rsbsa_number || ! $rsbsa || isset($seenRsbsa[$rsbsa])) {
+                    $skip('Already in AGAPAY');
+                } elseif ($existing->rsbsa_status !== Beneficiary::RSBSA_ENDORSED) {
+                    // Spec rule 8: a number is recorded only after the application is endorsed to DA-RFO.
+                    $exclude("{$existing->fullName()}'s RSBSA application is ".Beneficiary::rsbsaStatusLabel($existing->rsbsa_status).' — the number can be recorded once it is endorsed');
+                } else {
                     $row['status'] = ImportRow::UPDATE;
                     $row['data']['beneficiary_id'] = $existing->id;
-                } else {
-                    $row['status'] = ImportRow::DUPLICATE;
                 }
-            } elseif (($rsbsa && isset($seenRsbsa[$rsbsa])) || isset($seenIdentity[$identity])) {
-                $row['status'] = ImportRow::DUPLICATE;
+            } elseif ($rsbsa && isset($seenRsbsa[$rsbsa])) {
+                $first = $seenRsbsa[$rsbsa];
+                $samePerson($first['first_name'], $first['last_name'])
+                    ? $skip("Same person as row {$first['row']}")
+                    : $exclude("RSBSA No. {$data['rsbsa_number']} is also on row {$first['row']} ({$first['name']})");
+            } elseif (isset($seenIdentity[$identity])) {
+                $skip("Same person as row {$seenIdentity[$identity]}");
             }
 
             if ($row['status'] !== ImportRow::UNREADABLE) {
-                $seenIdentity[$identity] = true;
+                $seenIdentity[$identity] ??= $row['row_number'];
                 if ($rsbsa) {
-                    $seenRsbsa[$rsbsa] = true;
+                    $seenRsbsa[$rsbsa] ??= [
+                        'row' => $row['row_number'], 'first_name' => $data['first_name'], 'last_name' => $data['last_name'],
+                        'name' => implode(' ', array_filter([$data['first_name'], $data['middle_name'], $data['last_name']])),
+                    ];
                 }
             }
         }

@@ -56,6 +56,19 @@ it('uploads a file and shows feedback and the preview', function () {
         ->assertDontSee('data-confirm-disabled', false);
 });
 
+it('lists rows that need attention first in a long preview', function () {
+    $rows = [['Name', 'Birthdate', 'Barangay', 'RSBSA No.']];
+    foreach (range(1, 205) as $i) {
+        $rows[] = ["Farmer{$i} Ramos", '1980-05-10', 'Poblacion', "RSBSA-9{$i}"];
+    }
+    $rows[] = ['Ben Talawec', '1975-01-03', 'Atlantis', 'RSBSA-0902'];
+
+    $this->actingAs($this->encoder)->post('/import', ['file' => spreadsheet($rows)]);
+
+    $this->get('/import')->assertSeeInOrder(['Ben Talawec', "Unknown barangay 'Atlantis'", 'Farmer1 Ramos'])
+        ->assertSee('rows that need attention are listed first');
+});
+
 it('opens the latest staged batch of the user by default', function () {
     $this->actingAs($this->encoder)->post('/import', ['file' => masterlist()]);
 

@@ -3,6 +3,9 @@
 use App\Exceptions\ImportFileException;
 use App\Imports\ColumnMapper;
 use App\Imports\SpreadsheetReader;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxWriter;
 
 function readSheet(array $rows, string $type = 'xlsx'): array
 {
@@ -30,6 +33,45 @@ it('reads csv files whose title line has no commas', function (string $delimiter
         ['Pablo Ramos', '05/10/1980', 'poblacion', 'RSBSA-0901', '9171234567'],
     ]);
 })->with([',', ';', "\t"]);
+
+it('reads csv files saved by Excel in the Windows encoding', function () {
+    $path = tempnam(sys_get_temp_dir(), 'agapay').'.csv';
+    file_put_contents($path, "Name,Barangay\nJuan Pe\xF1a,Santo Ni\xF1o\n");
+
+    expect(app(SpreadsheetReader::class)->read($path, 'csv'))->toBe([['Name', 'Barangay'], ['Juan Peña', 'Santo Niño']]);
+});
+
+it('keeps reading when a formula links to another workbook', function () {
+    $book = new Spreadsheet;
+    $book->getActiveSheet()->fromArray([['Name', 'Birthdate'], ['Juan Cruz', null], ['Ana Cruz', '1980-01-01']]);
+    $book->getActiveSheet()->setCellValueExplicit('B2', "='C:\\x\\[book.xlsx]Sheet1'!A1", DataType::TYPE_FORMULA);
+    $path = tempnam(sys_get_temp_dir(), 'agapay').'.xlsx';
+    (new XlsxWriter($book))->setPreCalculateFormulas(false)->save($path);
+
+    $rows = app(SpreadsheetReader::class)->read($path, 'xlsx');
+
+    expect($rows[1][0])->toBe('Juan Cruz')
+        ->and(SpreadsheetReader::isError($rows[1][1]))->toBeTrue()
+        ->and($rows[2])->toBe(['Ana Cruz', '1980-01-01']);
+});
+
+it('counts the rows of a sheet without reading it', function (string $type) {
+    $file = spreadsheet([['Name', 'Barangay'], ['Juan', 'Poblacion'], ['Ana', 'Samoki']], $type);
+
+    expect(app(SpreadsheetReader::class)->rowCount($file->getPathname(), $type))->toBe(3);
+})->with(['xlsx', 'csv']);
+
+it('reads a two-tier header with group headings above the column names', function () {
+    $header = app(ColumnMapper::class)->map([
+        ['OMAG Bontoc Masterlist'],
+        ['Name', null, null, 'Birthdate', 'Address', null, 'RSBSA No.'],
+        ['Last Name', 'First Name', 'Middle Name', null, 'Barangay', 'Purok', null],
+        ['Dela Cruz', 'Juan', 'A', '1980-01-01', 'Poblacion', 'Purok 3', 'RSBSA-1'],
+    ]);
+
+    expect($header->headerIndex)->toBe(2)
+        ->and($header->columns)->toBe([0 => 'last_name', 1 => 'first_name', 2 => 'middle_name', 3 => 'birthdate', 4 => 'barangay', 5 => 'address', 6 => 'rsbsa_number']);
+});
 
 it('keeps numeric RSBSA and contact digits', function () {
     $rows = readSheet([['RSBSA No.', 'Contact', 'Qty', 'Area'], [171234567890, 9171234567, 3, 2.5]]);
