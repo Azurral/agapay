@@ -5,9 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['source', 'name', 'unit', 'one_per_household', 'allow_repeat', 'is_active'])]
+#[Fillable(['source', 'name', 'unit', 'inventory_item_id', 'one_per_household', 'allow_repeat', 'is_active'])]
 class Intervention extends Model
 {
     public const SOURCE_DA = 'da';
@@ -24,6 +25,12 @@ class Intervention extends Model
     public function records(): HasMany
     {
         return $this->hasMany(InterventionRecord::class);
+    }
+
+    /** The stocked good this program hands out (null for cash aid). */
+    public function inventoryItem(): BelongsTo
+    {
+        return $this->belongsTo(InventoryItem::class);
     }
 
     public function scopeActive(Builder $query): Builder

@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             BeneficiarySeeder::class,
             InterventionSeeder::class,
             InterventionRecordSeeder::class,
+            InventorySeeder::class,
         ]);
     }
 }

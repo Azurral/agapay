@@ -16,7 +16,7 @@ class InterventionSeeder extends Seeder
         ['da', 'Complete Fertilizer', 'sack', false, false],
         ['da', 'PAFF', null, true, false],
         ['da', 'RFFA', null, true, false],
-        ['da', 'HDPE Pipes', 'pc', false, false],
+        ['da', 'HDPE Pipes', 'meter', false, false],
         ['da', 'Molasses', 'L', false, false],
         ['da', 'Agri Machinery', 'unit', true, false],
         ['lgu', 'Complete Fertilizer', 'sack', false, false],
