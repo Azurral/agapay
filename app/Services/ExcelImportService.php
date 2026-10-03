@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\ImportFileException;
+use App\Exceptions\InterventionRuleViolation;
 use App\Imports\ColumnMapper;
 use App\Imports\MappedHeader;
 use App\Imports\RowNormalizer;
@@ -15,8 +16,10 @@ use App\Models\ImportRow;
 use App\Models\Intervention;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /** Spec rule 9: read, check and stage a spreadsheet; nothing reaches the beneficiary tables until confirm(). */
 final class ExcelImportService
@@ -26,6 +29,8 @@ final class ExcelImportService
     public function __construct(
         private readonly SpreadsheetReader $reader,
         private readonly ColumnMapper $mapper,
+        private readonly InterventionAssignment $assignment,
+        private readonly ClaimService $claims,
     ) {}
 
     public function stage(UploadedFile $file, User $actor): ImportBatch
@@ -102,15 +107,64 @@ final class ExcelImportService
         });
     }
 
+    /**
+     * Confirm & Import (spec rule 9): replays the staged rows in one transaction. A row that breaks a
+     * distribution rule aborts everything with "Row {n}: …"; rows that became duplicates since staging are skipped.
+     *
+     * @return array{created: int, updated: int, records: int, skipped: int}
+     */
+    public function confirm(ImportBatch $batch, User $actor): array
+    {
+        return DB::transaction(function () use ($batch, $actor) {
+            $batch = $this->lockStaged($batch);
+            $result = ['created' => 0, 'updated' => 0, 'records' => 0, 'skipped' => 0];
+            $cycles = DistributionCycle::all()->keyBy('id');
+            $interventions = Intervention::all()->keyBy('id');
+
+            $rows = $batch->rows()->whereIn('status', [ImportRow::READY, ImportRow::FLAGGED, ImportRow::UPDATE])->orderBy('row_number')->get();
+            foreach ($rows as $row) {
+                try {
+                    $beneficiary = $row->status === ImportRow::UPDATE ? $this->recordNumber($row, $actor) : $this->createProfile($row, $actor);
+                    if ($beneficiary === null) {
+                        $row->update(['status' => ImportRow::DUPLICATE, 'issues' => ['Already in AGAPAY when the import was confirmed']]);
+                        $result['skipped']++;
+
+                        continue;
+                    }
+                    $result[$row->status === ImportRow::UPDATE ? 'updated' : 'created']++;
+
+                    $data = $row->data;
+                    $intervention = $interventions[$data['intervention_id'] ?? 0] ?? null;
+                    $cycle = $cycles[$data['cycle_id'] ?? 0] ?? null;
+                    if ($intervention && $cycle) {
+                        $attrs = ['quantity' => $data['quantity'] ?? null];
+                        $record = $this->assignment->assign($beneficiary, $intervention, $cycle, $attrs, $actor);
+                        if ($data['date_distributed'] ?? null) {
+                            $this->claims->claim($record, $actor, [...$attrs, 'date_distributed' => $data['date_distributed']], historical: true);
+                        }
+                        $result['records']++;
+                    }
+
+                    $row->update(['beneficiary_id' => $beneficiary->id]);
+                } catch (InterventionRuleViolation|ImportFileException $e) {
+                    throw new ImportFileException("Row {$row->row_number}: {$e->getMessage()}");
+                } catch (ValidationException $e) {
+                    throw new ImportFileException("Row {$row->row_number}: ".collect($e->errors())->flatten()->first());
+                }
+            }
+
+            $batch->update(['status' => ImportBatch::IMPORTED, 'imported_at' => now()]);
+            AuditLogger::record('Imported Excel File', $batch, null, ['status' => ImportBatch::STAGED], $result, $actor);
+
+            return $result;
+        });
+    }
+
     /** Drops a staged batch; its rows stay for the record but can no longer be imported. */
     public function discard(ImportBatch $batch, User $actor): void
     {
         DB::transaction(function () use ($batch, $actor) {
-            $batch = ImportBatch::whereKey($batch->id)->lockForUpdate()->firstOrFail();
-            if ($batch->status !== ImportBatch::STAGED) {
-                throw new ImportFileException($batch->status === ImportBatch::IMPORTED ? 'This import was already confirmed.' : 'This import was discarded.');
-            }
-
+            $batch = $this->lockStaged($batch);
             $batch->update(['status' => ImportBatch::DISCARDED]);
             AuditLogger::record('Discarded Excel Import', $batch, null, ['status' => ImportBatch::STAGED], ['status' => ImportBatch::DISCARDED], $actor);
         });
@@ -124,6 +178,67 @@ final class ExcelImportService
     public static function tooLargeMessage(): string
     {
         return 'The file is larger than '.round(self::maxKilobytes() / 1024).' MB.';
+    }
+
+    /** The batch row, locked; a double-clicked confirm or a back-button resubmit waits here and then finds it imported. */
+    private function lockStaged(ImportBatch $batch): ImportBatch
+    {
+        $batch = ImportBatch::whereKey($batch->id)->lockForUpdate()->firstOrFail();
+        if ($batch->status !== ImportBatch::STAGED) {
+            throw new ImportFileException($batch->status === ImportBatch::IMPORTED ? 'This import was already confirmed.' : 'This import was discarded.');
+        }
+
+        return $batch;
+    }
+
+    /** A new profile from a ready/flagged row, or null when the same person was registered after staging. */
+    private function createProfile(ImportRow $row, User $actor): ?Beneficiary
+    {
+        $data = $row->data;
+        if (Beneficiary::isAlreadyRegistered($data['first_name'], $data['last_name'], $data['birthdate'], $data['barangay_id'])) {
+            return null;
+        }
+        $this->ensureNumberFree($data['rsbsa_number']);
+
+        return Beneficiary::create([
+            ...Arr::only($data, ['first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'barangay_id', 'contact_number', 'farm_location', 'crop_type', 'rsbsa_number']),
+            // Spec rule 8: a masterlist row without a number waits in the encoding queue until it is entered.
+            'rsbsa_status' => $data['rsbsa_number'] ? Beneficiary::RSBSA_REGISTERED : Beneficiary::RSBSA_ENDORSED,
+            'encoding_issue' => $data['rsbsa_number'] ? null : 'Missing RSBSA Number',
+            'source' => Beneficiary::SOURCE_IMPORT,
+            'created_by' => $actor->id,
+        ]);
+    }
+
+    /** Gives an existing profile its RSBSA No.; null when it got one (or was archived) after staging. */
+    private function recordNumber(ImportRow $row, User $actor): ?Beneficiary
+    {
+        $beneficiary = Beneficiary::whereKey($row->data['beneficiary_id'] ?? 0)->lockForUpdate()->first();
+        if ($beneficiary === null || $beneficiary->rsbsa_number) {
+            return null;
+        }
+        $this->ensureNumberFree($row->data['rsbsa_number']);
+
+        $keys = ['rsbsa_number', 'rsbsa_status', 'encoding_issue'];
+        $old = $beneficiary->only($keys);
+        $beneficiary->forceFill([
+            'rsbsa_number' => $row->data['rsbsa_number'],
+            'rsbsa_status' => Beneficiary::RSBSA_REGISTERED,
+            'rsbsa_status_reason' => null,
+            'encoding_issue' => $beneficiary->encoding_issue === 'Missing RSBSA Number' ? null : $beneficiary->encoding_issue,
+            'updated_by' => $actor->id,
+        ])->saveQuietly();
+        AuditLogger::record('Recorded RSBSA Number', $beneficiary, null, $old, $beneficiary->only($keys), $actor);
+
+        return $beneficiary;
+    }
+
+    private function ensureNumberFree(?string $rsbsaNumber): void
+    {
+        $owner = $rsbsaNumber ? Beneficiary::withTrashed()->where('rsbsa_number', $rsbsaNumber)->first() : null;
+        if ($owner) {
+            throw new ImportFileException("RSBSA No. {$rsbsaNumber} is already used by {$owner->fullName()}.");
+        }
     }
 
     private function ensureRequiredColumns(MappedHeader $header): void
@@ -145,11 +260,14 @@ final class ExcelImportService
     {
         $byRsbsa = [];
         $byIdentity = [];
-        foreach (Beneficiary::get(['id', 'first_name', 'middle_name', 'last_name', 'birthdate', 'barangay_id', 'rsbsa_number']) as $b) {
+        // RSBSA numbers are unique across archived profiles too; identity only counts active ones.
+        foreach (Beneficiary::withTrashed()->get(['id', 'first_name', 'middle_name', 'last_name', 'birthdate', 'barangay_id', 'rsbsa_number', 'deleted_at']) as $b) {
             if ($b->rsbsa_number) {
                 $byRsbsa[mb_strtolower(trim($b->rsbsa_number))] = $b;
             }
-            $byIdentity[self::identity($b->first_name, $b->last_name, $b->birthdate->toDateString(), $b->barangay_id)] = $b;
+            if (! $b->trashed()) {
+                $byIdentity[self::identity($b->first_name, $b->last_name, $b->birthdate->toDateString(), $b->barangay_id)] = $b;
+            }
         }
 
         $seenRsbsa = [];
@@ -164,7 +282,10 @@ final class ExcelImportService
 
             if ($rsbsa && isset($byRsbsa[$rsbsa])) {
                 $owner = $byRsbsa[$rsbsa];
-                if (mb_strtolower($owner->first_name) === mb_strtolower($data['first_name']) && mb_strtolower($owner->last_name) === mb_strtolower($data['last_name'])) {
+                if ($owner->trashed()) {
+                    $row['status'] = ImportRow::UNREADABLE;
+                    $row['issues'] = ["RSBSA No. {$data['rsbsa_number']} belongs to the archived profile of {$owner->fullName()}"];
+                } elseif (mb_strtolower($owner->first_name) === mb_strtolower($data['first_name']) && mb_strtolower($owner->last_name) === mb_strtolower($data['last_name'])) {
                     $row['status'] = ImportRow::DUPLICATE;
                 } else {
                     $row['status'] = ImportRow::UNREADABLE;

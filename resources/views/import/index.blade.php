@@ -49,9 +49,17 @@
         </div>
     </section>
 
+    @if ($errors->has('confirm'))
+        <p class="mt-[7px] rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $errors->first('confirm') }}</p>
+    @elseif ($batch && ! $batch->isStaged())
+        <p class="mt-[7px] rounded-[10px] border-[1.5px] border-black/10 bg-white px-[16px] py-[10px] text-[14px] font-bold" role="status">
+            {{ $batch->status === \App\Models\ImportBatch::IMPORTED ? 'This file was imported on '.$batch->imported_at->format('M j, Y g:i A').'.' : 'This import was discarded.' }}
+        </p>
+    @endif
+
     {{-- Figma 470:760 --}}
     @if ($canConfirm)
-        <form method="POST" action="{{ Route::has('import.confirm') ? route('import.confirm', $batch) : '' }}" class="mt-[7px]"
+        <form method="POST" action="{{ route('import.confirm', $batch) }}" class="mt-[7px]"
               x-data="{ busy: false }" @submit="busy = true">
             @csrf
             <button type="submit" :disabled="busy"

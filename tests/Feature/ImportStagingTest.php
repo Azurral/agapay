@@ -151,6 +151,15 @@ it('dedupes against AGAPAY and within the file', function () {
         ->and(collect($batch->feedback)->pluck('text'))->toContain('3 duplicates skipped (already in AGAPAY or repeated in the file)');
 });
 
+it('excludes rows whose RSBSA No. belongs to an archived profile', function () {
+    Beneficiary::where('rsbsa_number', 'RSBSA-0198')->sole()->delete();
+
+    $batch = stageRows([['Name', 'Birthdate', 'Barangay', 'RSBSA No.'], ['Maria Santos', '1970-01-01', 'Samoki', 'RSBSA-0198']]);
+
+    expect(stagedRow($batch, 2))->status->toBe('unreadable')
+        ->issues->toBe(['RSBSA No. RSBSA-0198 belongs to the archived profile of Maria Santos']);
+});
+
 it('plans RSBSA updates for existing profiles without a number', function () {
     $federico = Beneficiary::where('first_name', 'Federico')->sole();
     $batch = stageRows([['Name', 'Birthdate', 'Barangay', 'RSBSA No.'], ['Federico Wasing', $federico->birthdate->toDateString(), 'Bayyo', 'RSBSA-0777']]);

@@ -71,6 +71,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware('can:import.run')->group(function () {
         Route::get('/import', [ImportController::class, 'index'])->name('import.index');
         Route::post('/import', [ImportController::class, 'store'])->name('import.store');
+        Route::post('/import/{batch}/confirm', [ImportController::class, 'confirm'])->name('import.confirm');
         Route::post('/import/{batch}/discard', [ImportController::class, 'discard'])->name('import.discard');
     });
     Route::get('/validation', ValidationQueueController::class)->middleware('can:interventions.validate')->name('validation.index');

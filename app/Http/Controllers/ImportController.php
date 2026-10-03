@@ -8,12 +8,16 @@ use App\Services\ExcelImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /** Figma 470:540 (Admin) / 430:1887 (Data Encoder) Excel Import: upload, Processing Feedback and the staged preview. */
 class ImportController extends Controller
 {
     private const PREVIEW_ROWS = 200;
+
+    /** A 20,000-row masterlist takes minutes to read and import, well past PHP's default 30 seconds. */
+    private const TIME_LIMIT_SECONDS = 600;
 
     public function __construct(private readonly ExcelImportService $imports) {}
 
@@ -35,6 +39,7 @@ class ImportController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $file = $request->file('file');
+        set_time_limit(self::TIME_LIMIT_SECONDS);
 
         $error = match (true) {
             ! $file instanceof UploadedFile => 'Choose a spreadsheet to upload.',
@@ -53,6 +58,24 @@ class ImportController extends Controller
         }
 
         return redirect()->route('import.index', ['batch' => $batch]);
+    }
+
+    public function confirm(Request $request, ImportBatch $batch): RedirectResponse
+    {
+        abort_unless($batch->user_id === $request->user()->id, 404);
+        set_time_limit(self::TIME_LIMIT_SECONDS);
+
+        try {
+            $result = $this->imports->confirm($batch, $request->user());
+        } catch (ImportFileException $e) {
+            return redirect()->route('import.index', ['batch' => $batch])->withErrors(['confirm' => $e->getMessage()]);
+        }
+
+        return redirect()->route('import.index')->with('status', sprintf(
+            'Imported %d new %s, updated %d, added %d intervention %s.',
+            $result['created'], Str::plural('profile', $result['created']), $result['updated'],
+            $result['records'], Str::plural('record', $result['records']),
+        ));
     }
 
     public function discard(Request $request, ImportBatch $batch): RedirectResponse
