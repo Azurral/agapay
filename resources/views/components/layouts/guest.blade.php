@@ -8,9 +8,11 @@
     <title>{{ $title }}</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="alternate icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <x-screen-fit />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-grid-login min-h-screen font-sans text-ink antialiased">
+<body class="bg-grid-login min-h-[var(--app-vh,100vh)] font-sans text-ink antialiased">
+    <x-desktop-only />
     {{ $slot }}
 </body>
 </html>

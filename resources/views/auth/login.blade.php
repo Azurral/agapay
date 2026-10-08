@@ -1,5 +1,5 @@
 <x-layouts.guest title="Login · Agapay">
-    <main class="flex min-h-screen items-center justify-center">
+    <main class="flex min-h-[var(--app-vh,100vh)] items-center justify-center">
         <div class="flex flex-col items-center">
             <div class="flex items-center gap-[14px]">
                 <img src="{{ asset('images/logo.svg') }}" alt="Agapay logo" class="block size-[84px]">

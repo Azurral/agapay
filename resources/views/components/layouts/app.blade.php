@@ -8,15 +8,17 @@
     <title>{{ \Illuminate\Support\Str::title(strtolower($title)) }} · Agapay</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="alternate icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <x-screen-fit />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body x-data="{ nav: false }" class="min-h-screen min-w-[1280px] bg-white font-sans text-ink antialiased">
+<body x-data="{ nav: false }" class="min-h-[var(--app-vh,100vh)] min-w-[1280px] bg-white font-sans text-ink antialiased">
+    <x-desktop-only />
     <x-app.header :title="$title" />
 
     <x-app.sidebar />
 
     <div class="flex">
-        <main class="bg-grid relative mt-[11px] min-h-[calc(100vh-81px)] flex-1 overflow-hidden rounded-t-[20px] border-t-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px]">
+        <main class="bg-grid relative mt-[11px] min-h-[calc(var(--app-vh,100vh)-81px)] flex-1 overflow-hidden rounded-t-[20px] border-t-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px]">
             <x-app.greeting />
             @can('beneficiaries.view')
                 <x-app.search-bar class="mt-[34px]" />

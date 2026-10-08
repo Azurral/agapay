@@ -100,3 +100,19 @@ it('ignores a garbage remembered-accounts cookie', function () {
         ->get('/dashboard')
         ->assertOk();
 });
+
+it('scales every page to the screen and asks phones and tablets to use a desktop', function (string $url, bool $signedIn) {
+    if ($signedIn) {
+        $this->actingAs(userWithRole(Role::ADMIN));
+    }
+
+    $this->get($url)->assertOk()
+        ->assertSee('const DESIGN_WIDTH = 1600', false)
+        ->assertSee('class="desktop-only-notice"', false)
+        ->assertSee('Please use a desktop or laptop')
+        ->assertDontSee('100vh-', false);
+})->with([
+    'landing page' => ['/', false],
+    'login' => ['/login', false],
+    'dashboard' => ['/dashboard', true],
+]);

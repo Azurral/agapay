@@ -27,7 +27,8 @@ async function openProfile(page, name) {
 
 test('5.1 landing page, sign-in and menu', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('Office of the Municipal Agriculturist').first()).toBeVisible();
+    await expect(page.locator('main').getByText('Office of the Municipal Agriculturist').first()).toBeVisible();
+    await expect(page.locator('.desktop-only-notice')).toBeHidden();
     await page.getByRole('link', { name: 'Log in to Agapay' }).click();
 
     await page.fill('#username', 'Admin_01');

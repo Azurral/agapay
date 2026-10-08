@@ -137,3 +137,23 @@
 }
 
 [x-cloak] { display: none !important; }
+
+/* Phones and tablets (touch, no mouse): AGAPAY is a desktop app, so the page is blurred behind a notice. */
+.desktop-only-notice { display: none; }
+@media (hover: none) and (pointer: coarse) {
+    .desktop-only-notice {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(249, 246, 255, 0.55);
+    }
+    body > :not(.desktop-only-notice):not(script) {
+        filter: blur(6px);
+        pointer-events: none;
+        user-select: none;
+    }
+    body { overflow: hidden; }
+}

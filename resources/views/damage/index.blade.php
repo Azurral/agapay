@@ -172,8 +172,8 @@
         {{-- Photo viewer for "(view)" --}}
         <div x-cloak x-show="photos.length" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70" @click.self="photos = []"
              role="dialog" aria-modal="true" aria-label="Damage photos">
-            <div class="relative flex max-h-[90vh] max-w-[90vw] flex-col items-center gap-[12px]">
-                <img :src="photos[index]" alt="Damage photo" class="max-h-[80vh] max-w-[90vw] rounded-[12px] bg-white object-contain">
+            <div class="relative flex max-h-[calc(var(--app-vh,100vh)*0.9)] max-w-[90%] flex-col items-center gap-[12px]">
+                <img :src="photos[index]" alt="Damage photo" class="max-h-[calc(var(--app-vh,100vh)*0.8)] max-w-full rounded-[12px] bg-white object-contain">
                 <div class="flex items-center gap-[16px] text-[14px] font-bold text-white">
                     <button type="button" @click="index = (index + photos.length - 1) % photos.length" x-show="photos.length > 1" class="rounded-full bg-white/20 px-[14px] py-[6px] hover:bg-white/30">‹ Prev</button>
                     <span x-text="(index + 1) + ' / ' + photos.length"></span>
