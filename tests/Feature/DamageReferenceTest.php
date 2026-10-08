@@ -4,6 +4,7 @@ use App\Models\AuditLog;
 use App\Models\Beneficiary;
 use App\Models\Crop;
 use App\Models\DamageReport;
+use App\Models\Disaster;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Http\UploadedFile;
@@ -105,3 +106,14 @@ it('is for administrators only', function (string $username) {
     $this->post(route('damage.disasters.store'), ['name' => 'X', 'occurred_on' => '2026-08-01'])->assertForbidden();
     $this->get('/damage-reports')->assertDontSee('Crises &amp; Crop Values', false);
 })->with(['Agritech_02', 'Encoder_03']);
+
+it('seeds crises common in Bontoc and the highlands, Typhoon Cristina still the latest', function () {
+    expect(Disaster::orderBy('name')->pluck('name')->all())->toBe([
+        'El Niño Drought', 'Fall Armyworm Infestation', 'Frost (Cold Spell)', 'Rain-Induced Landslide',
+        'Rice Black Bug Infestation', 'Southwest Monsoon Flooding', 'Typhoon Cristina',
+    ])
+        ->and(Disaster::orderByDesc('occurred_on')->value('name'))->toBe('Typhoon Cristina')
+        ->and(Disaster::where('occurred_on', '>', today())->exists())->toBeFalse();
+
+    $this->actingAs($this->admin)->get('/damage-reports')->assertSee('placeholder="e.g. Rain-Induced Landslide"', false);
+});

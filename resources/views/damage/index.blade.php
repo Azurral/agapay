@@ -160,7 +160,7 @@
                         @csrf
                         <h3 class="text-[14px] font-bold">Add Crisis</h3>
                         <div class="mt-[10px] grid grid-cols-[1fr_220px_200px] gap-[10px]">
-                            <input type="text" name="name" maxlength="100" required placeholder="e.g. Typhoon Egay" value="{{ old('name') }}" aria-label="Crisis name" class="{{ $cell }}">
+                            <input type="text" name="name" maxlength="100" required placeholder="e.g. Rain-Induced Landslide" value="{{ old('name') }}" aria-label="Crisis name" class="{{ $cell }}">
                             <input type="date" name="occurred_on" required max="{{ now()->toDateString() }}" value="{{ old('occurred_on') }}" aria-label="Date it struck" class="{{ $cell }}">
                             <button type="submit" class="bg-brand-bar gradient-button h-[36px] rounded-[50px] text-[16px] font-bold text-white">Add Crisis</button>
                         </div>

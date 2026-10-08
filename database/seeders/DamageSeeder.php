@@ -23,7 +23,17 @@ class DamageSeeder extends Seeder
             Crop::updateOrCreate(['name' => $name], ['yield_mt_per_ha' => $yield, 'price_per_mt' => $price, 'partial_loss_factor' => 0.50]);
         }
 
-        Disaster::updateOrCreate(['name' => 'Southwest Monsoon Flooding'], ['occurred_on' => '2026-06-12']);
+        // Crises common in Bontoc and the Cordillera highlands; Typhoon Cristina stays the latest event (the list's default).
+        foreach ([
+            'Frost (Cold Spell)' => '2026-01-24',
+            'El Niño Drought' => '2026-04-15',
+            'Rice Black Bug Infestation' => '2026-05-08',
+            'Fall Armyworm Infestation' => '2026-05-27',
+            'Southwest Monsoon Flooding' => '2026-06-12',
+            'Rain-Induced Landslide' => '2026-07-03',
+        ] as $name => $date) {
+            Disaster::updateOrCreate(['name' => $name], ['occurred_on' => $date]);
+        }
         $typhoon = Disaster::updateOrCreate(['name' => 'Typhoon Cristina'], ['occurred_on' => '2026-07-20']);
 
         $agritech = User::where('username', 'Agritech_02')->firstOrFail();

@@ -83,7 +83,7 @@ class DamageReferenceController extends Controller
             'name' => ['required', 'string', 'max:100', Rule::unique('disasters', 'name')],
             'occurred_on' => ['required', 'date', 'before_or_equal:today'],
         ], [
-            'name.required' => 'Enter the crisis name, e.g. Typhoon Egay.',
+            'name.required' => 'Enter the crisis name, e.g. Typhoon Egay or Rain-Induced Landslide.',
             'name.unique' => 'That crisis is already on the list.',
             'occurred_on.*' => 'Enter the date it struck (not in the future).',
         ]);
