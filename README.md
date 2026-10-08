@@ -204,7 +204,7 @@ This gives AGAPAY a public `https://` link while the office setup above keeps wo
 2. Go to railway.com → **Login** → **Login with GitHub**.
 3. **New Project** → **Deploy from GitHub repo** → choose `agapay`. The first build may fail because the settings are not in yet; that is fine.
 4. In the same project, press **+ Create** → **Database** → **MySQL**.
-5. Click the AGAPAY service → **Settings** → **Networking** → **Generate Domain**. Copy the address it shows, e.g. `agapay-production.up.railway.app`.
+5. Click the AGAPAY service → **Settings** → **Networking** → **Generate Domain**. If it asks for a port, enter `8765`. Copy the address it shows, e.g. `agapay-production.up.railway.app`.
 6. Make an app key on your own PC (in the AGAPAY folder). Copy the line it prints, which starts with `base64:`:
 
 ```bash
@@ -229,12 +229,13 @@ CACHE_STORE=database
 TRUSTED_PROXIES=*
 LOG_CHANNEL=stderr
 AGAPAY_SEED_PASSWORD=<a new strong password>
+PORT=8765
 ```
 
    **Do not use the default password from `.env.example`.** This repository is public, so anyone could read it.
 
 8. Keep photos and reports between updates: right-click the AGAPAY service → **Attach Volume** → mount path `/app/storage/app/private`.
-9. Fill in the starting data **once**: AGAPAY service → **Settings** → **Deploy** → **Pre-deploy Command** → type `php artisan db:seed --force` → press **Deploy**. When the deployment shows **Success**, **delete that command** so it never runs again.
+9. Create the tables and fill in the starting data **once**: AGAPAY service → **Settings** → **Deploy** → **Pre-deploy Command** → type `php artisan migrate --force && php artisan db:seed --force` → press **Deploy**. When the deployment shows **Success**, change the command to just `php artisan migrate --force`, so later updates add new tables but never load the sample data again.
 10. Open `https://<your domain>` and sign in as `Admin_01` with the password from step 7. Change it under User Management.
 
 Every push to GitHub's `master` branch updates the online copy automatically. The database changes (migrations) run by themselves.
