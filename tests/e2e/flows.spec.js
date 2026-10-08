@@ -22,33 +22,50 @@ async function pickFarmer(page, name) {
     await page.getByRole('button', { name: new RegExp(name) }).first().click();
 }
 
-test('each role lands on its own dashboard', async ({ page }) => {
-    for (const [user, greeting, stat] of [
-        ['Admin_01', 'Hello, Admin', 'Total Beneficiaries'],
-        ['Agritech_02', 'Hello, Agritech', 'Pending Validation'],
-        ['Encoder_03', 'Hello, Encoder', 'Encoded This Month'],
+test('guests see the landing page, then each role lands on its own dashboard with a hamburger menu', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('link', { name: 'Log in to Agapay' })).toBeVisible();
+
+    await page.goto('/login');
+    await page.fill('#password', 'secret');
+    await page.getByRole('button', { name: 'Show password' }).click();
+    await expect(page.locator('#password')).toHaveAttribute('type', 'text');
+
+    for (const [user, greeting, item] of [
+        ['Admin_01', 'Hello, Admin', 'User Management'],
+        ['Agritech_02', 'Hello, Agritech', 'Crisis Reports'],
+        ['Encoder_03', 'Hello, Encoder', 'Beneficiary Profiles'],
     ]) {
         await login(page, user);
         await expect(page.getByText(greeting)).toBeVisible();
-        await expect(page.getByText(stat, { exact: true }).first()).toBeVisible();
+        await expect(page.locator('#side-panel')).toBeHidden();
+        await page.getByRole('button', { name: 'Open menu' }).click();
+        await expect(page.locator('#side-panel').getByText(item, { exact: true })).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(page.locator('#side-panel')).toBeHidden();
     }
 });
 
-test('an encoder registers a farmer who waits for OMAG validation', async ({ page }) => {
+test('an encoder adds a farmer without an RSBSA number, who shows as N/A on the LGU list', async ({ page }) => {
     await login(page, 'Encoder_03');
-    await page.goto('/rsbsa/register');
+    await page.goto('/beneficiaries/create');
     await page.fill('[name=first_name]', 'Lito');
     await page.fill('[name=last_name]', 'Bayang');
     await page.fill('[name=birthdate]', '1979-04-12');
-    await page.fill('[name=address]', 'Purok 4');
+    await page.fill('[name=house_no]', '8');
+    await page.fill('[name=sitio]', 'Purok 4');
     await page.selectOption('[name=barangay_id]', { label: 'Samoki' });
-    await page.getByRole('button', { name: /Submit Registration/ }).click();
+    await page.fill('[name=farm_area_ha]', '1.25');
+    await page.getByRole('button', { name: /Add Beneficiary/ }).last().click();
 
-    await expect(page.getByText('Lito Bayang was registered and is awaiting OMAG validation.')).toBeVisible();
+    await expect(page.getByText('Lito Bayang was added.')).toBeVisible();
 
     await login(page, 'Admin_01');
-    await page.goto('/rsbsa/register');
-    await expect(page.getByText('Lito Bayang').first()).toBeVisible();
+    await page.goto('/interventions/lgu?name=Lito');
+    const row = page.locator('div.grid').filter({ hasText: 'Lito Bayang' }).first();
+    await expect(row).toContainText('N/A');
+    await expect(row).toContainText('8, Purok 4');
+    await expect(row).toContainText('1.25 ha');
 });
 
 test('recording a distribution lowers the stock', async ({ page }) => {
@@ -92,6 +109,7 @@ test('a damage report with a photo is filed and validated', async ({ page }) => 
 
     await login(page, 'Encoder_03');
     await page.goto('/damage-reports/create');
+    await expect(page.getByText('Crisis:')).toBeVisible();
     await pickFarmer(page, 'Ana Dela Cruz');
     await page.selectOption('[name=crop_id]', { label: 'Rice' });
     await page.selectOption('[name=crop_stage]', 'vegetative');

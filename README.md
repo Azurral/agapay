@@ -4,11 +4,11 @@
 
 AGAPAY replaces OMAG's separate Excel workbooks with one web system for:
 
-- beneficiary profiles and RSBSA registration;
-- DA and LGU interventions, with household and eligibility rules;
+- beneficiary profiles (address in parts, farm area, RSBSA No. or N/A);
+- DA and LGU interventions, with the household rule (DA programs need an RSBSA No.);
 - inventory, with automatic stock deduction;
 - Excel import and export;
-- agricultural damage recording;
+- crisis (agricultural damage) reports;
 - distribution reports;
 - a full audit trail.
 
@@ -170,9 +170,9 @@ The seeder creates these accounts. Their password is the value of `AGAPAY_SEED_P
 
 | Username | Role | Can do |
 |---|---|---|
-| `Admin_01` | Administrator | Everything: users and role permissions, audit trail, RSBSA processing, claims, archive/restore, inventory, import/export, distribution cycles, disasters and crop values, reports |
-| `Agritech_02` | Agricultural Technologist | Validate eligibility, verify claims, file and validate damage reports, generate reports |
-| `Encoder_03` | Data Encoder | Register beneficiaries, edit profiles, encode intervention records, inventory, Excel import, file damage reports, generate reports |
+| `Admin_01` | Administrator | Everything: users and role permissions, audit trail, claims, archive/restore, inventory, import/export, distribution cycles, crises and crop values, reports |
+| `Agritech_02` | Agricultural Technologist | Mark special cases (Deceased, Duplicate, ...), release programs, file and validate crisis reports, download reports |
+| `Encoder_03` | Data Encoder | Add beneficiaries, edit profiles, encode intervention records, inventory, Excel import, file crisis reports, download reports |
 | `Encoder_04` | (no role, inactive) | Shows how blocked accounts behave |
 
 The Administrator can change what each role may do under **User Management → Configure Roles**.
@@ -180,9 +180,13 @@ The Administrator can change what each role may do under **User Management → C
 ## Everyday use
 
 - **Distribution cycles:** go to Interventions → Distribution Cycles (Administrator) to add the next cycle, e.g. `2026-Q4`. Only one cycle is "ongoing" at a time. Cycles are kept in date order.
-- **Excel import:** use Upload Excel. The sheet needs Name (or First Name + Last Name), Birthdate and Barangay columns; RSBSA No., Address, Contact and an Intervention column are optional. Check the Processing Feedback and preview, then press **Confirm & Import**.
-- **Reports:** use Reports, then choose a cycle, a program, the dates and PDF or Excel. Every generated file stays under Generated Reports so it can be downloaded again.
-- **Damage reports:** go to Disaster Reports → + New Damage Report. Loss and cost are computed from the crop values, which the Administrator edits under "Disasters & Crop Values".
+- **Adding beneficiaries:** use Add Beneficiary. Enter the address in parts (House/Lot No., Street, Sitio/Purok, Barangay); the town is always Bontoc, Mountain Province. The RSBSA No. is optional and shows as **N/A** when blank. Such farmers can get LGU programs but not DA programs.
+- **Programs:** new program records are ready to release at once. Change a record's status only for special cases: Deceased (released to a proxy), or Duplicate, Relocated or Inactive (not claimable).
+- **LGU page:** lists every farmer with address, farm area and number of crisis reports; the LGU program records are on its **Program Records** tab.
+- **Excel import:** use Upload Excel. The sheet needs Name (or First Name + Last Name), Birthdate and Barangay columns; RSBSA No., Address, Farm Area, Contact and an Intervention column are optional. Check the Processing Feedback and preview, then press **Confirm & Import**.
+- **Export List:** one row per program given, with claim status, amount and the farmer's crises. Birthdates and contact numbers are left out.
+- **Download Reports:** choose a cycle, a program, the dates and PDF or Excel. Every generated file stays under Generated Reports so it can be downloaded again.
+- **Crisis reports:** go to Crisis Reports → + New Damage Report. Loss and cost are computed from the crop values, which the Administrator edits under "Crises & Crop Values" (also where new crises, e.g. a typhoon, are added).
 
 ## Using it on the office network
 

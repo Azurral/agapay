@@ -34,8 +34,8 @@ function reportInput(array $overrides = []): array
 
 it('shows the Figma form for each role', function (string $username) {
     $this->actingAs(User::where('username', $username)->sole())->get('/reports')->assertOk()
-        ->assertSee('REPORT GENERATION')
-        ->assertSeeInOrder(['Reports', 'Program', 'Program: All (DA &amp; LGU)', 'Export Format', 'Format: PDF',
+        ->assertSee('DOWNLOAD REPORTS')
+        ->assertSeeInOrder(['Generate a Report', 'Program', 'Program: All (DA &amp; LGU)', 'Export Format', 'Format: PDF',
             'Start Date', 'End Date', 'Distribution Cycle', 'Cycle: 2026-Q3 Dry Season', 'Generate Report'], false)
         ->assertSee('<option value="'.$this->cycle->id.'" selected', false);
 })->with(['Admin_01', 'Agritech_02', 'Encoder_03']);
