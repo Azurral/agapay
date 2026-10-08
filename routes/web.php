@@ -83,6 +83,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware('can:damage.create')->group(function () {
         Route::get('/damage-reports/create', [DamageReportController::class, 'create'])->name('damage.create');
         Route::post('/damage-reports', [DamageReportController::class, 'store'])->name('damage.store');
+        Route::get('/damage-reports/staged-photos/{token}', [DamageReportController::class, 'stagedPhoto'])->name('damage.staged-photos.show');
         Route::get('/damage-reports/{report}/edit', [DamageReportController::class, 'edit'])->name('damage.edit');
         Route::put('/damage-reports/{report}', [DamageReportController::class, 'update'])->name('damage.update');
     });

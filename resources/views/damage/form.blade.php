@@ -196,6 +196,18 @@
                     @endforeach
                 </div>
             @endif
+            @php($staged = $errors->any() ? \App\Support\StagedPhotos::all() : [])
+            @if ($staged)
+                <div class="mt-[8px] flex flex-wrap gap-[10px]">
+                    @foreach ($staged as $token => $kept)
+                        <span x-data="{ kept: true }" x-show="kept" class="relative block size-[84px] overflow-hidden rounded-[10px] border-2 border-ok bg-white">
+                            <img src="{{ route('damage.staged-photos.show', $token) }}" alt="{{ $kept['name'] }}" class="size-full object-cover">
+                            <input type="hidden" name="kept_photos[]" value="{{ $token }}" :disabled="! kept">
+                            <button type="button" @click="kept = false" class="absolute top-[4px] right-[4px] rounded-full bg-white/90 px-[6px] text-[12px] font-bold" aria-label="Remove {{ $kept['name'] }}">✕</button>
+                        </span>
+                    @endforeach
+                </div>
+            @endif
             <label @dragover.prevent="over = true" @dragleave.prevent="over = false" @drop.prevent="over = false; add([...$event.dataTransfer.files])"
                    :class="over ? 'border-brand bg-brand-soft/20' : 'border-black/15 bg-brand-soft/10'"
                    class="mt-[8px] flex min-h-[130px] cursor-pointer flex-col items-center justify-center rounded-[15px] border-2 border-dashed px-[16px] py-[16px] text-center transition-colors">
@@ -216,8 +228,8 @@
                 <p class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger">{{ $message }}</p>
             @endforeach
             <p x-cloak x-show="photoNote" x-text="photoNote" class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger"></p>
-            @if ($errors->any() && ! $tooLarge)
-                <p class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger">Choose the photos again — the browser does not keep them after an error.</p>
+            @if ($staged)
+                <p class="mt-[4px] pl-[4px] text-[12px] font-semibold text-[#1f7a35]">Your photos are kept (green border) — remove any you do not want, or add more.</p>
             @endif
             <p class="mt-[4px] pl-[4px] text-[12px] font-medium text-muted">At least 1 and up to 10 JPG or PNG photos, each at most {{ \App\Http\Requests\DamageReportRequest::photoLimitLabel() }}.</p>
             <div class="mt-[16px] flex justify-center">

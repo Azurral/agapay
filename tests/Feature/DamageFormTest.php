@@ -74,7 +74,8 @@ it('rejects bad input with field errors and stores nothing', function (array $ov
         ->assertSessionHasErrors([$field => $message])
         ->assertSessionHasInput('farm_location', 'Sitio Lanao');
 
-    expect(DamageReport::count())->toBe($before)->and(Storage::disk('local')->allFiles())->toBe([]);
+    // Only the photo kept for the next try (damage-staging) is on disk; nothing was filed.
+    expect(DamageReport::count())->toBe($before)->and(Storage::disk('local')->allFiles('damage'))->toBe([]);
 })->with([
     'no farmer' => [['beneficiary_id' => null], 'beneficiary_id', 'Choose a farmer from the list.'],
     'archived farmer' => [fn () => ['beneficiary_id' => tap(Beneficiary::factory()->create())->delete()->id], 'beneficiary_id', 'Choose a farmer from the list.'],
@@ -159,12 +160,12 @@ it('rounds areas to the stored two decimals before computing', function () {
     expect(DamageReport::latest('id')->firstOrFail())->total_area_ha->toEqual('0.13')->loss_mt->toEqual('0.52')->cost->toEqual('10400.00');
 });
 
-it('tells the reporter to choose the photos again after an error', function () {
+it('tells the reporter the photos were kept after an error', function () {
     $this->actingAs($this->encoder)->from('/damage-reports/create')->followingRedirects()
         ->post('/damage-reports', damageInput(['total_area_ha' => '0', 'partial_area_ha' => '0', 'photos' => [UploadedFile::fake()->image('a.jpg')]]))
-        ->assertSee('Choose the photos again — the browser does not keep them after an error.');
+        ->assertSee('Your photos are kept')->assertDontSee('Choose the photos again');
 
-    $this->get('/damage-reports/create')->assertDontSee('Choose the photos again');
+    $this->get('/damage-reports/create')->assertDontSee('Your photos are kept');
 });
 
 it('tells the form the photo limits this server accepts', function () {

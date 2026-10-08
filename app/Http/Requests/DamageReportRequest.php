@@ -5,6 +5,8 @@ namespace App\Http\Requests;
 use App\Models\Crop;
 use App\Models\DamageReport;
 use App\Services\DamageCalculator;
+use App\Support\StagedPhotos;
+use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -32,8 +34,10 @@ class DamageReportRequest extends FormRequest
             'latitude' => ['nullable', 'required_with:longitude', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'required_with:latitude', 'numeric', 'between:-180,180'],
             // Paper (interview, Section G Q9): photographic documentation is mandatory. An edit keeps the stored photos.
-            'photos' => [Rule::requiredIf(fn () => $this->isMethod('post')), 'array', 'max:'.self::MAX_PHOTOS],
+            // Photos kept from an earlier try (StagedPhotos) count as attached.
+            'photos' => [Rule::requiredIf(fn () => $this->isMethod('post') && StagedPhotos::keptTokens($this) === []), 'array', 'max:'.self::MAX_PHOTOS],
             'photos.*' => ['file', 'mimes:jpg,jpeg,png', 'max:'.intdiv(self::photoLimitBytes(), 1024)],
+            'kept_photos' => ['nullable', 'array'],
             'remove_photos' => ['nullable', 'array'],
             'remove_photos.*' => ['integer'],
         ];
@@ -91,10 +95,23 @@ class DamageReportRequest extends FormRequest
         };
     }
 
+    /** The browser forgets chosen files on an error, so the valid ones are kept for the next try. */
+    protected function failedValidation(ValidatorContract $validator): void
+    {
+        StagedPhotos::stash($this);
+
+        parent::failedValidation($validator);
+    }
+
     public function after(): array
     {
         return [
             function (Validator $validator) {
+                $photos = count(array_filter((array) $this->file('photos', []))) + count(StagedPhotos::keptTokens($this));
+                if ($photos > self::MAX_PHOTOS && ! $validator->errors()->has('photos')) {
+                    $validator->errors()->add('photos', 'Attach up to 10 photos.');
+                }
+
                 $areas = $validator->errors()->hasAny(['total_area_ha', 'partial_area_ha'])
                     ? null
                     : (float) $this->input('total_area_ha') + (float) $this->input('partial_area_ha');

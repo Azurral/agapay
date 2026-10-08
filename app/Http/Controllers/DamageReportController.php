@@ -5,16 +5,22 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DamageReportRequest;
 use App\Models\Barangay;
 use App\Models\Crop;
+use App\Models\DamagePhoto;
 use App\Models\DamageReport;
 use App\Models\Disaster;
 use App\Models\User;
 use App\Services\DamageReportService;
 use App\Support\DamageReportFilters;
+use App\Support\StagedPhotos;
 use Illuminate\Database\DetectsConcurrencyErrors;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use PDOException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /** Figma 329:2978 / 407:1554 / 470:1863 damage list and 423:786 / 423:306 New Damage Report (spec rule 11). */
 class DamageReportController extends Controller
@@ -49,10 +55,17 @@ class DamageReportController extends Controller
     public function store(DamageReportRequest $request): RedirectResponse
     {
         try {
-            $report = $this->reports->file($request->validated(), $request->file('photos', []), $request->user());
+            $report = $this->reports->file($request->validated(), $this->photos($request), $request->user());
+        } catch (ValidationException $e) {
+            StagedPhotos::stash($request);
+
+            throw $e;
         } catch (PDOException $e) {
+            StagedPhotos::stash($request);
+
             return $this->concurrentSave($e);
         }
+        StagedPhotos::clear();
 
         return redirect()->route('damage.show', $report)->with('status', "Damage report filed for {$report->beneficiary->fullName()}.");
     }
@@ -79,13 +92,39 @@ class DamageReportController extends Controller
         abort_unless(self::canEdit($request->user(), $report), 403);
 
         try {
-            $this->reports->update($report, $request->validated(), $request->file('photos', []),
+            $this->reports->update($report, $request->validated(), $this->photos($request),
                 array_map('intval', $request->validated('remove_photos') ?? []), $request->user());
+        } catch (ValidationException $e) {
+            StagedPhotos::stash($request);
+
+            throw $e;
         } catch (PDOException $e) {
+            StagedPhotos::stash($request);
+
             return $this->concurrentSave($e);
         }
+        StagedPhotos::clear();
 
         return redirect()->route('damage.show', $report)->with('status', 'Damage report saved.');
+    }
+
+    /**
+     * The new photos plus those kept from the form's earlier try.
+     *
+     * @return list<UploadedFile>
+     */
+    private function photos(DamageReportRequest $request): array
+    {
+        return [...array_values(array_filter((array) $request->file('photos', []))), ...StagedPhotos::files(StagedPhotos::keptTokens($request))];
+    }
+
+    /** Shows a kept photo to the session that uploaded it. */
+    public function stagedPhoto(string $token): StreamedResponse
+    {
+        $photo = StagedPhotos::all()[$token] ?? null;
+        abort_unless($photo && Storage::disk(DamagePhoto::DISK)->exists($photo['path']), 404);
+
+        return Storage::disk(DamagePhoto::DISK)->response($photo['path'], $photo['name'], ['Cache-Control' => 'private, no-store'], 'inline');
     }
 
     /** A deadlock that outlived the service's retries (QueryException, or DeadlockException from a nested transaction). */
@@ -107,6 +146,11 @@ class DamageReportController extends Controller
 
     private function form(?DamageReport $report, Request $request): View
     {
+        // Kept photos only belong to the form that just came back with an error.
+        if (! $request->session()->has('errors')) {
+            StagedPhotos::clear();
+        }
+
         return view('damage.form', [
             'report' => $report?->load(['beneficiary', 'photos']),
             'disasters' => Disaster::orderByDesc('occurred_on')->orderByDesc('id')->get(),
