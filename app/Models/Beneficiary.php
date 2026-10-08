@@ -26,27 +26,11 @@ class Beneficiary extends Model
     /** @use HasFactory<BeneficiaryFactory> */
     use Auditable, HasFactory, SoftDeletes;
 
-    public const RSBSA_PENDING = 'pending_validation';
-
-    public const RSBSA_VALIDATED = 'validated';
-
-    public const RSBSA_ENDORSED = 'endorsed';
-
+    /** Every profile is registered on entry (OMAG no longer tracks an RSBSA application workflow). */
     public const RSBSA_REGISTERED = 'registered';
 
-    public const RSBSA_RETURNED = 'returned';
-
-    public const RSBSA_REJECTED = 'rejected';
-
-    /** Applications OMAG is still working on ("Pending RSBSA"). */
-    public const RSBSA_IN_PROGRESS = [self::RSBSA_PENDING, self::RSBSA_VALIDATED, self::RSBSA_ENDORSED];
-
-    /** LGU registration filter value => RSBSA statuses. */
-    public const REGISTRATION_FILTERS = [
-        'registered' => [self::RSBSA_REGISTERED],
-        'new' => self::RSBSA_IN_PROGRESS,
-        'unregistered' => [self::RSBSA_RETURNED, self::RSBSA_REJECTED],
-    ];
+    /** Shown instead of an RSBSA number a farmer does not have (LGU programs do not need one). */
+    public const NO_RSBSA = 'N/A';
 
     public const SOURCE_MANUAL = 'manual';
 
@@ -134,16 +118,6 @@ class Beneficiary extends Model
         return $this->hasOne(InterventionRecord::class)->ofMany(['distribution_cycle_id' => 'max', 'id' => 'max']);
     }
 
-    /** LGU "Registration" column (Figma 329:1423). */
-    public function registrationLabel(): string
-    {
-        return match (true) {
-            in_array($this->rsbsa_status, self::REGISTRATION_FILTERS['registered'], true) => 'Registered',
-            in_array($this->rsbsa_status, self::REGISTRATION_FILTERS['new'], true) => 'Registered (New)',
-            default => 'Unregistered (Eligible)',
-        };
-    }
-
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -161,7 +135,7 @@ class Beneficiary extends Model
 
     public function rsbsaDisplay(): string
     {
-        return $this->rsbsa_number ?: '(pending)';
+        return $this->rsbsa_number ?: self::NO_RSBSA;
     }
 
     /** Eager loads for <x-beneficiary.table>: barangay name and household size without N+1 queries. */
@@ -216,29 +190,9 @@ class Beneficiary extends Model
             ->exists();
     }
 
-    /** Chip label for an RSBSA status. */
-    public static function rsbsaStatusLabel(?string $status): string
-    {
-        return match ($status) {
-            self::RSBSA_PENDING => 'Pending Validation',
-            self::RSBSA_VALIDATED => 'Validated',
-            self::RSBSA_ENDORSED => 'Endorsed to DA-RFO',
-            self::RSBSA_REGISTERED => 'Registered',
-            self::RSBSA_RETURNED => 'Returned',
-            self::RSBSA_REJECTED => 'Rejected',
-            default => '—',
-        };
-    }
-
-    /** Chip tone: statuses that need someone's attention are "bad". */
-    public static function rsbsaStatusTone(?string $status): string
-    {
-        return in_array($status, [self::RSBSA_PENDING, self::RSBSA_RETURNED, self::RSBSA_REJECTED], true) ? 'bad' : 'ok';
-    }
-
     public function auditRecordLabel(): string
     {
-        return $this->fullName().' ('.($this->rsbsa_number ?: 'pending').')';
+        return $this->fullName().' ('.$this->rsbsaDisplay().')';
     }
 
     /** Members of this beneficiary's household, including the beneficiary. */

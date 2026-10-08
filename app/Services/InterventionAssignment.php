@@ -25,7 +25,8 @@ final class InterventionAssignment
 
         return DB::transaction(function () use ($beneficiary, $intervention, $cycle, $attrs, $actor) {
             // One assignment per beneficiary at a time, so a double-submitted form cannot fill the same slot twice.
-            Beneficiary::whereKey($beneficiary->id)->lockForUpdate()->first();
+            $current = Beneficiary::whereKey($beneficiary->id)->lockForUpdate()->first() ?? $beneficiary;
+            self::ensureRsbsaFor($current, $intervention);
             $this->ensureSlotFree($beneficiary, $intervention, $cycle);
 
             return InterventionRecord::create([
@@ -65,6 +66,7 @@ final class InterventionAssignment
 
             if ($moved) {
                 $intervention = Intervention::findOrFail($interventionId);
+                self::ensureRsbsaFor($record->beneficiary, $intervention);
                 $this->ensureSlotFree($record->beneficiary, $intervention, DistributionCycle::findOrFail($cycleId), $record->id);
                 $record->fill(['intervention_id' => $interventionId, 'distribution_cycle_id' => $cycleId]);
 
@@ -80,6 +82,14 @@ final class InterventionAssignment
 
             return $record;
         });
+    }
+
+    /** DA programs need an RSBSA number; LGU programs also serve farmers without one. */
+    public static function ensureRsbsaFor(Beneficiary $beneficiary, Intervention $intervention): void
+    {
+        if ($intervention->requiresRsbsa() && ! $beneficiary->rsbsa_number) {
+            throw new InterventionRuleViolation(Intervention::rsbsaRequiredFor($beneficiary));
+        }
     }
 
     private function ensureSlotFree(Beneficiary $beneficiary, Intervention $intervention, DistributionCycle $cycle, ?int $ignoreId = null): void

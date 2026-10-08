@@ -65,6 +65,7 @@ final class ClaimService
             if ($record->isClaimed()) {
                 throw new InterventionRuleViolation('Already claimed.');
             }
+            InterventionAssignment::ensureRsbsaFor($record->beneficiary, $record->intervention);
 
             if ($record->validation_status === InterventionRecord::VALIDATION_PENDING) {
                 if (! $historical) {

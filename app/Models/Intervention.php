@@ -17,6 +17,20 @@ class Intervention extends Model
 
     public const SOURCES = [self::SOURCE_DA, self::SOURCE_LGU];
 
+    /** Excel import note when a DA program is skipped for a farmer without an RSBSA number. */
+    public const RSBSA_REQUIRED_MESSAGE = "no RSBSA No. (DA programs need one; LGU programs don't)";
+
+    /** DA programs go to RSBSA-registered farmers only; LGU programs also serve farmers without a number. */
+    public function requiresRsbsa(): bool
+    {
+        return $this->source === self::SOURCE_DA;
+    }
+
+    public static function rsbsaRequiredFor(Beneficiary $beneficiary): string
+    {
+        return "{$beneficiary->fullName()} has no RSBSA No. DA programs need one; LGU programs don't.";
+    }
+
     protected function casts(): array
     {
         return ['one_per_household' => 'boolean', 'allow_repeat' => 'boolean', 'is_active' => 'boolean'];

@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Beneficiary;
 use Illuminate\Validation\Rule;
 
-/** Field rules shared by RSBSA registration and the encoder's profile edit. */
+/** Field rules shared by Add Beneficiary and the encoder's profile edit. */
 trait BeneficiaryRules
 {
     /** @return array<string, array<int, mixed>> */
@@ -31,6 +32,15 @@ trait BeneficiaryRules
             'contact_number.regex' => 'Use the format 09XX-XXX-XXXX.',
             'barangay_id.required' => 'Select a barangay.',
         ];
+    }
+
+    /** RSBSA numbers are unique across all profiles, archived ones included, ignoring case. */
+    protected function rsbsaNumberTaken(string $number, ?int $exceptId = null): bool
+    {
+        return Beneficiary::withTrashed()
+            ->when($exceptId, fn ($query) => $query->whereKeyNot($exceptId))
+            ->whereRaw('LOWER(TRIM(rsbsa_number)) = ?', [mb_strtolower($number)])
+            ->exists();
     }
 
     /** Trims name fields so " JUAN " and "Juan" are treated alike. */

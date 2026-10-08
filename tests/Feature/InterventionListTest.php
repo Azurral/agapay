@@ -47,15 +47,13 @@ it('gives agri techs validation and status dropdowns without archive controls', 
         ->assertDontSee('Archived/Restore');
 });
 
-it('adds the registration column and filter on LGU', function () {
-    $this->actingAs($this->admin)->get('/interventions/lgu')->assertOk()
+it('lists LGU program records like DA ones, with N/A for a missing RSBSA number', function () {
+    $this->actingAs($this->admin)->get('/interventions/lgu?tab=records')->assertOk()
         ->assertSee('LGU INTERVENTION LIST')
-        ->assertSeeInOrder(['Maria Santos', 'RSBSA-0198', 'Samoki', 'Complete Fertilizer', 'Registered'])
-        ->assertSee('Registered (New)')->assertSee('Unregistered (Eligible)')
-        ->assertDontSee('Qty / Unit');
-
-    $this->actingAs($this->admin)->get('/interventions/lgu?registration=new')
-        ->assertSee('Pedro Reyes')->assertDontSee('Maria Santos')->assertDontSee('Ana Gomez');
+        ->assertSeeInOrder(['Maria Santos', 'RSBSA-0198', 'Samoki', 'Complete Fertilizer'])
+        ->assertSeeInOrder(['Pedro Reyes', 'N/A', 'Bontoc Ili', 'Emergency Seedlings'])
+        ->assertSee('Qty / Unit')
+        ->assertDontSee('Registered (New)');
 });
 
 it('filters by name, RSBSA, barangay and intervention', function () {

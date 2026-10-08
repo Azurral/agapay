@@ -24,7 +24,7 @@ function uploadRows(array $rows): ImportBatch
     return ImportBatch::latest('id')->firstOrFail();
 }
 
-it('imports ready and flagged rows and updates RSBSA numbers', function () {
+it('imports new rows, with or without an RSBSA number, and updates RSBSA numbers', function () {
     $federico = Beneficiary::where('first_name', 'Federico')->sole();
     $batch = uploadRows([
         ['Name', 'Birthdate', 'Barangay', 'RSBSA No.', 'Address', 'Contact'],
@@ -43,12 +43,10 @@ it('imports ready and flagged rows and updates RSBSA numbers', function () {
     expect(Beneficiary::count())->toBe($before + 2)
         ->and($pablo)->rsbsa_status->toBe(Beneficiary::RSBSA_REGISTERED)->source->toBe(Beneficiary::SOURCE_IMPORT)
         ->contact_number->toBe('09171234567')->address->toBe('Purok 2')->created_by->toBe($this->encoder->id)
-        ->and($gloria)->rsbsa_status->toBe(Beneficiary::RSBSA_ENDORSED)->encoding_issue->toBe('Missing RSBSA Number')->rsbsa_number->toBeNull()
-        ->and($federico->fresh())->rsbsa_number->toBe('RSBSA-0777')->rsbsa_status->toBe(Beneficiary::RSBSA_REGISTERED)->encoding_issue->toBeNull()
+        ->and($gloria)->rsbsa_number->toBeNull()->rsbsaDisplay()->toBe('N/A')->encoding_issue->toBeNull()
+        ->and($federico->fresh())->rsbsa_number->toBe('RSBSA-0777')
         ->and($batch->fresh())->status->toBe(ImportBatch::IMPORTED)->imported_at->not->toBeNull()
         ->and($batch->rows()->where('row_number', 2)->value('beneficiary_id'))->toBe($pablo->id);
-
-    $this->get('/dashboard')->assertSee('Gloria Ramos')->assertDontSee('Federico Wasing');
 });
 
 it('groups imported people into households', function () {

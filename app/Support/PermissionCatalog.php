@@ -14,8 +14,7 @@ final class PermissionCatalog
         'audit.view' => ['View audit trail', 'Administration'],
         'beneficiaries.view' => ['View beneficiary profiles', 'Beneficiaries'],
         'beneficiaries.manage' => ['Add and edit beneficiary profiles', 'Beneficiaries'],
-        'rsbsa.register' => ['Encode RSBSA registrations', 'Beneficiaries'],
-        'rsbsa.process' => ['Validate and endorse RSBSA registrations', 'Beneficiaries'],
+        'rsbsa.register' => ['Add beneficiaries', 'Beneficiaries'],
         'interventions.view' => ['View DA and LGU intervention lists', 'Interventions'],
         'interventions.validate' => ['Validate beneficiary eligibility', 'Interventions'],
         'interventions.claim' => ['Process intervention claims', 'Interventions'],
@@ -45,7 +44,7 @@ final class PermissionCatalog
         return [
             Role::ADMIN => array_keys(self::PERMISSIONS),
             Role::AGRITECH => [
-                'dashboard.view', 'beneficiaries.view', 'rsbsa.process',
+                'dashboard.view', 'beneficiaries.view',
                 'interventions.view', 'interventions.validate', 'interventions.claim',
                 'damage.view', 'damage.create', 'damage.validate', 'reports.generate',
             ],

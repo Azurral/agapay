@@ -81,21 +81,13 @@ class BeneficiaryController extends Controller
 
     public function update(UpdateBeneficiaryRequest $request, Beneficiary $beneficiary): RedirectResponse
     {
-        $old = $beneficiary->only(['rsbsa_status', 'rsbsa_number', 'rsbsa_status_reason']);
+        $old = $beneficiary->only(['rsbsa_number']);
         $beneficiary->fill($request->validated());
         $beneficiary->rsbsa_number = $request->validated('rsbsa_number') ?: null;
         $beneficiary->updated_by = $request->user()->id;
 
-        // Entering the masterlist number for an endorsed application completes the RSBSA registration
-        // (the request refuses a first number before endorsement).
+        // A first number gets its own audit entry, so the trail shows when the farmer joined the RSBSA.
         $recordsNumber = ! $old['rsbsa_number'] && $beneficiary->rsbsa_number;
-        if ($recordsNumber) {
-            $beneficiary->rsbsa_status = Beneficiary::RSBSA_REGISTERED;
-            $beneficiary->rsbsa_status_reason = null;
-        }
-        if ($beneficiary->rsbsa_number && $beneficiary->encoding_issue === 'Missing RSBSA Number') {
-            $beneficiary->encoding_issue = null;
-        }
 
         try {
             DB::transaction(function () use ($beneficiary, $recordsNumber, $old) {

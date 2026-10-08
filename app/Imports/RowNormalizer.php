@@ -110,7 +110,13 @@ final class RowNormalizer
             return ['status' => 'unreadable', 'data' => $data, 'issues' => $blocking];
         }
 
-        return ['status' => $data['rsbsa_number'] ? 'ready' : 'flagged', 'data' => $data, 'issues' => $issues];
+        // DA programs need an RSBSA number; the profile is still imported (shown as N/A).
+        if ($data['intervention_id'] && ! $data['rsbsa_number'] && $this->interventions->firstWhere('id', $data['intervention_id'])?->requiresRsbsa()) {
+            $issues[] = 'Intervention skipped: '.Intervention::RSBSA_REQUIRED_MESSAGE;
+            $data['intervention_id'] = null;
+        }
+
+        return ['status' => 'ready', 'data' => $data, 'issues' => $issues];
     }
 
     /** Trimmed, single-spaced. */

@@ -12,6 +12,7 @@ class ImportRow extends Model
 {
     public const READY = 'ready';
 
+    /** Older staged rows without an RSBSA number; new rows without one are simply "ready". */
     public const FLAGGED = 'flagged';
 
     public const UPDATE = 'update';
@@ -21,7 +22,7 @@ class ImportRow extends Model
     public const UNREADABLE = 'unreadable';
 
     public const LABELS = [
-        self::READY => 'Ready', self::FLAGGED => 'Missing RSBSA', self::UPDATE => 'Adds RSBSA No.',
+        self::READY => 'Ready', self::FLAGGED => 'Ready', self::UPDATE => 'Adds RSBSA No.',
         self::DUPLICATE => 'Duplicate', self::UNREADABLE => 'Excluded',
     ];
 
@@ -47,6 +48,6 @@ class ImportRow extends Model
 
     public function statusTone(): string
     {
-        return in_array($this->status, [self::READY, self::UPDATE], true) ? 'ok' : 'bad';
+        return in_array($this->status, [self::READY, self::FLAGGED, self::UPDATE], true) ? 'ok' : 'bad';
     }
 }

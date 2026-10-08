@@ -26,12 +26,12 @@ it('shows recent beneficiaries with household size on the admin dashboard', func
 });
 
 it('shows the encoder their pending encoding queue', function () {
-    Beneficiary::factory()->create(['first_name' => 'Federico', 'middle_name' => null, 'last_name' => 'Wasing', 'source' => Beneficiary::SOURCE_IMPORT, 'encoding_issue' => 'Missing RSBSA Number']);
+    Beneficiary::factory()->create(['first_name' => 'Federico', 'middle_name' => null, 'last_name' => 'Wasing', 'source' => Beneficiary::SOURCE_IMPORT, 'encoding_issue' => 'Awaiting Barangay Confirmation']);
     Beneficiary::factory()->create(['first_name' => 'Maria', 'middle_name' => null, 'last_name' => 'Santos']);
 
     $this->actingAs(userWithRole(Role::ENCODER))->get('/dashboard')
         ->assertOk()->assertSee('Pending Encoding Queue')
-        ->assertSeeInOrder(['Federico Wasing', 'Excel Import', 'Missing RSBSA Number', now()->format('M j, Y'), 'Incomplete'])
+        ->assertSeeInOrder(['Federico Wasing', 'Excel Import', 'Awaiting Barangay Confirmation', now()->format('M j, Y'), 'Incomplete'])
         ->assertDontSee('Maria Santos');
 });
 

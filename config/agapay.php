@@ -52,7 +52,7 @@ return [
         ]],
         Role::ENCODER => ['width' => 200, 'gap' => 22, 'items' => [
             ['label' => 'Upload Excel', 'route' => 'import.index', 'permission' => 'import.run'],
-            ['label' => 'Add Beneficiary', 'route' => 'rsbsa.register', 'permission' => 'rsbsa.register'],
+            ['label' => 'Add Beneficiary', 'route' => 'beneficiaries.create', 'permission' => 'rsbsa.register'],
             ['label' => 'Crisis Reports', 'route' => 'damage.index', 'permission' => 'damage.view'],
         ]],
     ],

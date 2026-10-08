@@ -73,6 +73,28 @@ it('ignores archived records for the household rule and the LGU duplicate flag',
     expect($this->assign->assign($juan, $fertilizer, $this->q3, [], $this->admin)->validation_status)->toBe('pending');
 });
 
+it('gives DA programs only to farmers with an RSBSA number, LGU programs to anyone', function () {
+    [$juan] = sameHousehold(['Juan']);
+    $juan->update(['rsbsa_number' => null]);
+
+    expect(fn () => $this->assign->assign($juan, program('da', 'Certified Rice Seeds'), $this->q3, [], $this->admin))
+        ->toThrow(InterventionRuleViolation::class, "Juan Dela Cruz has no RSBSA No. DA programs need one; LGU programs don't.");
+
+    $lgu = $this->assign->assign($juan, program('lgu', 'Emergency Seedlings'), $this->q3, [], $this->admin);
+    expect($lgu->exists)->toBeTrue()
+        ->and(fn () => $this->assign->reassign($lgu, ['intervention_id' => program('da', 'Molasses')->id], $this->admin))
+        ->toThrow(InterventionRuleViolation::class, "Juan Dela Cruz has no RSBSA No. DA programs need one; LGU programs don't.");
+});
+
+it('refuses to release a DA program after the RSBSA number was removed', function () {
+    [$juan] = sameHousehold(['Juan']);
+    $record = record($juan, program('da', 'PAFF'), ['validation_status' => 'eligible']);
+    $juan->update(['rsbsa_number' => null]);
+
+    expect(fn () => $this->claims->claim($record, $this->admin))
+        ->toThrow(InterventionRuleViolation::class, "Juan Dela Cruz has no RSBSA No. DA programs need one; LGU programs don't.");
+});
+
 it('requires validation before a claim, except for historical encoding', function () {
     [$juan] = sameHousehold(['Juan']);
     $pending = record($juan, program('da', 'Certified Rice Seeds'));

@@ -8,22 +8,21 @@ use Illuminate\View\View;
 
 class SearchController extends Controller
 {
-    public const STATUSES = [
-        Beneficiary::RSBSA_PENDING, Beneficiary::RSBSA_VALIDATED, Beneficiary::RSBSA_ENDORSED,
-        Beneficiary::RSBSA_REGISTERED, Beneficiary::RSBSA_RETURNED, Beneficiary::RSBSA_REJECTED,
-    ];
+    /** RSBSA filter value => label: farmers with a number, or without one (N/A). */
+    public const RSBSA_FILTERS = ['with' => 'Has RSBSA No.', 'none' => 'N/A (no RSBSA No.)'];
 
     public function __invoke(Request $request): View
     {
         $term = mb_substr($request->queryText('q'), 0, 100);
         $barangay = ctype_digit($request->queryText('barangay')) ? (int) $request->queryText('barangay') : null;
-        $status = in_array($request->queryText('rsbsa_status'), self::STATUSES, true) ? $request->queryText('rsbsa_status') : null;
-        $hasCriteria = $term !== '' || $barangay || $status;
+        $rsbsa = array_key_exists($request->queryText('rsbsa'), self::RSBSA_FILTERS) ? $request->queryText('rsbsa') : null;
+        $hasCriteria = $term !== '' || $barangay || $rsbsa;
 
         $results = Beneficiary::forTable()
             ->search($term)
             ->when($barangay, fn ($q) => $q->where('barangay_id', $barangay))
-            ->when($status, fn ($q) => $q->where('rsbsa_status', $status))
+            ->when($rsbsa === 'with', fn ($q) => $q->whereNotNull('rsbsa_number'))
+            ->when($rsbsa === 'none', fn ($q) => $q->whereNull('rsbsa_number'))
             // An empty search lists nothing rather than the whole masterlist.
             ->when(! $hasCriteria, fn ($q) => $q->whereRaw('1 = 0'))
             ->orderBy('last_name')->orderBy('first_name')->orderBy('id')

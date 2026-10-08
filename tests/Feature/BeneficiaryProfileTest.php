@@ -65,13 +65,13 @@ it('lets encoders correct a profile and regroups the household', function () {
         ->and(AuditLog::where('action', 'Updated Beneficiary Profile')->where('record_label', 'Juan Dela Cruz (RSBSA-0231)')->exists())->toBeTrue();
 });
 
-it('registers a record when its RSBSA number is entered', function () {
-    $b = Beneficiary::factory()->create(['rsbsa_status' => Beneficiary::RSBSA_ENDORSED, 'rsbsa_number' => null, 'encoding_issue' => 'Missing RSBSA Number']);
+it('records an RSBSA number entered on edit', function () {
+    $b = Beneficiary::factory()->create(['rsbsa_number' => null]);
 
     $this->actingAs(userWithRole(Role::ENCODER))->put(route('beneficiaries.update', $b), profileInput($b, ['rsbsa_number' => ' RSBSA-0777 ']))
         ->assertSessionHasNoErrors();
 
-    expect($b->fresh())->rsbsa_status->toBe(Beneficiary::RSBSA_REGISTERED)->rsbsa_number->toBe('RSBSA-0777')->encoding_issue->toBeNull();
+    expect($b->fresh())->rsbsa_number->toBe('RSBSA-0777')->rsbsaDisplay()->toBe('RSBSA-0777');
 });
 
 it('refuses a taken RSBSA number and under-age birthdates on edit', function () {
@@ -98,17 +98,8 @@ it('returns 404 for archived beneficiaries', function () {
     $this->actingAs(userWithRole(Role::ADMIN))->get('/beneficiaries/'.$this->juan->id)->assertNotFound();
 });
 
-it('only accepts an RSBSA number on edit once the application is endorsed', function (string $status) {
-    $b = Beneficiary::factory()->create(['rsbsa_status' => $status, 'rsbsa_number' => null]);
-
-    $this->actingAs(userWithRole(Role::ENCODER))->put(route('beneficiaries.update', $b), profileInput($b, ['rsbsa_number' => 'RSBSA-0888']))
-        ->assertSessionHasErrors(['rsbsa_number' => 'Record the RSBSA number after DA-RFO endorsement.']);
-
-    expect($b->fresh())->rsbsa_status->toBe($status)->rsbsa_number->toBeNull();
-})->with(['pending_validation', 'validated', 'returned', 'rejected']);
-
-it('audits an RSBSA number entered on edit like the workflow does', function () {
-    $b = Beneficiary::factory()->create(['rsbsa_status' => Beneficiary::RSBSA_ENDORSED, 'rsbsa_number' => null]);
+it('audits an RSBSA number entered on edit', function () {
+    $b = Beneficiary::factory()->create(['rsbsa_number' => null]);
 
     $this->actingAs(userWithRole(Role::ENCODER))->put(route('beneficiaries.update', $b), profileInput($b, ['rsbsa_number' => 'RSBSA-0888']));
 

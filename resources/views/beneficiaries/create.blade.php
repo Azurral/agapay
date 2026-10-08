@@ -1,16 +1,14 @@
-<x-layouts.app title="RSBSA REGISTRATION FORM">
+<x-layouts.app title="ADD BENEFICIARY">
     @if (session('status'))
         <p class="rounded-[10px] border-[1.5px] border-ok bg-white px-[16px] py-[10px] text-[14px] font-bold" role="status">{{ session('status') }}</p>
     @endif
 
-    @if ($canRegister)
-        {{-- Figma 329:3290 form card + 329:3330 submit bar (20px apart). --}}
-        <form method="POST" action="{{ route('rsbsa.store') }}" class="flex flex-col gap-[20px]"
+    {{-- Figma 329:3290 form card + 329:3330 submit bar (20px apart). --}}
+        <form method="POST" action="{{ route('beneficiaries.store') }}" class="flex flex-col gap-[20px]"
               x-on:submit="busy = true"
               x-data="{ busy: false, birthdate: @js(old('birthdate', '')), get age() { if (! this.birthdate) return ''; const b = new Date(this.birthdate), n = new Date(); let a = n.getFullYear() - b.getFullYear(); if (n.getMonth() < b.getMonth() || (n.getMonth() === b.getMonth() && n.getDate() < b.getDate())) a--; return a >= 0 ? a : ''; } }">
             @csrf
-            <x-ui.card title="RSBSA Registration Form (To be filled up by the beneficiary)" class="pb-[12px]">
-                <p class="mt-[3px] text-[14px] font-medium leading-[21px] text-muted">Registered applicant → OMAG validation → endorse to DA-RFO → masterlist returns.</p>
+            <x-ui.card title="Beneficiary Information" class="pb-[12px]">
                 <div class="divider mt-[7px]"></div>
 
                 <div class="mt-[9.5px] grid grid-cols-2 gap-x-[29px]">
@@ -36,14 +34,12 @@
                                class="h-[39px] w-full rounded-[15px] bg-brand-soft/10 px-[16px] text-[14px] font-medium text-ink outline-none placeholder:text-muted">
                     </x-beneficiary.form-field>
                     <x-beneficiary.form-field label="Crop Type" name="crop_type" :value="old('crop_type')" placeholder="Cabbage" :error="$errors->first('crop_type')" />
+                    <x-beneficiary.form-field label="RSBSA No." name="rsbsa_number" :value="old('rsbsa_number')" placeholder="Leave blank if none (shows N/A)" :error="$errors->first('rsbsa_number')" />
                 </div>
             </x-ui.card>
 
             <button type="submit" :disabled="busy" class="bg-brand-bar gradient-button disabled:cursor-wait disabled:opacity-70 flex h-[59px] w-full items-center justify-center gap-[6px] rounded-[50px] text-[20px] font-bold leading-[24px] text-white">
-                <span class="text-[24px] leading-none">+</span> Submit Registration
+                <span class="text-[24px] leading-none">+</span> Add Beneficiary
             </button>
         </form>
-    @endif
-
-    @include('rsbsa.partials.pending')
 </x-layouts.app>

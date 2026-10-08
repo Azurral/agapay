@@ -40,16 +40,15 @@ it('stages a clean masterlist', function () {
     ]);
 
     expect($batch)->status->toBe('staged')->original_name->toBe('masterlist.xlsx')
-        ->and($batch->counts)->toMatchArray(['ready' => 2, 'flagged' => 1, 'update' => 0, 'duplicate' => 0, 'unreadable' => 0])
+        ->and($batch->counts)->toMatchArray(['ready' => 3, 'flagged' => 0, 'update' => 0, 'duplicate' => 0, 'unreadable' => 0])
         ->and($batch->feedback)->toBe([
             ['ok' => true, 'text' => '3 rows matched automatically (Name, Birthdate, Barangay, RSBSA No.)'],
-            ['ok' => false, 'text' => '1 row missing RSBSA No. — flagged for manual review'],
         ])
         ->and(stagedRow($batch, 2)->data)->toMatchArray([
             'first_name' => 'Pablo', 'last_name' => 'Ramos', 'birthdate' => '1980-05-10',
             'barangay_id' => Barangay::where('name', 'Poblacion')->value('id'), 'address' => 'Barangay Poblacion', 'rsbsa_number' => 'RSBSA-0901',
         ])
-        ->and(stagedRow($batch, 3)->status)->toBe('flagged')
+        ->and(stagedRow($batch, 3))->status->toBe('ready')->data->toMatchArray(['rsbsa_number' => null])
         ->and(Beneficiary::where('last_name', 'Ramos')->exists())->toBeFalse()   // nothing imported yet
         ->and(AuditLog::where('action', 'Uploaded Excel File')->value('record_label'))->toBe('masterlist.xlsx');
 });
@@ -57,7 +56,7 @@ it('stages a clean masterlist', function () {
 it('reads csv files too', function () {
     $batch = stageRows([['Name', 'Birthdate', 'Barangay'], ['Pablo Ramos', '1980-05-10', 'Poblacion']], 'csv');
 
-    expect($batch->counts['flagged'])->toBe(1);
+    expect($batch->counts['ready'])->toBe(1);
 });
 
 it('reports column shift corrections', function () {
@@ -201,12 +200,17 @@ it('notes what a duplicate repeats', function () {
     expect(stagedRow($batch, 2)->issues)->toBe(['Already in AGAPAY']);
 });
 
-it('records a number only for an endorsed RSBSA application', function () {
-    $estrella = Beneficiary::where('first_name', 'Estrella')->sole();   // Returned, no number
-    $batch = stageRows([['Name', 'Birthdate', 'Barangay', 'RSBSA No.'], ['Estrella Domogen', $estrella->birthdate->toDateString(), 'Maligcong', 'RSBSA-0778']]);
+it('skips a DA program for a farmer without an RSBSA number but keeps the farmer', function () {
+    $batch = stageRows([
+        ['Name', 'Birthdate', 'Barangay', 'Intervention'],
+        ['Pablo Ramos', '1980-05-10', 'Poblacion', 'DA - Certified Rice Seeds'],
+        ['Ben Talawec', '1975-01-03', 'Samoki', 'LGU - Emergency Seedlings'],
+    ]);
 
-    expect(stagedRow($batch, 2))->status->toBe('unreadable')
-        ->issues->toBe(["Estrella Domogen's RSBSA application is Returned — the number can be recorded once it is endorsed"]);
+    expect(stagedRow($batch, 2))->status->toBe('ready')
+        ->issues->toBe(["Intervention skipped: no RSBSA No. (DA programs need one; LGU programs don't)"])
+        ->and(stagedRow($batch, 2)->data['intervention_id'])->toBeNull()
+        ->and(stagedRow($batch, 3)->data['intervention_id'])->toBe(program('lgu', 'Emergency Seedlings')->id);
 });
 
 it('excludes rows whose RSBSA No. belongs to an archived profile', function () {
@@ -251,7 +255,7 @@ it('fixes leading zeros of contact numbers and ignores unusable ones', function 
     $batch = stageRows([['Name', 'Birthdate', 'Barangay', 'Contact'], ['Pablo Ramos', '1980-05-10', 'Poblacion', 9171234567], ['Ben Talawec', '1975-01-03', 'Samoki', 'n/a']]);
 
     expect(stagedRow($batch, 2)->data['contact_number'])->toBe('09171234567')
-        ->and(stagedRow($batch, 3))->status->toBe('flagged')->issues->toBe(["Contact number 'n/a' ignored"])
+        ->and(stagedRow($batch, 3))->status->toBe('ready')->issues->toBe(["Contact number 'n/a' ignored"])
         ->and(stagedRow($batch, 3)->data['contact_number'])->toBeNull();
 });
 

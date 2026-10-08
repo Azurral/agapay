@@ -39,7 +39,6 @@ class InterventionController extends Controller
         $interventions = Intervention::where('source', $source)->orderBy('name')->pluck('name', 'id');
         $interventionId = ctype_digit($request->queryText('intervention')) ? (int) $request->queryText('intervention') : null;
         $barangayId = ctype_digit($request->queryText('barangay')) ? (int) $request->queryText('barangay') : null;
-        $registration = $source === Intervention::SOURCE_LGU ? $request->queryText('registration') : '';
         $name = mb_substr($request->queryText('name'), 0, 100);
         $rsbsa = mb_substr($request->queryText('rsbsa'), 0, 50);
 
@@ -54,9 +53,6 @@ class InterventionController extends Controller
             )))
             ->when($barangayId, fn (Builder $q) => $q->whereHas('beneficiary', fn (Builder $b) => $b->where('barangay_id', $barangayId)))
             ->when($interventionId, fn (Builder $q) => $q->where('intervention_id', $interventionId))
-            ->when(isset(Beneficiary::REGISTRATION_FILTERS[$registration]), fn (Builder $q) => $q->whereHas(
-                'beneficiary', fn (Builder $b) => $b->whereIn('rsbsa_status', Beneficiary::REGISTRATION_FILTERS[$registration])
-            ))
             ->orderByDesc('distribution_cycle_id')->orderBy('id')
             ->paginate(15)->withQueryString();
 

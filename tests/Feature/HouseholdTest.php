@@ -61,7 +61,7 @@ it('labels beneficiaries for screens and the audit trail', function () {
     expect($b->fullName())->toBe('Juan Dela Cruz')
         ->and($b->age())->toBe(45)
         ->and($b->auditRecordLabel())->toBe('Juan Dela Cruz (RSBSA-0231)')
-        ->and(Beneficiary::factory()->make(['rsbsa_number' => null])->rsbsaDisplay())->toBe('(pending)');
+        ->and(Beneficiary::factory()->make(['rsbsa_number' => null])->rsbsaDisplay())->toBe('N/A');
 });
 
 it('seeds the Figma sample beneficiaries', function () {
@@ -76,7 +76,8 @@ it('seeds the Figma sample beneficiaries', function () {
         ->and($find('Juan', 'Dela Cruz')->age())->toBe(45)
         ->and($find('Pedro', 'Reyes')->householdSize())->toBe(2)
         ->and($find('Carlos', 'Ibanez')->householdSize())->toBe(2)
-        ->and(Beneficiary::whereNotNull('encoding_issue')->count())->toBe(2)
+        ->and(Beneficiary::whereNotNull('encoding_issue')->count())->toBe(1)
+        ->and(Beneficiary::whereNull('rsbsa_number')->count())->toBe(4)
         ->and($find('Federico', 'Wasing')->created_at->toDateString())->toBe('2026-07-20');
 });
 

@@ -1,8 +1,7 @@
 @php
     $barangays = \App\Models\Barangay::options();
-    $statuses = collect(\App\Http\Controllers\SearchController::STATUSES)
-        ->mapWithKeys(fn ($s) => [$s => \App\Models\Beneficiary::rsbsaStatusLabel($s)]);
-    $filtered = request()->queryText('barangay') !== '' || request()->queryText('rsbsa_status') !== '';
+    $rsbsaFilters = \App\Http\Controllers\SearchController::RSBSA_FILTERS;
+    $filtered = request()->queryText('barangay') !== '' || request()->queryText('rsbsa') !== '';
 @endphp
 <form method="GET" role="search" action="{{ route('search') }}" x-data="{ filters: false }" @keydown.escape="filters = false"
       {{ $attributes->class('bg-brand-bar relative flex h-[59px] items-center rounded-[30px] pr-[11px] pl-[28px]') }}>
@@ -14,7 +13,7 @@
 
     <div id="search-filters" x-cloak x-show="filters" @click.outside="filters = false"
          class="absolute top-[66px] right-0 z-40 flex w-[360px] flex-col gap-[14px] rounded-[15px] border-[1.5px] border-black/10 bg-white p-[20px] shadow-[0_20px_50px_rgba(90,93,227,0.25),0_4px_12px_rgba(0,0,0,0.08)]">
-        @foreach ([['barangay', 'Barangay', $barangays], ['rsbsa_status', 'RSBSA Status', $statuses]] as [$field, $label, $options])
+        @foreach ([['barangay', 'Barangay', $barangays], ['rsbsa', 'RSBSA No.', $rsbsaFilters]] as [$field, $label, $options])
             <label class="flex flex-col gap-[7px] text-[16px] font-bold leading-[20px]">
                 {{ $label }}
                 <span class="relative">
