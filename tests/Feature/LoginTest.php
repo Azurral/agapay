@@ -104,8 +104,9 @@ it('shows guests a landing page with a way to log in', function () {
         ->assertDontSee('Juan Dela Cruz');
 });
 
-it('sends signed-in users from the landing page to their dashboard', function () {
-    $this->actingAs($this->admin)->get('/')->assertRedirect(route('dashboard'));
+it('shows the landing page to signed-in users too, whose Log in leads to their dashboard', function () {
+    $this->actingAs($this->admin)->get('/')->assertOk()->assertSee('href="'.route('login').'"', false);
+    $this->get('/login')->assertRedirect(route('dashboard'));
 });
 
 it('lets the user show or hide the password', function () {

@@ -35,8 +35,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/switch-account', [LoginController::class, 'switch'])->name('account.switch');
 });
 
-// Guests see the public landing page; signed-in users land on their dashboard.
-Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : view('welcome'))->name('home');
+// The public landing page, for everyone; its Log in button takes signed-in users straight to their dashboard.
+Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->middleware('can:dashboard.view')->name('dashboard');
