@@ -7,7 +7,6 @@ use App\Models\DistributionCycle;
 use App\Models\InterventionRecord;
 use App\Models\User;
 use App\Services\ClaimService;
-use App\Support\DashboardStats;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Database\QueryException;
 
@@ -29,16 +28,6 @@ it('turns a double-submitted record into a message', function () {
         'distribution_cycle_id' => $this->cycle->id, 'quantity' => 1, 'distribution_status' => 'not_distributed',
     ])->assertRedirect('/intervention-records/create')
         ->assertSessionHasErrors(['intervention_id' => 'Another save for this record happened at the same moment. Check the list, then try again if it is missing.']);
-});
-
-it('leaves archived farmers out of the counters', function () {
-    $pending = DashboardStats::value('pending_validation', $this->agritech);
-    $record = InterventionRecord::where('validation_status', 'pending')->firstOrFail();
-    $count = InterventionRecord::where(['validation_status' => 'pending', 'beneficiary_id' => $record->beneficiary_id])->count();
-
-    $record->beneficiary->delete();
-
-    expect(DashboardStats::value('pending_validation', $this->agritech))->toBe($pending - $count);
 });
 
 it('keeps proxy rules on claimed records', function () {

@@ -21,8 +21,7 @@ class InterventionRecord extends Model
     /** @use HasFactory<InterventionRecordFactory> */
     use Auditable, HasFactory, SoftDeletes;
 
-    public const VALIDATION_PENDING = 'pending';
-
+    /** New records start eligible: eligibility is checked outside AGAPAY, special cases are set by hand. */
     public const VALIDATION_ELIGIBLE = 'eligible';
 
     public const VALIDATION_OFW = 'ofw';
@@ -39,7 +38,6 @@ class InterventionRecord extends Model
 
     /** status => chip label, in dropdown order. */
     public const VALIDATIONS = [
-        self::VALIDATION_PENDING => 'Validate',
         self::VALIDATION_ELIGIBLE => 'Eligible',
         self::VALIDATION_OFW => 'OFW',
         self::VALIDATION_BEDRIDDEN => 'Bedridden',
@@ -100,10 +98,10 @@ class InterventionRecord extends Model
         return self::VALIDATIONS[$status] ?? '—';
     }
 
-    /** Pending needs an Agri Tech; every checked status shows green (Figma 407:323). */
+    /** Every known status shows green (Figma 407:323); an unknown value is flagged. */
     public static function validationTone(string $status): string
     {
-        return $status === self::VALIDATION_PENDING ? 'bad' : 'ok';
+        return array_key_exists($status, self::VALIDATIONS) ? 'ok' : 'bad';
     }
 
     public function isClaimed(): bool

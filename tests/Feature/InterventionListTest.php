@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Barangay;
+use App\Models\Beneficiary;
 use App\Models\InterventionRecord;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
@@ -47,15 +48,39 @@ it('gives agri techs validation and status dropdowns without archive controls', 
         ->assertDontSee('Archived/Restore');
 });
 
-it('adds the registration column and filter on LGU', function () {
-    $this->actingAs($this->admin)->get('/interventions/lgu')->assertOk()
-        ->assertSee('LGU INTERVENTION LIST')
-        ->assertSeeInOrder(['Maria Santos', 'RSBSA-0198', 'Samoki', 'Complete Fertilizer', 'Registered'])
-        ->assertSee('Registered (New)')->assertSee('Unregistered (Eligible)')
-        ->assertDontSee('Qty / Unit');
+it('lists every farmer on the LGU page with address, farm area and crisis reports', function () {
+    $juan = Beneficiary::where('rsbsa_number', 'RSBSA-0231')->sole();
+    Beneficiary::where('first_name', 'Lorna')->sole()->delete();
 
-    $this->actingAs($this->admin)->get('/interventions/lgu?registration=new')
-        ->assertSee('Pedro Reyes')->assertDontSee('Maria Santos')->assertDontSee('Ana Gomez');
+    $this->actingAs($this->admin)->get('/interventions/lgu')->assertOk()
+        ->assertSee('LGU Beneficiaries')
+        ->assertSee('href="'.route('interventions.lgu', ['tab' => 'records']).'"', false)
+        ->assertSeeInOrder(['Name', 'RSBSA', 'Address', 'Farm Area', 'Barangay', 'Crisis Reports'])
+        ->assertSeeInOrder(['Juan Dela Cruz', 'RSBSA-0231', 'Purok 3', $juan->farmAreaDisplay(), 'Poblacion', (string) $juan->damageReports()->count()])
+        ->assertSeeInOrder(['Ana Gomez', 'N/A', 'Purok 2'])
+        ->assertDontSee('Lorna Reyes');   // archived
+
+    $this->get('/interventions/lgu?name=juan+dela')->assertSee('Juan Dela Cruz')->assertDontSee('Ana Gomez');
+    $this->get('/interventions/lgu?barangay='.brgy('Samoki'))->assertSee('Maria Santos')->assertDontSee('Juan Dela Cruz');
+    $this->actingAs($this->agritech)->get('/interventions/lgu')->assertOk()->assertSee('LGU Beneficiaries');
+});
+
+it('counts only active crisis reports per farmer', function () {
+    $juan = Beneficiary::where('rsbsa_number', 'RSBSA-0231')->sole();
+    $before = $juan->damageReports()->count();
+    $juan->damageReports()->firstOrFail()->delete();
+
+    expect($juan->damageReports()->count())->toBe($before - 1)
+        ->and(Beneficiary::withCount('damageReports')->find($juan->id)->damage_reports_count)->toBe($before - 1);
+});
+
+it('lists LGU program records like DA ones, with N/A for a missing RSBSA number', function () {
+    $this->actingAs($this->admin)->get('/interventions/lgu?tab=records')->assertOk()
+        ->assertSee('LGU INTERVENTION LIST')
+        ->assertSeeInOrder(['Maria Santos', 'RSBSA-0198', 'Samoki', 'Complete Fertilizer'])
+        ->assertSeeInOrder(['Pedro Reyes', 'N/A', 'Bontoc Ili', 'Emergency Seedlings'])
+        ->assertSee('Qty / Unit')
+        ->assertDontSee('Registered (New)');
 });
 
 it('filters by name, RSBSA, barangay and intervention', function () {
@@ -90,28 +115,22 @@ it('validates and claims through the dropdown routes', function () {
     $this->post(route('intervention-records.unclaim', $carlos))->assertSessionHasNoErrors();
     expect($carlos->fresh()->claim_status)->toBe('unclaimed');
 
-    $this->post(route('intervention-records.claim', seededRecord('Pedro', 'Reyes')))
-        ->assertSessionHasErrorsIn('intervention', ['intervention' => 'Validate eligibility first.']);
+    // Records start eligible: no validation step before a release.
+    $this->post(route('intervention-records.claim', seededRecord('Pedro', 'Reyes')), ['quantity' => 5])->assertSessionHasNoErrors();
     $this->post(route('intervention-records.validate', $carlos), ['validation_status' => ['eligible']])
         ->assertSessionHasErrorsIn('intervention', 'validation_status');
 });
 
-it('lists pending records in the validation queue', function () {
-    $this->actingAs($this->agritech)->get('/validation')->assertOk()
-        ->assertSee('BENEFICIARY VALIDATION')
-        ->assertSee('Carlos Ibanez')->assertSee('Pedro Reyes')
-        ->assertSee('DA - Complete Fertilizer (Batch 2026-Q3)')
-        ->assertDontSee('Juan Dela Cruz');
-
-    InterventionRecord::where('validation_status', 'pending')->update(['validation_status' => 'eligible']);
-    $this->get('/validation')->assertSee('No records are waiting for validation.');
+it('has no beneficiary validation queue any more', function () {
+    expect(Route::has('validation.index'))->toBeFalse()
+        ->and(InterventionRecord::where('validation_status', 'pending')->exists())->toBeFalse();
+    $this->actingAs($this->agritech)->get('/validation')->assertNotFound();
 });
 
 it('keeps lists and actions behind their permissions', function () {
     $carlos = seededRecord('Carlos', 'Ibanez');
 
     $this->actingAs($this->encoder)->get('/interventions/da')->assertForbidden();
-    $this->actingAs($this->encoder)->get('/validation')->assertForbidden();
     $this->actingAs($this->encoder)->post(route('intervention-records.validate', $carlos), ['validation_status' => 'eligible'])->assertForbidden();
 });
 

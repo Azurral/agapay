@@ -22,7 +22,7 @@ class InterventionRecordFactory extends Factory
             'distribution_cycle_id' => fn () => DistributionCycle::current()?->id
                 ?? DistributionCycle::create(['code' => '2026-Q3', 'label' => '2026-Q3 Dry Season', 'status' => DistributionCycle::STATUS_ONGOING])->id,
             'quantity' => 1,
-            'validation_status' => InterventionRecord::VALIDATION_PENDING,
+            'validation_status' => InterventionRecord::VALIDATION_ELIGIBLE,
             'claim_status' => InterventionRecord::CLAIM_UNCLAIMED,
         ];
     }

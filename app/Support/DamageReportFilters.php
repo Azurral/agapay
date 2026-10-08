@@ -93,7 +93,7 @@ final readonly class DamageReportFilters
     {
         $disaster = $this->disaster();
 
-        return ($disaster ? "{$disaster->name} ({$disaster->occurred_on->format('M j, Y')})" : 'All disasters')
+        return ($disaster ? "{$disaster->name} ({$disaster->occurred_on->format('M j, Y')})" : 'All crises')
             .' · Barangay: '.($this->barangayId !== null ? $this->barangays[$this->barangayId] : 'All')
             .' · Status: '.$this->statusOptions()[$this->status];
     }

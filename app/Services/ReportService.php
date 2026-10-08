@@ -81,10 +81,7 @@ final class ReportService
                 'barangay' => (string) $r->beneficiary->barangay?->name,
                 'program' => $r->intervention->sourcedName(),
                 'quantity' => $r->quantityDisplay(),
-                // "Validate" is the dropdown's prompt; a report states the status.
-                'validation' => $r->validation_status === InterventionRecord::VALIDATION_PENDING
-                    ? 'Pending Validation'
-                    : InterventionRecord::validationLabel($r->validation_status),
+                'validation' => InterventionRecord::validationLabel($r->validation_status),
                 'claim' => ! $r->isClaimed() && in_array($r->validation_status, self::NOT_CLAIMABLE, true) ? 'Not Claimable' : $r->claimLabel(),
                 'date' => $r->date_distributed?->format('M j, Y') ?? '—',
             ])->all(),

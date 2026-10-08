@@ -45,7 +45,7 @@ final class ClaimService
 
     /**
      * @param  array{date_distributed?: string|null, quantity?: float|int|string|null, proxy_claimant?: string|null, proof_note?: string|null, override_reason?: string|null}  $input
-     * @param  bool  $historical  Encoding a past distribution from a logbook: skips only the pending-validation check.
+     * @param  bool  $historical  Encoding a past distribution from a logbook (audited as "Historical Encoding").
      */
     public function claim(InterventionRecord $record, User $actor, array $input = [], bool $historical = false): InterventionRecord
     {
@@ -65,13 +65,7 @@ final class ClaimService
             if ($record->isClaimed()) {
                 throw new InterventionRuleViolation('Already claimed.');
             }
-
-            if ($record->validation_status === InterventionRecord::VALIDATION_PENDING) {
-                if (! $historical) {
-                    throw new InterventionRuleViolation('Validate eligibility first.');
-                }
-                $record->validation_status = InterventionRecord::VALIDATION_ELIGIBLE;
-            }
+            InterventionAssignment::ensureRsbsaFor($record->beneficiary, $record->intervention);
 
             if (! in_array($record->validation_status, InterventionRecord::CLAIMABLE, true)) {
                 throw new InterventionRuleViolation('Not eligible: '.InterventionRecord::validationLabel($record->validation_status).'.');

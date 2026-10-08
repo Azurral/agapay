@@ -83,12 +83,12 @@ class DamageReferenceController extends Controller
             'name' => ['required', 'string', 'max:100', Rule::unique('disasters', 'name')],
             'occurred_on' => ['required', 'date', 'before_or_equal:today'],
         ], [
-            'name.required' => 'Enter the disaster name, e.g. Typhoon Egay.',
-            'name.unique' => 'That disaster is already on the list.',
+            'name.required' => 'Enter the crisis name, e.g. Typhoon Egay.',
+            'name.unique' => 'That crisis is already on the list.',
             'occurred_on.*' => 'Enter the date it struck (not in the future).',
         ]);
         if ($validator->fails() || $this->nameTaken('disasters', $request->input('name'))) {
-            $validator->errors()->addIf(! $validator->errors()->has('name'), 'name', 'That disaster is already on the list.');
+            $validator->errors()->addIf(! $validator->errors()->has('name'), 'name', 'That crisis is already on the list.');
 
             return back()->withInput()->withErrors($validator, 'reference');
         }

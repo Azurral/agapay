@@ -102,14 +102,6 @@ it('reports quantity distributed from claimed records only', function () {
     expect(round(array_sum(array_column($data['interventions'], 'quantity')), 2))->toBe(round($expected, 2));
 });
 
-it('labels pending validation as a status, not an action', function () {
-    $record = InterventionRecord::where(['distribution_cycle_id' => $this->cycle->id, 'validation_status' => 'pending'])->firstOrFail();
-    $row = collect(buildReport(new ReportCriteria($this->cycle))['beneficiaries'])
-        ->first(fn ($r) => $r['name'] === $record->beneficiary->fullName() && $r['program'] === $record->intervention->sourcedName());
-
-    expect($row['validation'])->toBe('Pending Validation');
-});
-
 it('does not add up quantities of different units per barangay', function () {
     $barangays = buildReport(new ReportCriteria($this->cycle))['barangays'];
 

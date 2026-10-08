@@ -22,7 +22,7 @@ class BeneficiaryLookupController extends Controller
             ->map(fn (Beneficiary $b) => [
                 'id' => $b->id, 'name' => $b->fullName(), 'rsbsa' => $b->rsbsaDisplay(), 'barangay' => $b->barangay?->name,
                 // Prefill the damage form with the farmer's own barangay, farm and crop.
-                'barangay_id' => $b->barangay_id, 'farm_location' => $b->farm_location, 'crop_type' => $b->crop_type,
+                'barangay_id' => $b->barangay_id, 'address' => $b->address, 'crop_type' => $b->crop_type,
             ]));
     }
 }

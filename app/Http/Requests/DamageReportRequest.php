@@ -45,7 +45,7 @@ class DamageReportRequest extends FormRequest
         $photo = 'Each photo must be JPG or PNG and at most '.self::photoLimitLabel().'.';
 
         return [
-            'disaster_id.*' => 'Choose a disaster.',
+            'disaster_id.*' => 'Choose a crisis.',
             'beneficiary_id.*' => 'Choose a farmer from the list.',
             'barangay_id.*' => 'Choose a barangay.',
             'crop_id.*' => 'Choose a crop.',

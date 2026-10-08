@@ -227,10 +227,9 @@ final class ExcelImportService
         $this->ensureNumberFree($data['rsbsa_number']);
 
         return Beneficiary::create([
-            ...Arr::only($data, ['first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'barangay_id', 'contact_number', 'farm_location', 'crop_type', 'rsbsa_number']),
-            // Spec rule 8: a masterlist row without a number waits in the encoding queue until it is entered.
-            'rsbsa_status' => $data['rsbsa_number'] ? Beneficiary::RSBSA_REGISTERED : Beneficiary::RSBSA_ENDORSED,
-            'encoding_issue' => $data['rsbsa_number'] ? null : 'Missing RSBSA Number',
+            ...Arr::only($data, ['first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'house_no', 'street', 'sitio', 'barangay_id', 'contact_number', 'farm_area_ha', 'crop_type', 'rsbsa_number']),
+            // A row without a number is imported as is: the farmer shows "N/A" and can still get LGU programs.
+            'rsbsa_status' => Beneficiary::RSBSA_REGISTERED,
             'source' => Beneficiary::SOURCE_IMPORT,
             'created_by' => $actor->id,
         ]);
@@ -245,13 +244,10 @@ final class ExcelImportService
         }
         $this->ensureNumberFree($row->data['rsbsa_number']);
 
-        $keys = ['rsbsa_number', 'rsbsa_status', 'encoding_issue'];
+        $keys = ['rsbsa_number'];
         $old = $beneficiary->only($keys);
         $beneficiary->forceFill([
             'rsbsa_number' => Beneficiary::normalizeRsbsa($row->data['rsbsa_number']),   // saved quietly: no model hook
-            'rsbsa_status' => Beneficiary::RSBSA_REGISTERED,
-            'rsbsa_status_reason' => null,
-            'encoding_issue' => $beneficiary->encoding_issue === 'Missing RSBSA Number' ? null : $beneficiary->encoding_issue,
             'updated_by' => $actor->id,
         ])->saveQuietly();
         AuditLogger::record('Recorded RSBSA Number', $beneficiary, null, $old, $beneficiary->only($keys), $actor);
@@ -289,7 +285,7 @@ final class ExcelImportService
         $byRsbsa = [];
         $byIdentity = [];
         // RSBSA numbers are unique across archived profiles too; identity only counts active ones.
-        foreach (Beneficiary::withTrashed()->get(['id', 'first_name', 'middle_name', 'last_name', 'birthdate', 'barangay_id', 'rsbsa_number', 'rsbsa_status', 'deleted_at']) as $b) {
+        foreach (Beneficiary::withTrashed()->get(['id', 'first_name', 'middle_name', 'last_name', 'birthdate', 'barangay_id', 'rsbsa_number', 'deleted_at']) as $b) {
             if ($b->rsbsa_number) {
                 $byRsbsa[mb_strtolower(trim($b->rsbsa_number))] = $b;
             }
@@ -332,9 +328,6 @@ final class ExcelImportService
                     $exclude("{$existing->fullName()} already has RSBSA No. {$existing->rsbsa_number} in AGAPAY");
                 } elseif ($existing->rsbsa_number || ! $rsbsa || isset($seenRsbsa[$rsbsa])) {
                     $skip('Already in AGAPAY');
-                } elseif ($existing->rsbsa_status !== Beneficiary::RSBSA_ENDORSED) {
-                    // Spec rule 8: a number is recorded only after the application is endorsed to DA-RFO.
-                    $exclude("{$existing->fullName()}'s RSBSA application is ".Beneficiary::rsbsaStatusLabel($existing->rsbsa_status).' — the number can be recorded once it is endorsed');
                 } else {
                     $row['status'] = ImportRow::UPDATE;
                     $row['data']['beneficiary_id'] = $existing->id;
@@ -381,9 +374,6 @@ final class ExcelImportService
 
         if ($n = $counts[ImportRow::UPDATE]) {
             $lines[] = ['ok' => true, 'text' => $n === 1 ? '1 existing profile will receive its RSBSA No.' : "{$n} existing profiles will receive their RSBSA No."];
-        }
-        if ($n = $counts[ImportRow::FLAGGED]) {
-            $lines[] = ['ok' => false, 'text' => $n.' '.Str::plural('row', $n).' missing RSBSA No. — flagged for manual review'];
         }
         if ($n = $counts[ImportRow::DUPLICATE]) {
             $lines[] = ['ok' => false, 'text' => $n.' '.Str::plural('duplicate', $n).' skipped (already in AGAPAY or repeated in the file)'];

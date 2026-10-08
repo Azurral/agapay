@@ -38,18 +38,6 @@ final class Navigation
         ];
     }
 
-    /** @return list<array{label:string, value:int, color:string}> */
-    public static function stats(User $user): array
-    {
-        $colors = config('agapay.stat_colors');
-
-        return collect(config('agapay.stats.'.$user->role?->slug, []))
-            ->map(fn (string $label, string $key) => ['label' => $label, 'value' => DashboardStats::value($key, $user)])
-            ->values()
-            ->map(fn (array $stat, int $i) => [...$stat, 'color' => $colors[$i % count($colors)]])
-            ->all();
-    }
-
     /** Routes of modules built in later phases render as "#" until registered. */
     private static function url(array $item): string
     {

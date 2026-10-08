@@ -7,7 +7,6 @@ use App\Models\Disaster;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\DamageCalculator;
-use App\Support\DashboardStats;
 use Database\Seeders\DatabaseSeeder;
 
 it('computes loss and cost from crop values', function () {
@@ -69,15 +68,6 @@ describe('seeded data', function () {
             ->and($report->statusTone())->toBe('ok');
     });
 
-    it('counts damage reports filed this month for the agri tech stat', function () {
-        $agritech = User::where('username', 'Agritech_02')->sole();
-        DamageReport::factory()->count(2)->create();
-        DamageReport::factory()->create(['created_at' => now()->subMonth()]);
-        DamageReport::factory()->create()->delete();
-
-        expect(DashboardStats::value('reports_filed_this_month', $agritech))->toBe(2);
-    });
-
     it('gives damage.configure to the administrator only', function () {
         expect(User::where('username', 'Admin_01')->sole()->can('damage.configure'))->toBeTrue()
             ->and(User::where('username', 'Agritech_02')->sole()->can('damage.configure'))->toBeFalse()
@@ -90,5 +80,5 @@ it('audits a new disaster', function () {
 
     Disaster::create(['name' => 'Typhoon Egay', 'occurred_on' => '2026-08-01']);
 
-    expect(AuditLog::where('action', 'Added Disaster')->sole()->record_label)->toBe('Typhoon Egay (Aug 1, 2026)');
+    expect(AuditLog::where('action', 'Added Crisis')->sole()->record_label)->toBe('Typhoon Egay (Aug 1, 2026)');
 });

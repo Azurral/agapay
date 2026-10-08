@@ -2,26 +2,24 @@
 @php
     use App\Models\InterventionRecord;
 
-    $lgu = $source === 'lgu';
-    // Figma 344:76 (DA) / 329:1423 (LGU) column widths, measured from the card's inner edge.
-    $cols = $lgu ? 'grid-cols-[220px_231px_225px_223px_209px_162px_155px]' : 'grid-cols-[251px_260px_255px_242px_100px_162px_155px]';
-    $filterWidth = $lgu ? 199 : 230;
+    // Figma 344:76 column widths, measured from the card's inner edge (DA and LGU program records alike).
+    $cols = 'grid-cols-[251px_260px_255px_242px_100px_162px_155px]';
+    $filterWidth = 230;
     $validationOptions = InterventionRecord::VALIDATIONS;
     $claimOptions = [InterventionRecord::CLAIM_UNCLAIMED => 'Unclaimed', InterventionRecord::CLAIM_CLAIMED => 'Claimed'];
     $canValidate = $variant === 'dropdowns' && auth()->user()->can('interventions.validate');
     $canClaim = $variant === 'dropdowns' && auth()->user()->can('interventions.claim');
 @endphp
 
-<form method="GET" class="relative mt-[20.5px] flex h-[39px] items-center pl-[1.5px]" style="gap: {{ $lgu ? 24.5 : 25 }}px">
+<form method="GET" class="relative mt-[20.5px] flex h-[39px] items-center pl-[1.5px]" style="gap: 25px">
+    @if ($source === 'lgu')
+        <input type="hidden" name="tab" value="records">
+    @endif
     <x-ui.pill-input name="name" placeholder="Search Name..." :value="request()->queryText('name')" :width="$filterWidth" />
     <x-ui.pill-input name="rsbsa" placeholder="RSBSA Number..." :value="request()->queryText('rsbsa')" :width="$filterWidth" />
     <x-ui.pill-select name="barangay" label="Barangay" :options="['' => 'All'] + $barangays->all()" :selected="request()->queryText('barangay')" :width="$filterWidth" />
     <x-ui.pill-select name="intervention" label="Intervention" :options="['' => 'All'] + $interventions->all()" :selected="request()->queryText('intervention')" :width="$filterWidth" />
-    @if ($lgu)
-        <x-ui.pill-select name="registration" label="Registration" :options="['' => 'All', 'registered' => 'Registered', 'new' => 'New', 'unregistered' => 'Unregistered']" :selected="request()->queryText('registration')" :width="$filterWidth" />
-    @else
-        <span class="absolute left-[1024.5px] text-[14px] font-medium text-muted">Qty / Unit</span>
-    @endif
+    <span class="absolute left-[1024.5px] text-[14px] font-medium text-muted">Qty / Unit</span>
     <span class="absolute left-[1124.5px] w-[155px] text-center text-[14px] font-medium text-muted">Validation</span>
     <span class="absolute left-[1286.5px] w-[155px] text-center text-[14px] font-medium text-muted">Status</span>
     <button type="submit" class="sr-only">Apply filters</button>
@@ -37,7 +35,7 @@
             <span class="truncate pr-[12px]">{{ $beneficiary->rsbsaDisplay() }}</span>
             <span class="truncate pr-[12px]">{{ $beneficiary->barangay?->name }}</span>
             <span class="truncate pr-[12px]">{{ $record->intervention->name }}</span>
-            <span class="truncate pr-[12px]">{{ $lgu ? $beneficiary->registrationLabel() : $record->quantityDisplay() }}</span>
+            <span class="truncate pr-[12px]">{{ $record->quantityDisplay() }}</span>
             <span>
                 @if ($canValidate)
                     <x-intervention.chip-select name="validation_status" :options="$validationOptions" :selected="$record->validation_status"

@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Models\Beneficiary;
 use App\Models\DistributionCycle;
 use App\Models\Intervention;
 use Carbon\CarbonImmutable;
@@ -22,7 +23,7 @@ final class RowNormalizer
     /** Column sizes of the beneficiaries table (as in BeneficiaryRules); MariaDB refuses longer values. */
     private const MAX_LENGTHS = [
         'first_name' => 100, 'middle_name' => 100, 'last_name' => 100,
-        'address' => 255, 'farm_location' => 255, 'crop_type' => 255, 'rsbsa_number' => 50,
+        'house_no' => 100, 'street' => 100, 'sitio' => 255, 'crop_type' => 255, 'rsbsa_number' => 50,
     ];
 
     private const DATE_FORMATS = ['Y-m-d', 'm/d/Y', 'M j, Y', 'F j, Y', 'M d, Y', 'F d, Y', 'j M Y', 'd-M-Y', 'Y/m/d'];
@@ -86,10 +87,21 @@ final class RowNormalizer
             $blocking[] = 'Missing barangay';
         }
 
-        $data['address'] = $raw['address'] ?? null ?: ($data['barangay'] ? "Barangay {$data['barangay']}" : null);
-        $data['farm_location'] = $raw['farm_location'] ?? null;
+        // A one-line address column becomes the sitio/purok; a blank one falls back to the barangay.
+        $data['sitio'] = $raw['address'] ?? null ?: ($data['barangay'] ? "Barangay {$data['barangay']}" : null);
+        $data['farm_area_ha'] = null;
+        if (($raw['farm_area_ha'] ?? null) !== null) {
+            $area = str_replace(',', '', preg_replace('/\s*(ha|hectares?)\.?$/i', '', $raw['farm_area_ha']));
+            if (is_numeric($area) && (float) $area >= 0 && (float) $area <= 9999.99) {
+                $data['farm_area_ha'] = $area;
+            } else {
+                $issues[] = "Farm area '{$raw['farm_area_ha']}' ignored (not a number of hectares)";
+            }
+        }
         $data['crop_type'] = $raw['crop_type'] ?? null;
-        $data['rsbsa_number'] = $raw['rsbsa_number'] ?? null;
+        $data['rsbsa_number'] = Beneficiary::isNoRsbsa($raw['rsbsa_number'] ?? null) ? null : $raw['rsbsa_number'];
+        $data['house_no'] = $raw['house_no'] ?? null;
+        $data['street'] = $raw['street'] ?? null;
         $data['contact_number'] = null;
         if ($raw['contact_number'] ?? null) {
             $data['contact_number'] = self::contact($raw['contact_number']);
@@ -110,7 +122,13 @@ final class RowNormalizer
             return ['status' => 'unreadable', 'data' => $data, 'issues' => $blocking];
         }
 
-        return ['status' => $data['rsbsa_number'] ? 'ready' : 'flagged', 'data' => $data, 'issues' => $issues];
+        // DA programs need an RSBSA number; the profile is still imported (shown as N/A).
+        if ($data['intervention_id'] && ! $data['rsbsa_number'] && $this->interventions->firstWhere('id', $data['intervention_id'])?->requiresRsbsa()) {
+            $issues[] = 'Intervention skipped: '.Intervention::RSBSA_REQUIRED_MESSAGE;
+            $data['intervention_id'] = null;
+        }
+
+        return ['status' => 'ready', 'data' => $data, 'issues' => $issues];
     }
 
     /** Trimmed, single-spaced. */

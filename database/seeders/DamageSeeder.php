@@ -47,7 +47,7 @@ class DamageSeeder extends Seeder
                 ['disaster_id' => $typhoon->id, 'beneficiary_id' => $beneficiary->id, 'crop_id' => $crop->id],
                 [
                     'barangay_id' => $beneficiary->barangay_id,
-                    'farm_location' => $beneficiary->farm_location,
+                    'farm_location' => $beneficiary->address,
                     'crop_stage' => $stage,
                     'total_area_ha' => $total,
                     'partial_area_ha' => $partial,

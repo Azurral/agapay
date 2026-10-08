@@ -22,11 +22,11 @@
 
             <form method="GET" class="mt-[17px] flex items-center gap-[20px] pl-[1.5px]">
                 <label class="{{ $filterBox }} w-[280px]">
-                    <span class="sr-only">Disaster</span>
+                    <span class="sr-only">Crisis</span>
                     <select name="disaster" onchange="this.form.requestSubmit()" class="{{ $filterSelect }}">
-                        <option value="all" @selected($filters->disasterId === null)>Disaster: All</option>
+                        <option value="all" @selected($filters->disasterId === null)>Crisis: All</option>
                         @foreach ($filters->disasters as $disaster)
-                            <option value="{{ $disaster->id }}" @selected($filters->disasterId === $disaster->id)>Disaster: {{ $disaster->name }}</option>
+                            <option value="{{ $disaster->id }}" @selected($filters->disasterId === $disaster->id)>Crisis: {{ $disaster->name }}</option>
                         @endforeach
                     </select>
                     <img src="{{ asset('images/figma/icons/arrow-down.svg') }}" alt="" class="pointer-events-none absolute top-[13px] right-[12px] size-[18px]">
@@ -119,14 +119,14 @@
             {{-- Not in Figma: kept below the mirrored card (spec §2). --}}
             <div class="mt-[14px]">
                 <button type="button" @click="$dispatch('open-modal', 'damage-reference')"
-                        class="border-gradient pill-button h-[39px] w-[262px] rounded-[50px] text-[18px] font-bold leading-[24px]">Disasters &amp; Crop Values</button>
+                        class="border-gradient pill-button h-[39px] w-[262px] rounded-[50px] text-[18px] font-bold leading-[24px]">Crises &amp; Crop Values</button>
             </div>
 
             @php
                 $referenceErrors = $errors->reference;
                 $cell = 'h-[36px] w-full rounded-[8px] border border-field bg-white px-[10px] text-[14px] font-bold outline-none focus:border-brand-soft';
             @endphp
-            <x-ui.modal name="damage-reference" title="Disasters & Crop Values" :open="$referenceErrors->any()" width="900">
+            <x-ui.modal name="damage-reference" title="Crises & Crop Values" :open="$referenceErrors->any()" width="900">
                 <div class="max-h-[60vh] overflow-y-auto pr-[4px]">
                     @if ($referenceErrors->any())
                         <ul class="mb-[12px] rounded-[10px] border-[1.5px] border-bad px-[14px] py-[8px] text-[13px] font-semibold text-danger" role="alert">
@@ -158,11 +158,11 @@
 
                     <form method="POST" action="{{ route('damage.disasters.store') }}" class="mt-[22px]">
                         @csrf
-                        <h3 class="text-[14px] font-bold">Add Disaster</h3>
+                        <h3 class="text-[14px] font-bold">Add Crisis</h3>
                         <div class="mt-[10px] grid grid-cols-[1fr_220px_200px] gap-[10px]">
-                            <input type="text" name="name" maxlength="100" required placeholder="e.g. Typhoon Egay" value="{{ old('name') }}" aria-label="Disaster name" class="{{ $cell }}">
+                            <input type="text" name="name" maxlength="100" required placeholder="e.g. Typhoon Egay" value="{{ old('name') }}" aria-label="Crisis name" class="{{ $cell }}">
                             <input type="date" name="occurred_on" required max="{{ now()->toDateString() }}" value="{{ old('occurred_on') }}" aria-label="Date it struck" class="{{ $cell }}">
-                            <button type="submit" class="bg-brand-bar gradient-button h-[36px] rounded-[50px] text-[16px] font-bold text-white">Add Disaster</button>
+                            <button type="submit" class="bg-brand-bar gradient-button h-[36px] rounded-[50px] text-[16px] font-bold text-white">Add Crisis</button>
                         </div>
                     </form>
                 </div>

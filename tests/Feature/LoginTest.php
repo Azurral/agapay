@@ -94,7 +94,24 @@ it('kicks out a user deactivated mid-session', function () {
 
 it('sends guests to the login page', function () {
     $this->get('/dashboard')->assertRedirect(route('login'));
-    $this->get('/')->assertRedirect(route('dashboard'));
+});
+
+it('shows guests a landing page with a way to log in', function () {
+    $this->get('/')->assertOk()
+        ->assertSee('Agapay')
+        ->assertSee('Office of the Municipal Agriculturist')
+        ->assertSee('href="'.route('login').'"', false)
+        ->assertDontSee('Juan Dela Cruz');
+});
+
+it('sends signed-in users from the landing page to their dashboard', function () {
+    $this->actingAs($this->admin)->get('/')->assertRedirect(route('dashboard'));
+});
+
+it('lets the user show or hide the password', function () {
+    $this->get('/login')
+        ->assertSee(':type="show ? \'text\' : \'password\'"', false)
+        ->assertSee('Show password');
 });
 
 it('sends signed-in users away from the login page', function () {

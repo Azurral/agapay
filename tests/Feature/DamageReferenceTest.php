@@ -28,7 +28,7 @@ function cropValues(array $changes = []): array
 
 it('shows the reference values to administrators', function () {
     $this->actingAs($this->admin)->get('/damage-reports')
-        ->assertSee('Disasters &amp; Crop Values', false)
+        ->assertSee('Crises &amp; Crop Values', false)
         ->assertSee('Loss = (Total + factor × Partial) × Yield · Cost = Loss × Price')
         ->assertSee('name="crops['.Crop::where('name', 'Rice')->value('id').'][price_per_mt]"', false);
 });
@@ -72,9 +72,9 @@ it('adds a disaster that the form then offers', function () {
     $this->actingAs($this->admin)->post(route('damage.disasters.store'), ['name' => 'Typhoon Egay', 'occurred_on' => '2026-08-01'])
         ->assertRedirect(route('damage.index'))->assertSessionHas('status', 'Typhoon Egay added.');
 
-    expect(AuditLog::where('action', 'Added Disaster')->sole()->record_label)->toBe('Typhoon Egay (Aug 1, 2026)');
+    expect(AuditLog::where('action', 'Added Crisis')->sole()->record_label)->toBe('Typhoon Egay (Aug 1, 2026)');
     $this->get('/damage-reports/create')->assertSee('Typhoon Egay');
-    $this->get('/damage-reports')->assertSee('Disaster: Typhoon Egay');
+    $this->get('/damage-reports')->assertSee('Crisis: Typhoon Egay');
 });
 
 it('rejects invalid values', function (string $route, array $input, string $field) {
@@ -103,5 +103,5 @@ it('is for administrators only', function (string $username) {
 
     $this->actingAs($user)->put(route('damage.crops.update'), ['crops' => cropValues()])->assertForbidden();
     $this->post(route('damage.disasters.store'), ['name' => 'X', 'occurred_on' => '2026-08-01'])->assertForbidden();
-    $this->get('/damage-reports')->assertDontSee('Disasters &amp; Crop Values', false);
+    $this->get('/damage-reports')->assertDontSee('Crises &amp; Crop Values', false);
 })->with(['Agritech_02', 'Encoder_03']);

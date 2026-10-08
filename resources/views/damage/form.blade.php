@@ -80,7 +80,7 @@
             <div class="mt-[33px] grid grid-cols-2 gap-x-[12px] gap-y-[12px]">
                 <div>
                     <label @class([$box, $border('disaster_id')])>
-                        <span class="shrink-0">Disaster:</span>
+                        <span class="shrink-0">Crisis:</span>
                         <select name="disaster_id" required class="{{ $control }} cursor-pointer">
                             @foreach ($disasters as $disaster)
                                 <option value="{{ $disaster->id }}" @selected((string) $value('disaster_id', $disasters->first()?->id) === (string) $disaster->id)>{{ $disaster->name }}</option>
@@ -114,7 +114,7 @@
                         pick(r) {
                             this.id = String(r.id); this.q = r.name; this.open = false;
                             if (r.barangay_id) barangay = String(r.barangay_id);
-                            if (r.farm_location && farm === '') farm = r.farm_location;
+                            if (r.address && farm === '') farm = r.address;
                             const match = Object.entries(crops).find(([, c]) => c.name.toLowerCase() === String(r.crop_type ?? '').toLowerCase());
                             if (match && crop === '') crop = match[0];
                         },

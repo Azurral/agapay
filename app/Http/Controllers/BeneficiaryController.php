@@ -50,7 +50,8 @@ class BeneficiaryController extends Controller
         $others = $beneficiary->otherHouseholdMembers();
         $cycle = DistributionCycle::current();
         $claimable = $records->filter(fn (InterventionRecord $r) => ! $r->isClaimed()
-            && in_array($r->validation_status, InterventionRecord::CLAIMABLE, true))->values();
+            && in_array($r->validation_status, InterventionRecord::CLAIMABLE, true)
+            && ($beneficiary->rsbsa_number || ! $r->intervention->requiresRsbsa()))->values();
         // The banner's claim check covers every cycle Process Claim offers, the current one first.
         $cycleIds = $claimable->pluck('distribution_cycle_id')->push($cycle?->id)->filter()->unique()->values();
 
@@ -69,10 +70,10 @@ class BeneficiaryController extends Controller
                     ->latest('date_distributed')->latest('id')->first()
                 : null,
             // 430:1461 is the only Data Encoder profile frame, so encoders always edit;
-            // Agri Techs verify eligibility (407:1181); Administrators process claims (329:2822).
+            // Agri Techs view the profile; Administrators process claims (329:2822).
             'variant' => match (true) {
                 $user->role?->slug === Role::ENCODER && $user->can('beneficiaries.manage') => 'edit',
-                $user->role?->slug === Role::AGRITECH => 'eligibility',
+                $user->role?->slug === Role::AGRITECH => 'view',
                 default => 'claim',
             },
             'barangays' => Barangay::orderBy('name')->get(['id', 'name']),
@@ -81,21 +82,15 @@ class BeneficiaryController extends Controller
 
     public function update(UpdateBeneficiaryRequest $request, Beneficiary $beneficiary): RedirectResponse
     {
-        $old = $beneficiary->only(['rsbsa_status', 'rsbsa_number', 'rsbsa_status_reason']);
+        $old = $beneficiary->only(['rsbsa_number']);
         $beneficiary->fill($request->validated());
         $beneficiary->rsbsa_number = $request->validated('rsbsa_number') ?: null;
         $beneficiary->updated_by = $request->user()->id;
+        // Saving the profile is how an encoder resolves an item in their encoding queue.
+        $beneficiary->encoding_issue = null;
 
-        // Entering the masterlist number for an endorsed application completes the RSBSA registration
-        // (the request refuses a first number before endorsement).
+        // A first number gets its own audit entry, so the trail shows when the farmer joined the RSBSA.
         $recordsNumber = ! $old['rsbsa_number'] && $beneficiary->rsbsa_number;
-        if ($recordsNumber) {
-            $beneficiary->rsbsa_status = Beneficiary::RSBSA_REGISTERED;
-            $beneficiary->rsbsa_status_reason = null;
-        }
-        if ($beneficiary->rsbsa_number && $beneficiary->encoding_issue === 'Missing RSBSA Number') {
-            $beneficiary->encoding_issue = null;
-        }
 
         try {
             DB::transaction(function () use ($beneficiary, $recordsNumber, $old) {

@@ -93,3 +93,22 @@ function spreadsheet(array $rows, string $type = 'xlsx', string $name = 'masterl
 
     return new UploadedFile($path, "{$name}.{$type}", null, null, true);
 }
+
+/** Valid Add Beneficiary input (BarangaySeeder must have run). */
+function validRegistration(array $overrides = []): array
+{
+    return [
+        'first_name' => 'Juan',
+        'middle_name' => 'Abenoja',
+        'last_name' => 'Dela Cruz',
+        'birthdate' => now()->subYears(45)->toDateString(),
+        'house_no' => null,
+        'street' => null,
+        'sitio' => 'Purok 3',
+        'barangay_id' => brgy('Poblacion'),
+        'contact_number' => '0917-123-4567',
+        'farm_area_ha' => '1.5',
+        'crop_type' => 'Cabbage',
+        ...$overrides,
+    ];
+}

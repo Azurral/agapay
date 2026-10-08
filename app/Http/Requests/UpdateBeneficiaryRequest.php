@@ -15,7 +15,8 @@ class UpdateBeneficiaryRequest extends FormRequest
         $this->trimNames();
 
         if (is_string($this->input('rsbsa_number'))) {
-            $this->merge(['rsbsa_number' => trim($this->input('rsbsa_number'))]);
+            $number = trim($this->input('rsbsa_number'));
+            $this->merge(['rsbsa_number' => Beneficiary::isNoRsbsa($number) ? null : $number]);
         }
     }
 
@@ -58,20 +59,7 @@ class UpdateBeneficiaryRequest extends FormRequest
                     return;
                 }
 
-                // A first number completes the RSBSA workflow, so it needs the same DA-RFO endorsement step.
-                $beneficiary = $this->route('beneficiary');
-                if (! $beneficiary->rsbsa_number && ! in_array($beneficiary->rsbsa_status, [Beneficiary::RSBSA_ENDORSED, Beneficiary::RSBSA_REGISTERED], true)) {
-                    $validator->errors()->add('rsbsa_number', 'Record the RSBSA number after DA-RFO endorsement.');
-
-                    return;
-                }
-
-                $taken = Beneficiary::withTrashed()
-                    ->whereKeyNot($this->route('beneficiary')->getKey())
-                    ->whereRaw('LOWER(TRIM(rsbsa_number)) = ?', [mb_strtolower($number)])
-                    ->exists();
-
-                if ($taken) {
+                if ($this->rsbsaNumberTaken($number, $this->route('beneficiary')->getKey())) {
                     $validator->errors()->add('rsbsa_number', "RSBSA number {$number} is already assigned to another beneficiary.");
                 }
             },

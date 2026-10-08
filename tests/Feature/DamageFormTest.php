@@ -44,7 +44,7 @@ it('shows the Figma form to every role', function (string $username) {
     $this->actingAs(User::where('username', $username)->sole())->get('/damage-reports/create')->assertOk()
         ->assertSee('NEW DAMAGE REPORT')
         ->assertSeeInOrder([
-            'New Damage Report', 'Disaster:', 'Barangay:', 'Farmer / Beneficiary:', 'Crop / Farm Location:',
+            'New Damage Report', 'Crisis:', 'Barangay:', 'Farmer / Beneficiary:', 'Crop / Farm Location:',
             'Crop Stage:', 'Total Area:', 'Partial Area:', 'GPS Coordinates', 'Latitude:', 'Longitude:',
             'Photo / Attachment', 'Drag &amp; drop photos here (JPG/PNG)', 'or click to browse', 'Choose Photo', 'Submit Damage Report',
         ], false);

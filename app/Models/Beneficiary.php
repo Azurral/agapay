@@ -17,8 +17,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 #[Fillable([
-    'first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'barangay_id', 'contact_number',
-    'farm_location', 'crop_type', 'rsbsa_number', 'rsbsa_status', 'rsbsa_status_reason', 'life_status',
+    'first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'house_no', 'street', 'sitio', 'barangay_id', 'contact_number',
+    'farm_area_ha', 'crop_type', 'rsbsa_number', 'rsbsa_status', 'rsbsa_status_reason', 'life_status',
     'encoding_issue', 'source', 'created_by', 'updated_by',
 ])]
 class Beneficiary extends Model
@@ -26,27 +26,11 @@ class Beneficiary extends Model
     /** @use HasFactory<BeneficiaryFactory> */
     use Auditable, HasFactory, SoftDeletes;
 
-    public const RSBSA_PENDING = 'pending_validation';
-
-    public const RSBSA_VALIDATED = 'validated';
-
-    public const RSBSA_ENDORSED = 'endorsed';
-
+    /** Every profile is registered on entry (OMAG no longer tracks an RSBSA application workflow). */
     public const RSBSA_REGISTERED = 'registered';
 
-    public const RSBSA_RETURNED = 'returned';
-
-    public const RSBSA_REJECTED = 'rejected';
-
-    /** Applications OMAG is still working on ("Pending RSBSA"). */
-    public const RSBSA_IN_PROGRESS = [self::RSBSA_PENDING, self::RSBSA_VALIDATED, self::RSBSA_ENDORSED];
-
-    /** LGU registration filter value => RSBSA statuses. */
-    public const REGISTRATION_FILTERS = [
-        'registered' => [self::RSBSA_REGISTERED],
-        'new' => self::RSBSA_IN_PROGRESS,
-        'unregistered' => [self::RSBSA_RETURNED, self::RSBSA_REJECTED],
-    ];
+    /** Shown instead of an RSBSA number a farmer does not have (LGU programs do not need one). */
+    public const NO_RSBSA = 'N/A';
 
     public const SOURCE_MANUAL = 'manual';
 
@@ -57,8 +41,18 @@ class Beneficiary extends Model
     /** Bookkeeping changes that are not user edits. */
     protected array $auditIgnore = ['household_id', 'updated_by'];
 
+    /** Every farmer lives in Bontoc: the barangay list is the town's, so these parts of the address are fixed. */
+    public const MUNICIPALITY = 'Bontoc';
+
+    public const PROVINCE = 'Mountain Province';
+
+    public const REGION = 'Cordillera Administrative Region (CAR)';
+
+    /** Address parts, in government-form order; "address" stores them joined. */
+    public const ADDRESS_PARTS = ['house_no', 'street', 'sitio'];
+
     /** Free-text fields stored trimmed with single spaces, so typed and imported data match alike. */
-    public const SQUISHED = ['first_name', 'middle_name', 'last_name', 'address', 'farm_location', 'crop_type'];
+    public const SQUISHED = ['first_name', 'middle_name', 'last_name', 'address', 'house_no', 'street', 'sitio', 'crop_type'];
 
     protected static function booted(): void
     {
@@ -67,6 +61,12 @@ class Beneficiary extends Model
                 if (is_string($beneficiary->{$field})) {
                     $beneficiary->{$field} = self::squish($beneficiary->{$field});
                 }
+            }
+            // The parts are the source; a one-line address given on its own (older code, tests) becomes the sitio.
+            if ($beneficiary->isDirty(self::ADDRESS_PARTS) || ! $beneficiary->isDirty('address')) {
+                $beneficiary->address = self::joinAddress($beneficiary->only(self::ADDRESS_PARTS)) ?? $beneficiary->address;
+            } else {
+                $beneficiary->fill(['house_no' => null, 'street' => null, 'sitio' => $beneficiary->address]);
             }
             if ($beneficiary->isDirty('rsbsa_number')) {
                 $beneficiary->rsbsa_number = self::normalizeRsbsa($beneficiary->rsbsa_number);
@@ -94,18 +94,67 @@ class Beneficiary extends Model
         return $value === '' ? null : $value;
     }
 
+    /**
+     * "12, Rizal St., Purok 3"; null when every part is blank.
+     *
+     * @param  array<string, string|null>  $parts
+     */
+    public static function joinAddress(array $parts): ?string
+    {
+        $joined = collect($parts)->map(fn ($part) => self::squish($part))->filter()->implode(', ');
+
+        return $joined === '' ? null : $joined;
+    }
+
+    /** "12, Rizal St., Purok 3, Barangay Poblacion, Bontoc, Mountain Province". */
+    public function fullAddress(): string
+    {
+        $barangay = $this->barangay?->name;
+        $local = (string) $this->address;
+        // Older imports stored "Barangay Poblacion" as the address: do not repeat it.
+        if ($barangay && ! str_contains(mb_strtolower($local), mb_strtolower("Barangay {$barangay}"))) {
+            $local = ltrim("{$local}, Barangay {$barangay}", ', ');
+        }
+
+        return "{$local}, ".self::MUNICIPALITY.', '.self::PROVINCE;
+    }
+
+    /** "1.5 ha", or null when not recorded. */
+    public function farmAreaDisplay(): ?string
+    {
+        return $this->farm_area_ha === null ? null : rtrim(rtrim(number_format((float) $this->farm_area_ha, 2), '0'), '.').' ha';
+    }
+
     /** Whether a unique-key violation is on the RSBSA number (other unique keys are not reported as an RSBSA clash). */
     public static function isRsbsaClash(\Throwable $e): bool
     {
         return str_contains($e->getMessage(), 'rsbsa_number');
     }
 
-    /** RSBSA numbers are stored trimmed and in upper case ("rsbsa-0777" → "RSBSA-0777"). */
-    public static function normalizeRsbsa(?string $number): ?string
+    /** What people type for "no RSBSA number" (N/A is also AGAPAY's own display text). */
+    public const NO_RSBSA_PLACEHOLDERS = ['n/a', 'na', 'n.a.', 'none', 'wala', '-', '--', '(pending)', 'pending'];
+
+    public static function isNoRsbsa(?string $number): bool
     {
         $number = self::squish($number);
 
-        return $number === null ? null : mb_strtoupper($number);
+        return $number === null || in_array(mb_strtolower($number), self::NO_RSBSA_PLACEHOLDERS, true);
+    }
+
+    /** RSBSA numbers are stored trimmed and in upper case ("rsbsa-0777" → "RSBSA-0777"); placeholders like "N/A" are no number. */
+    public static function normalizeRsbsa(?string $number): ?string
+    {
+        return self::isNoRsbsa($number) ? null : mb_strtoupper(self::squish($number));
+    }
+
+    /** "Poblacion (1.5 hectares)" → "1.5"; text without a number of hectares ("Sitio Ili 2", "500 sqm") → null. */
+    public static function hectaresIn(?string $text): ?string
+    {
+        if (! preg_match('/(\d+(?:\.\d+)?)\s*(?:ha|has|hectares?)\b/i', (string) $text, $match) || (float) $match[1] > 9999.99) {
+            return null;
+        }
+
+        return $match[1];
     }
 
     protected function casts(): array
@@ -128,20 +177,16 @@ class Beneficiary extends Model
         return $this->hasMany(InterventionRecord::class);
     }
 
+    /** Crisis (damage) reports filed for this farmer; archived reports are left out by default. */
+    public function damageReports(): HasMany
+    {
+        return $this->hasMany(DamageReport::class);
+    }
+
     /** The newest active record (by cycle, then id). */
     public function latestRecord(): HasOne
     {
         return $this->hasOne(InterventionRecord::class)->ofMany(['distribution_cycle_id' => 'max', 'id' => 'max']);
-    }
-
-    /** LGU "Registration" column (Figma 329:1423). */
-    public function registrationLabel(): string
-    {
-        return match (true) {
-            in_array($this->rsbsa_status, self::REGISTRATION_FILTERS['registered'], true) => 'Registered',
-            in_array($this->rsbsa_status, self::REGISTRATION_FILTERS['new'], true) => 'Registered (New)',
-            default => 'Unregistered (Eligible)',
-        };
     }
 
     public function creator(): BelongsTo
@@ -161,7 +206,7 @@ class Beneficiary extends Model
 
     public function rsbsaDisplay(): string
     {
-        return $this->rsbsa_number ?: '(pending)';
+        return $this->rsbsa_number ?: self::NO_RSBSA;
     }
 
     /** Eager loads for <x-beneficiary.table>: barangay name and household size without N+1 queries. */
@@ -216,29 +261,9 @@ class Beneficiary extends Model
             ->exists();
     }
 
-    /** Chip label for an RSBSA status. */
-    public static function rsbsaStatusLabel(?string $status): string
-    {
-        return match ($status) {
-            self::RSBSA_PENDING => 'Pending Validation',
-            self::RSBSA_VALIDATED => 'Validated',
-            self::RSBSA_ENDORSED => 'Endorsed to DA-RFO',
-            self::RSBSA_REGISTERED => 'Registered',
-            self::RSBSA_RETURNED => 'Returned',
-            self::RSBSA_REJECTED => 'Rejected',
-            default => '—',
-        };
-    }
-
-    /** Chip tone: statuses that need someone's attention are "bad". */
-    public static function rsbsaStatusTone(?string $status): string
-    {
-        return in_array($status, [self::RSBSA_PENDING, self::RSBSA_RETURNED, self::RSBSA_REJECTED], true) ? 'bad' : 'ok';
-    }
-
     public function auditRecordLabel(): string
     {
-        return $this->fullName().' ('.($this->rsbsa_number ?: 'pending').')';
+        return $this->fullName().' ('.$this->rsbsaDisplay().')';
     }
 
     /** Members of this beneficiary's household, including the beneficiary. */

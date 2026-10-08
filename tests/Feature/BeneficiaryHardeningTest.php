@@ -1,17 +1,13 @@
 <?php
 
-use App\Exceptions\InvalidRsbsaTransition;
-use App\Models\AuditLog;
 use App\Models\Barangay;
 use App\Models\Beneficiary;
 use App\Models\Household;
 use App\Models\Permission;
 use App\Models\User;
-use App\Services\RsbsaWorkflow;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 beforeEach(function () {
     $this->seed(DatabaseSeeder::class);
@@ -24,9 +20,12 @@ function editInput(Beneficiary $b, array $overrides = []): array
 {
     return [
         'first_name' => $b->first_name, 'middle_name' => $b->middle_name, 'last_name' => $b->last_name,
-        'birthdate' => $b->birthdate->toDateString(), 'address' => $b->address, 'barangay_id' => $b->barangay_id,
-        'rsbsa_number' => $b->rsbsa_number, 'contact_number' => $b->contact_number,
-        'farm_location' => $b->farm_location, 'crop_type' => $b->crop_type, ...$overrides,
+        'birthdate' => $b->birthdate->toDateString(), 'house_no' => $b->house_no, 'street' => $b->street, 'sitio' => $b->sitio,
+        'barangay_id' => $b->barangay_id, 'rsbsa_number' => $b->rsbsa_number, 'contact_number' => $b->contact_number,
+        'farm_area_ha' => $b->farm_area_ha, 'crop_type' => $b->crop_type,
+        // A one-line "address" override is the sitio/purok.
+        ...(isset($overrides['address']) ? ['sitio' => $overrides['address']] : []),
+        ...collect($overrides)->except('address')->all(),
     ];
 }
 
@@ -42,10 +41,10 @@ it('refuses an edit that duplicates another profile', function () {
 });
 
 it('stores names without extra spaces', function () {
-    $b = Beneficiary::factory()->create(['first_name' => '  Rosa  ', 'middle_name' => ' Ana   Lee ', 'last_name' => "Dela\t Cruz ", 'address' => ' Purok  3 ', 'farm_location' => ' Sitio  Ili ']);
+    $b = Beneficiary::factory()->create(['first_name' => '  Rosa  ', 'middle_name' => ' Ana   Lee ', 'last_name' => "Dela\t Cruz ", 'house_no' => ' 12 ', 'street' => ' Rizal   St. ', 'sitio' => ' Purok  3 ']);
 
     expect($b->fresh())->first_name->toBe('Rosa')->middle_name->toBe('Ana Lee')->last_name->toBe('Dela Cruz')
-        ->address->toBe('Purok 3')->farm_location->toBe('Sitio Ili');
+        ->sitio->toBe('Purok 3')->street->toBe('Rizal St.')->address->toBe('12, Rizal St., Purok 3');
 });
 
 it('stores RSBSA numbers in upper case', function () {
@@ -64,7 +63,7 @@ it('normalises existing rows with the data migration', function () {
 });
 
 it('turns a simultaneous RSBSA number into a form error', function () {
-    $federico = Beneficiary::where('first_name', 'Federico')->sole();   // endorsed, no number
+    $federico = Beneficiary::where('first_name', 'Federico')->sole();   // no number yet
     // Someone else saves the same number between validation and this save.
     Beneficiary::saving(function (Beneficiary $b) use ($federico) {
         if ($b->is($federico) && $b->isDirty('rsbsa_number') && ! DB::table('beneficiaries')->where('rsbsa_number', 'RSBSA-0999')->exists()) {
@@ -75,25 +74,6 @@ it('turns a simultaneous RSBSA number into a form error', function () {
     $this->actingAs($this->encoder)->from(route('beneficiaries.show', $federico))
         ->put(route('beneficiaries.update', $federico), editInput($federico, ['rsbsa_number' => 'RSBSA-0999']))
         ->assertSessionHasErrors(['rsbsa_number' => 'RSBSA No. RSBSA-0999 is already used by another profile.']);
-});
-
-it('lets only one of two simultaneous transitions through', function () {
-    $pending = Beneficiary::where('rsbsa_status', Beneficiary::RSBSA_PENDING)->firstOrFail();
-    $first = Beneficiary::find($pending->id);
-    $second = Beneficiary::find($pending->id);   // loaded before the first one saved
-
-    RsbsaWorkflow::apply($first, 'validate');
-
-    expect(fn () => RsbsaWorkflow::apply($second, 'validate'))->toThrow(InvalidRsbsaTransition::class)
-        ->and(AuditLog::where('action', 'Validated RSBSA Registration')->count())->toBe(1);
-});
-
-it('writes the workflow audit in the same transaction', function () {
-    $pending = Beneficiary::where('rsbsa_status', Beneficiary::RSBSA_PENDING)->firstOrFail();
-    Schema::drop('audit_logs');
-
-    expect(fn () => RsbsaWorkflow::apply($pending, 'validate'))->toThrow(Exception::class)
-        ->and($pending->fresh()->rsbsa_status)->toBe(Beneficiary::RSBSA_PENDING);
 });
 
 it('finds people by full name in any order', function (string $term) {
@@ -139,14 +119,6 @@ it('keeps a household that an archived member still belongs to', function () {
     $b->update(['address' => 'Purok 3']);
 
     expect(Household::find($household))->not->toBeNull();
-});
-
-it('upper-cases RSBSA numbers recorded through the workflow', function () {
-    $federico = Beneficiary::where('first_name', 'Federico')->sole();   // endorsed
-
-    RsbsaWorkflow::apply($federico, 'record-number', ['rsbsa_number' => ' rsbsa-5555 ']);
-
-    expect($federico->fresh()->rsbsa_number)->toBe('RSBSA-5555');
 });
 
 it('keeps the old case when upper-casing would collide', function () {

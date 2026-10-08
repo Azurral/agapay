@@ -4,6 +4,7 @@ use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BeneficiaryController;
 use App\Http\Controllers\BeneficiaryLookupController;
+use App\Http\Controllers\BeneficiaryRegistrationController;
 use App\Http\Controllers\DamageExportController;
 use App\Http\Controllers\DamagePhotoController;
 use App\Http\Controllers\DamageReferenceController;
@@ -19,12 +20,9 @@ use App\Http\Controllers\InterventionRecordController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
-use App\Http\Controllers\RsbsaRegistrationController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ValidationQueueController;
 use App\Models\Intervention;
-use App\Services\RsbsaWorkflow;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -37,8 +35,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/switch-account', [LoginController::class, 'switch'])->name('account.switch');
 });
 
-// Guests go / -> /dashboard -> /login; signed-in users land on their dashboard.
-Route::redirect('/', '/dashboard');
+// Guests see the public landing page; signed-in users land on their dashboard.
+Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : view('welcome'))->name('home');
 
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->middleware('can:dashboard.view')->name('dashboard');
@@ -47,6 +45,9 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/search', SearchController::class)->middleware('can:beneficiaries.view')->name('search');
 
     Route::get('/beneficiaries', [BeneficiaryController::class, 'index'])->middleware('can:beneficiaries.manage')->name('beneficiaries.index');
+    // Registered before /beneficiaries/{beneficiary} so "create" is not read as a profile id.
+    Route::get('/beneficiaries/create', [BeneficiaryRegistrationController::class, 'create'])->middleware('can:rsbsa.register')->name('beneficiaries.create');
+    Route::post('/beneficiaries', [BeneficiaryRegistrationController::class, 'store'])->middleware('can:rsbsa.register')->name('beneficiaries.store');
     Route::get('/beneficiaries/{beneficiary}', [BeneficiaryController::class, 'show'])->middleware('can:beneficiaries.view')->name('beneficiaries.show');
     Route::put('/beneficiaries/{beneficiary}', [BeneficiaryController::class, 'update'])->middleware('can:beneficiaries.manage')->name('beneficiaries.update');
 
@@ -125,20 +126,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/import/{batch}/confirm', [ImportController::class, 'confirm'])->name('import.confirm');
         Route::post('/import/{batch}/discard', [ImportController::class, 'discard'])->name('import.discard');
     });
-    Route::get('/validation', ValidationQueueController::class)->middleware('can:interventions.validate')->name('validation.index');
     Route::post('/intervention-records/{record}/validation', [InterventionRecordActionController::class, 'validate'])
         ->middleware('can:interventions.validate')->name('intervention-records.validate');
     Route::middleware('can:interventions.claim')->group(function () {
         Route::post('/intervention-records/{record}/claim', [InterventionRecordActionController::class, 'claim'])->name('intervention-records.claim');
         Route::post('/intervention-records/{record}/unclaim', [InterventionRecordActionController::class, 'unclaim'])->name('intervention-records.unclaim');
     });
-
-    Route::get('/rsbsa/register', [RsbsaRegistrationController::class, 'create'])
-        ->middleware('can.any:rsbsa.register,rsbsa.process')->name('rsbsa.register');
-    Route::post('/rsbsa/register', [RsbsaRegistrationController::class, 'store'])
-        ->middleware('can:rsbsa.register')->name('rsbsa.store');
-    Route::post('/rsbsa/{beneficiary}/{action}', [RsbsaRegistrationController::class, 'transition'])
-        ->middleware('can:rsbsa.process')->whereIn('action', RsbsaWorkflow::ACTIONS)->name('rsbsa.transition');
 
     Route::middleware('can:users.manage')->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users.index');

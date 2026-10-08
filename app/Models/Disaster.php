@@ -13,7 +13,7 @@ class Disaster extends Model
 {
     use Auditable;
 
-    protected string $auditSubject = 'Disaster';
+    protected string $auditSubject = 'Crisis';
 
     protected function casts(): array
     {

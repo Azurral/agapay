@@ -5,9 +5,7 @@ use App\Models\Beneficiary;
 use App\Models\Crop;
 use App\Models\DamageReport;
 use App\Models\Disaster;
-use App\Models\Permission;
 use App\Models\User;
-use App\Support\DashboardStats;
 use Database\Seeders\DatabaseSeeder;
 
 beforeEach(function () {
@@ -27,7 +25,7 @@ it('shows the Figma list for each role', function (string $username, bool $expor
     $response = $this->actingAs(User::where('username', $username)->sole())->get('/damage-reports')->assertOk()
         ->assertSee('AGRICULTURAL DAMAGE REPORT')
         ->assertSeeInOrder([
-            'Crisis / Crop Damage Report', 'Disaster: Typhoon Cristina', 'Barangay: All', 'Status: All', '+ New Damage Report',
+            'Crisis / Crop Damage Report', 'Crisis: Typhoon Cristina', 'Barangay: All', 'Status: All', '+ New Damage Report',
             'Farmers Affected', 'Total Area Damaged (ha)', 'Production Loss (MT)', 'Est. Cost of Damage (₱)',
             'Reported Damage Records', 'Name', 'Barangay', 'Crop / Farm Loc.', 'Crop Stage', 'Damaged Area (Total/Partial)',
             'Loss (MT)', 'Cost of Damage', 'Photos', 'Status',
@@ -117,18 +115,4 @@ it('paginates ten rows at a time', function () {
     DamageReport::factory()->count(9)->create(['disaster_id' => $typhoon->id, 'crop_id' => Crop::where('name', 'Corn')->value('id')]);
 
     $this->actingAs($this->admin)->get('/damage-reports')->assertSee('data-agapay-pagination', false)->assertSee('Showing 1–10 of 15');
-});
-
-it('counts reports in the agri tech sidebar', function () {
-    DamageReport::factory()->create();
-
-    expect(DashboardStats::value('reports_filed_this_month', $this->agritech))->toBe(1);
-    $this->actingAs($this->agritech)->get('/damage-reports')->assertSeeInOrder(['1', 'Reports Filed This Month']);
-});
-
-it('forbids users without damage access', function () {
-    $role = $this->encoder->role;
-    $role->permissions()->detach(Permission::where('slug', 'damage.view')->value('id'));
-
-    $this->actingAs($this->encoder->fresh())->get('/damage-reports')->assertForbidden();
 });

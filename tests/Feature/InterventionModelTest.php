@@ -36,7 +36,6 @@ it('labels validation and claim states as in Figma', function (string $status, s
     expect(InterventionRecord::validationLabel($status))->toBe($label)
         ->and(InterventionRecord::validationTone($status))->toBe($tone);
 })->with([
-    ['pending', 'Validate', 'bad'],
     ['eligible', 'Eligible', 'ok'],
     ['ofw', 'OFW', 'ok'],
     ['bedridden', 'Bedridden', 'ok'],
@@ -65,18 +64,6 @@ it('formats quantities, claim chips and DE labels', function () {
         ->and($record($seeds, 2)->claimLabel())->toBe('Unclaimed');
 });
 
-it('derives the LGU registration label', function (string $status, string $label) {
-    $this->seed(BarangaySeeder::class);
-
-    expect(Beneficiary::factory()->make(['rsbsa_status' => $status])->registrationLabel())->toBe($label);
-})->with([
-    ['registered', 'Registered'],
-    ['pending_validation', 'Registered (New)'],
-    ['endorsed', 'Registered (New)'],
-    ['returned', 'Unregistered (Eligible)'],
-    ['rejected', 'Unregistered (Eligible)'],
-]);
-
 it('seeds the Figma sample records idempotently', function () {
     $this->seed(DatabaseSeeder::class);
     $this->seed(DatabaseSeeder::class);
@@ -91,5 +78,5 @@ it('seeds the Figma sample records idempotently', function () {
         ->validation_status->toBe('eligible')
         ->and($federico->delete_reason)->toBe('Deceased - confirmed by barangay')
         ->and($federico->deleter->username)->toBe('Agritech_02')
-        ->and(Beneficiary::where(['first_name' => 'Ana', 'last_name' => 'Gomez'])->value('rsbsa_status'))->toBe('rejected');
+        ->and(Beneficiary::where(['first_name' => 'Ana', 'last_name' => 'Gomez'])->value('rsbsa_number'))->toBeNull();
 });
