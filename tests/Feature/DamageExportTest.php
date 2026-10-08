@@ -28,7 +28,7 @@ it('downloads the filtered reports as xlsx', function () {
         $carlos = $rows->first(fn ($r) => $r->beneficiary->first_name === 'Carlos');
 
         return $export->headings() === [
-            'Disaster', 'Farmer', 'RSBSA No.', 'Barangay', 'Crop', 'Farm Location', 'Crop Stage', 'Total Area (ha)', 'Partial Area (ha)',
+            'Crisis', 'Farmer', 'RSBSA No.', 'Barangay', 'Crop', 'Farm Location', 'Crop Stage', 'Total Area (ha)', 'Partial Area (ha)',
             'Loss (MT)', 'Cost (₱)', 'Latitude', 'Longitude', 'Photos', 'Status', 'Reported By', 'Date Reported', 'Validated By', 'Validated On',
         ]
             && $rows->count() === 2

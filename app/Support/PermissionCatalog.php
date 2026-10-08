@@ -26,7 +26,7 @@ final class PermissionCatalog
         'damage.view' => ['View agricultural damage reports', 'Damage Recording'],
         'damage.create' => ['File agricultural damage reports', 'Damage Recording'],
         'damage.validate' => ['Validate agricultural damage reports', 'Damage Recording'],
-        'damage.configure' => ['Manage disasters and crop reference values', 'Damage Recording'],
+        'damage.configure' => ['Manage crises and crop reference values', 'Damage Recording'],
         'import.run' => ['Import Excel files', 'Data'],
         'export.run' => ['Export beneficiary lists', 'Data'],
         'reports.generate' => ['Generate reports', 'Reports'],

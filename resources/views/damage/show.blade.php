@@ -1,7 +1,7 @@
 @php
     $money = fn ($value) => '₱'.\App\Services\DamageCalculator::decimal((float) $value);
     $facts = [
-        'Disaster' => $report->disaster->name.' · '.$report->disaster->occurred_on->format('M j, Y'),
+        'Crisis' => $report->disaster->name.' · '.$report->disaster->occurred_on->format('M j, Y'),
         'Farmer' => $report->beneficiary->fullName().' · '.$report->beneficiary->rsbsaDisplay(),
         'Barangay' => $report->barangay->name,
         'Crop / Farm Location' => $report->crop->name.($report->farm_location ? ' · '.$report->farm_location : ''),

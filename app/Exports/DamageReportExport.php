@@ -30,7 +30,7 @@ class DamageReportExport implements FromQuery, ShouldAutoSize, WithCustomValueBi
     public function headings(): array
     {
         return [
-            'Disaster', 'Farmer', 'RSBSA No.', 'Barangay', 'Crop', 'Farm Location', 'Crop Stage', 'Total Area (ha)', 'Partial Area (ha)',
+            'Crisis', 'Farmer', 'RSBSA No.', 'Barangay', 'Crop', 'Farm Location', 'Crop Stage', 'Total Area (ha)', 'Partial Area (ha)',
             'Loss (MT)', 'Cost (₱)', 'Latitude', 'Longitude', 'Photos', 'Status', 'Reported By', 'Date Reported', 'Validated By', 'Validated On',
         ];
     }

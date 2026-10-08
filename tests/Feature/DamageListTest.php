@@ -25,7 +25,7 @@ it('shows the Figma list for each role', function (string $username, bool $expor
     $response = $this->actingAs(User::where('username', $username)->sole())->get('/damage-reports')->assertOk()
         ->assertSee('AGRICULTURAL DAMAGE REPORT')
         ->assertSeeInOrder([
-            'Crisis / Crop Damage Report', 'Disaster: Typhoon Cristina', 'Barangay: All', 'Status: All', '+ New Damage Report',
+            'Crisis / Crop Damage Report', 'Crisis: Typhoon Cristina', 'Barangay: All', 'Status: All', '+ New Damage Report',
             'Farmers Affected', 'Total Area Damaged (ha)', 'Production Loss (MT)', 'Est. Cost of Damage (₱)',
             'Reported Damage Records', 'Name', 'Barangay', 'Crop / Farm Loc.', 'Crop Stage', 'Damaged Area (Total/Partial)',
             'Loss (MT)', 'Cost of Damage', 'Photos', 'Status',

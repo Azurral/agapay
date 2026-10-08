@@ -80,5 +80,5 @@ it('audits a new disaster', function () {
 
     Disaster::create(['name' => 'Typhoon Egay', 'occurred_on' => '2026-08-01']);
 
-    expect(AuditLog::where('action', 'Added Disaster')->sole()->record_label)->toBe('Typhoon Egay (Aug 1, 2026)');
+    expect(AuditLog::where('action', 'Added Crisis')->sole()->record_label)->toBe('Typhoon Egay (Aug 1, 2026)');
 });
