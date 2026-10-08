@@ -54,9 +54,12 @@ it('renders the dashboard shell for every role', function (string $role, string 
     [Role::ENCODER, 'Encoder'],
 ]);
 
-it('opens the side panel from a hamburger button, without counters', function () {
-    $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')
-        ->assertSee('aria-label="Open menu"', false)
+it('opens the side panel from the logo button, without counters', function () {
+    $this->actingAs(userWithRole(Role::ADMIN, ['name' => 'Maria Santos']))->get('/dashboard')
+        ->assertSeeInOrder(['aria-label="Open menu"', 'Agapay logo', 'Agapay'], false)
+        ->assertDontSee('M4 6h16', false)                       // no separate hamburger icon
+        ->assertSee('>MS</span>', false)                         // initials avatar
+        ->assertDontSee('images/figma/avatars/', false)
         ->assertSee('id="side-panel"', false)
         ->assertDontSee('Total Beneficiaries')
         ->assertDontSee('Active Users');

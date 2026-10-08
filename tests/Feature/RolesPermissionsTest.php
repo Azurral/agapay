@@ -59,7 +59,23 @@ it('labels users by role', function () {
     expect($agritech->roleName())->toBe('Agricultural Technologist')
         ->and($agritech->roleShortName())->toBe('Agricultural Tech')
         ->and($agritech->greetingName())->toBe('Agritech')
-        ->and($agritech->avatarUrl())->toEndWith('/images/figma/avatars/agritech.png');
+        ->and($agritech->avatarColor())->toBe('#4671ff');
+});
+
+it('gives every user an initials avatar in their role colour', function (?string $role, string $name, string $initials, string $color) {
+    $user = userWithRole($role, ['name' => $name, 'username' => 'Some_User']);
+
+    expect($user->initials())->toBe($initials)->and($user->avatarColor())->toBe($color);
+})->with([
+    'two names' => [Role::ADMIN, 'Maria Santos', 'MS', '#8037ff'],
+    'middle names' => [Role::AGRITECH, 'Juan dela Cruz', 'JC', '#4671ff'],
+    'one name' => [Role::ENCODER, 'Encoder', 'EN', '#0bcaff'],
+    'spaces and case' => [Role::ENCODER, '  ana   gomez ', 'AG', '#0bcaff'],
+    'no role' => [null, 'Lito Bayang', 'LB', '#9ca3af'],
+]);
+
+it('falls back to the username for initials', function () {
+    expect(userWithRole(Role::ENCODER, ['name' => '', 'username' => 'encoder_05'])->initials())->toBe('EN');
 });
 
 it('seeds the four Figma accounts', function () {

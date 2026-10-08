@@ -20,6 +20,7 @@ class User extends Authenticatable
     use Auditable, HasFactory, Notifiable;
 
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_INACTIVE = 'inactive';
 
     protected string $auditSubject = 'User';
@@ -85,14 +86,26 @@ class User extends Authenticatable
         return $this->role?->greeting ?? $this->username;
     }
 
-    public function avatarUrl(): string
+    /** "Maria Santos" → "MS", "Juan dela Cruz" → "JC", "Encoder" → "EN"; the username when there is no name. */
+    public function initials(): string
     {
-        $key = $this->avatar ?? match ($this->role?->slug) {
-            Role::AGRITECH => 'agritech',
-            Role::ENCODER => 'encoder',
-            default => 'admin',
-        };
+        $name = trim((string) $this->name);
+        $words = $name === '' ? [(string) $this->username ?: '?'] : preg_split('/\s+/u', $name, -1, PREG_SPLIT_NO_EMPTY);
+        $initials = count($words) === 1
+            ? mb_substr($words[0], 0, 2)
+            : mb_substr($words[0], 0, 1).mb_substr(end($words), 0, 1);
 
-        return asset("images/figma/avatars/{$key}.png");
+        return mb_strtoupper($initials);
+    }
+
+    /** Avatar circle colour by role: purple Administrator, blue Agricultural Technologist, cyan Data Encoder. */
+    public function avatarColor(): string
+    {
+        return match ($this->role?->slug) {
+            Role::ADMIN => '#8037ff',
+            Role::AGRITECH => '#4671ff',
+            Role::ENCODER => '#0bcaff',
+            default => '#9ca3af',
+        };
     }
 }

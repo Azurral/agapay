@@ -3,7 +3,7 @@
 <div x-data="{ open: false }" class="relative h-[56px] w-[235px]" @click.outside="open = false" @keydown.escape.window="open = false">
     <button type="button" @click="open = true" :aria-expanded="open" aria-haspopup="true"
             class="account-trigger relative block h-[56px] w-[235px] rounded-[15px] border-[1.5px] border-black/15 bg-white text-left">
-        <img src="{{ $user->avatarUrl() }}" alt="" class="absolute top-[8.5px] left-[9.5px] size-[36px] rounded-full object-cover">
+        <x-app.avatar :user="$user" class="absolute top-[8.5px] left-[9.5px]" />
         <span class="absolute top-[5px] left-[50px] text-[16px] font-bold leading-[20px]">{{ $user->username }}</span>
         <span class="absolute top-[25px] left-[50px] text-[13px] font-medium leading-[17px] text-subtle">{{ $user->roleShortName() }}</span>
         {{-- Same 26px hover circle and position as the menu's close (up) arrow. --}}
@@ -20,7 +20,7 @@
         </button>
 
         <div class="relative h-[41px] pl-[9.5px]">
-            <img src="{{ $user->avatarUrl() }}" alt="" class="absolute top-[2px] left-[9.5px] size-[36px] rounded-full object-cover">
+            <x-app.avatar :user="$user" class="absolute top-[2px] left-[9.5px]" />
             <p class="absolute top-0 left-[51.5px] text-[16px] font-bold leading-[20px]">{{ $user->username }}</p>
             <p class="absolute top-[20px] left-[51.5px] text-[13px] font-medium leading-[17px] text-subtle">{{ $user->roleShortName() }}</p>
         </div>
@@ -30,7 +30,7 @@
                 @csrf
                 <input type="hidden" name="username" value="{{ $other->username }}">
                 <button type="submit" class="hover-tint relative block h-[41px] w-full rounded-[10px] text-left" title="Sign in as {{ $other->username }}">
-                    <img src="{{ $other->avatarUrl() }}" alt="" class="absolute top-[2px] left-[9.5px] size-[36px] rounded-full object-cover">
+                    <x-app.avatar :user="$other" class="absolute top-[2px] left-[9.5px]" />
                     <img src="{{ asset('images/figma/icons/ring.svg') }}" alt="" class="absolute top-[2.5px] left-[10.5px]">
                     <span class="absolute top-0 left-[51.5px] text-[16px] font-bold leading-[20px]">{{ $other->username }}</span>
                     <span class="absolute top-[20px] left-[51.5px] text-[13px] font-medium leading-[17px] text-subtle">{{ $other->roleShortName() }}</span>
