@@ -51,7 +51,12 @@ class BeneficiarySeeder extends Seeder
             $beneficiary->fill([
                 'middle_name' => $middle,
                 'birthdate' => $beneficiary->birthdate ?? now()->subYears($age)->subMonths(2)->toDateString(),
-                'address' => $address,
+                // Seeding mutes model events, so the joined address is set here too.
+                'house_no' => null,
+                'street' => null,
+                'sitio' => $address,
+                'address' => Beneficiary::joinAddress(['sitio' => $address]),
+                'farm_area_ha' => [1.5, 0.8, 0.5, 2.0, 1.2, 0.75, 1.0, 2.5, 1.8, 0.6, 0.4, 1.1, 0.9][$i] ?? 1.0,
                 'contact_number' => sprintf('0917-%03d-%04d', 310 + $i, 1200 + $i * 37),
                 'rsbsa_number' => $number,
                 'rsbsa_status' => Beneficiary::RSBSA_REGISTERED,

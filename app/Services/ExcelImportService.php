@@ -227,7 +227,7 @@ final class ExcelImportService
         $this->ensureNumberFree($data['rsbsa_number']);
 
         return Beneficiary::create([
-            ...Arr::only($data, ['first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'barangay_id', 'contact_number', 'farm_location', 'crop_type', 'rsbsa_number']),
+            ...Arr::only($data, ['first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'house_no', 'street', 'sitio', 'barangay_id', 'contact_number', 'farm_area_ha', 'crop_type', 'rsbsa_number']),
             // A row without a number is imported as is: the farmer shows "N/A" and can still get LGU programs.
             'rsbsa_status' => Beneficiary::RSBSA_REGISTERED,
             'source' => Beneficiary::SOURCE_IMPORT,

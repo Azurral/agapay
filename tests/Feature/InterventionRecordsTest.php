@@ -135,7 +135,7 @@ it('still refuses records marked not claimable from the encoder dropdown', funct
 it('returns beneficiary lookup results', function () {
     $this->actingAs($this->encoder)->getJson('/beneficiary-lookup?q=juan')->assertOk()
         ->assertExactJson([['id' => ($this->person)('Juan', 'Dela Cruz')->id, 'name' => 'Juan Dela Cruz', 'rsbsa' => 'RSBSA-0231', 'barangay' => 'Poblacion',
-            'barangay_id' => ($this->person)('Juan', 'Dela Cruz')->barangay_id, 'farm_location' => null, 'crop_type' => 'Rice']]);
+            'barangay_id' => ($this->person)('Juan', 'Dela Cruz')->barangay_id, 'address' => 'Purok 3', 'crop_type' => 'Rice']]);
 
     $this->actingAs($this->encoder)->getJson('/beneficiary-lookup?q[]=juan')->assertOk()->assertExactJson([]);
     $this->actingAs($this->encoder)->getJson('/beneficiary-lookup?q=%25')->assertOk()->assertExactJson([]);

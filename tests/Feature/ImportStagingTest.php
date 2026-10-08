@@ -46,7 +46,7 @@ it('stages a clean masterlist', function () {
         ])
         ->and(stagedRow($batch, 2)->data)->toMatchArray([
             'first_name' => 'Pablo', 'last_name' => 'Ramos', 'birthdate' => '1980-05-10',
-            'barangay_id' => Barangay::where('name', 'Poblacion')->value('id'), 'address' => 'Barangay Poblacion', 'rsbsa_number' => 'RSBSA-0901',
+            'barangay_id' => Barangay::where('name', 'Poblacion')->value('id'), 'sitio' => 'Barangay Poblacion', 'rsbsa_number' => 'RSBSA-0901',
         ])
         ->and(stagedRow($batch, 3))->status->toBe('ready')->data->toMatchArray(['rsbsa_number' => null])
         ->and(Beneficiary::where('last_name', 'Ramos')->exists())->toBeFalse()   // nothing imported yet
@@ -105,12 +105,12 @@ it('excludes a birthdate that is only a year', function () {
 it('excludes values longer than their field', function () {
     $batch = stageRows([
         ['First Name', 'Last Name', 'Birthdate', 'Barangay', 'RSBSA No.', 'Address'],
-        [str_repeat('a', 101), 'Ramos', '1980-05-10', 'Poblacion', str_repeat('9', 51), str_repeat('b', 256)],
-        [str_repeat('a', 100), 'Ramos', '1980-05-10', 'Poblacion', str_repeat('9', 50), str_repeat('b', 255)],
+        [str_repeat('a', 101), 'Ramos', '1980-05-10', 'Poblacion', str_repeat('9', 51), str_repeat('b', 101)],
+        [str_repeat('a', 100), 'Ramos', '1980-05-10', 'Poblacion', str_repeat('9', 50), str_repeat('b', 100)],
     ]);
 
     expect(stagedRow($batch, 2))->status->toBe('unreadable')->issues->toBe([
-        'First Name is longer than 100 characters', 'Address is longer than 255 characters', 'RSBSA No. is longer than 50 characters',
+        'First Name is longer than 100 characters', 'Address is longer than 100 characters', 'RSBSA No. is longer than 50 characters',
     ])->and(stagedRow($batch, 3)->status)->toBe('ready');
 });
 

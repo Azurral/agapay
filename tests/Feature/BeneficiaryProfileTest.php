@@ -15,9 +15,12 @@ function profileInput(Beneficiary $b, array $overrides = []): array
 {
     return [
         'first_name' => $b->first_name, 'middle_name' => $b->middle_name, 'last_name' => $b->last_name,
-        'birthdate' => $b->birthdate->toDateString(), 'address' => $b->address, 'barangay_id' => $b->barangay_id,
-        'rsbsa_number' => $b->rsbsa_number, 'contact_number' => $b->contact_number,
-        'farm_location' => $b->farm_location, 'crop_type' => $b->crop_type, ...$overrides,
+        'birthdate' => $b->birthdate->toDateString(), 'house_no' => $b->house_no, 'street' => $b->street, 'sitio' => $b->sitio,
+        'barangay_id' => $b->barangay_id, 'rsbsa_number' => $b->rsbsa_number, 'contact_number' => $b->contact_number,
+        'farm_area_ha' => $b->farm_area_ha, 'crop_type' => $b->crop_type,
+        // A one-line "address" override is the sitio/purok.
+        ...(isset($overrides['address']) ? ['sitio' => $overrides['address']] : []),
+        ...collect($overrides)->except('address')->all(),
     ];
 }
 

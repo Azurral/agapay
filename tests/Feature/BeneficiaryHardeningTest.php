@@ -20,9 +20,12 @@ function editInput(Beneficiary $b, array $overrides = []): array
 {
     return [
         'first_name' => $b->first_name, 'middle_name' => $b->middle_name, 'last_name' => $b->last_name,
-        'birthdate' => $b->birthdate->toDateString(), 'address' => $b->address, 'barangay_id' => $b->barangay_id,
-        'rsbsa_number' => $b->rsbsa_number, 'contact_number' => $b->contact_number,
-        'farm_location' => $b->farm_location, 'crop_type' => $b->crop_type, ...$overrides,
+        'birthdate' => $b->birthdate->toDateString(), 'house_no' => $b->house_no, 'street' => $b->street, 'sitio' => $b->sitio,
+        'barangay_id' => $b->barangay_id, 'rsbsa_number' => $b->rsbsa_number, 'contact_number' => $b->contact_number,
+        'farm_area_ha' => $b->farm_area_ha, 'crop_type' => $b->crop_type,
+        // A one-line "address" override is the sitio/purok.
+        ...(isset($overrides['address']) ? ['sitio' => $overrides['address']] : []),
+        ...collect($overrides)->except('address')->all(),
     ];
 }
 
@@ -38,10 +41,10 @@ it('refuses an edit that duplicates another profile', function () {
 });
 
 it('stores names without extra spaces', function () {
-    $b = Beneficiary::factory()->create(['first_name' => '  Rosa  ', 'middle_name' => ' Ana   Lee ', 'last_name' => "Dela\t Cruz ", 'address' => ' Purok  3 ', 'farm_location' => ' Sitio  Ili ']);
+    $b = Beneficiary::factory()->create(['first_name' => '  Rosa  ', 'middle_name' => ' Ana   Lee ', 'last_name' => "Dela\t Cruz ", 'house_no' => ' 12 ', 'street' => ' Rizal   St. ', 'sitio' => ' Purok  3 ']);
 
     expect($b->fresh())->first_name->toBe('Rosa')->middle_name->toBe('Ana Lee')->last_name->toBe('Dela Cruz')
-        ->address->toBe('Purok 3')->farm_location->toBe('Sitio Ili');
+        ->sitio->toBe('Purok 3')->street->toBe('Rizal St.')->address->toBe('12, Rizal St., Purok 3');
 });
 
 it('stores RSBSA numbers in upper case', function () {

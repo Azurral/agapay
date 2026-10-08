@@ -114,7 +114,7 @@
                         pick(r) {
                             this.id = String(r.id); this.q = r.name; this.open = false;
                             if (r.barangay_id) barangay = String(r.barangay_id);
-                            if (r.farm_location && farm === '') farm = r.farm_location;
+                            if (r.address && farm === '') farm = r.address;
                             const match = Object.entries(crops).find(([, c]) => c.name.toLowerCase() === String(r.crop_type ?? '').toLowerCase());
                             if (match && crop === '') crop = match[0];
                         },

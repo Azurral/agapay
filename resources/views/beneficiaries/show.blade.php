@@ -1,9 +1,6 @@
 @php
     $isEdit = $variant === 'edit';
     $barangayName = $beneficiary->barangay?->name;
-    $address = $barangayName && ! str_contains(mb_strtolower($beneficiary->address), mb_strtolower($barangayName))
-        ? "{$beneficiary->address}, Barangay {$barangayName}"
-        : $beneficiary->address;
     $bar = match ($variant) {
         'edit' => ['EDIT MODE', 'Editing beneficiary profile - remember to save your changes.', 'Save Changes'],
         default => ['CLAIM VERIFICATION', 'Checking household claim status for current intervention cycle...', 'Process Claim'],
@@ -11,9 +8,11 @@
     $field = 'h-[28px] w-full rounded-[10px] bg-brand-soft/10 px-[6px] text-[14px] font-medium text-brand-soft outline-none focus:ring-2 focus:ring-brand-soft/40';
     $editFields = [
         ['first_name', 'First Name', 'text'], ['middle_name', 'Middle Name', 'text'], ['last_name', 'Last Name', 'text'],
-        ['birthdate', 'Birthdate', 'date'], ['age', 'Age', 'computed'], ['address', 'Address', 'text'], ['barangay_id', 'Barangay', 'select'],
+        ['birthdate', 'Birthdate', 'date'], ['age', 'Age', 'computed'],
+        ['house_no', 'House/Lot No.', 'text'], ['street', 'Street', 'text'], ['sitio', 'Sitio/Purok', 'text'], ['barangay_id', 'Barangay', 'select'],
+        ['town', 'Municipality / Province', 'computed'],
         ['rsbsa_number', 'RSBSA Number', 'text'], ['contact_number', 'Contact Number', 'text'],
-        ['farm_location', 'Farm Location', 'text'], ['crop_type', 'Crop Type', 'text'], ['household', 'Household Number', 'computed'],
+        ['farm_area_ha', 'Farm Area (ha)', 'number'], ['crop_type', 'Crop Type', 'text'], ['household', 'Household Number', 'computed'],
     ];
 @endphp
 <x-layouts.app title="BENEFICIARY PROFILE">
@@ -48,6 +47,8 @@
                             {{ $label }}
                             @if ($name === 'age')
                                 <input type="text" readonly tabindex="-1" :value="age" class="{{ $field }}">
+                            @elseif ($name === 'town')
+                                <input type="text" readonly tabindex="-1" value="{{ \App\Models\Beneficiary::MUNICIPALITY }}, {{ \App\Models\Beneficiary::PROVINCE }}" class="{{ $field }} !text-muted">
                             @elseif ($name === 'household')
                                 <input type="text" readonly tabindex="-1" value="{{ $beneficiary->household?->household_no ?? '(auto-grouped)' }}" class="{{ $field }} !text-muted">
                             @elseif ($type === 'select')
@@ -62,9 +63,12 @@
                             @elseif ($type === 'date')
                                 <input type="date" name="birthdate" value="{{ old('birthdate', $beneficiary->birthdate->toDateString()) }}" x-model="birthdate" required
                                        max="{{ now()->subYears(18)->toDateString() }}" @class([$field, 'ring-2 ring-bad' => $errors->has('birthdate')])>
+                            @elseif ($type === 'number')
+                                <input type="number" name="{{ $name }}" step="0.01" min="0" value="{{ old($name, $beneficiary->{$name} === null ? null : (float) $beneficiary->{$name}) }}"
+                                       @class([$field, 'ring-2 ring-bad' => $errors->has($name)])>
                             @else
                                 <input type="text" name="{{ $name }}" value="{{ old($name, $beneficiary->{$name}) }}"
-                                       @required(in_array($name, ['first_name', 'last_name', 'address'], true))
+                                       @required(in_array($name, ['first_name', 'last_name', 'sitio'], true))
                                        @class([$field, 'ring-2 ring-bad' => $errors->has($name)])>
                             @endif
                             @error($name)<span class="text-[12px] font-semibold text-danger">{{ $message }}</span>@enderror
@@ -74,8 +78,9 @@
             @else
                 <dl class="mt-[16px] flex flex-col gap-[9px] text-[14px] leading-[18px]">
                     @foreach ([
-                        'Full Name' => $beneficiary->fullName(), 'Age' => $beneficiary->age(), 'Address' => $address,
+                        'Full Name' => $beneficiary->fullName(), 'Age' => $beneficiary->age(), 'Address' => $beneficiary->fullAddress(),
                         'Barangay' => $barangayName, 'RSBSA Number' => $beneficiary->rsbsaDisplay(),
+                        'Farm Area' => $beneficiary->farmAreaDisplay() ?? '—', 'Crop Type' => $beneficiary->crop_type ?? '—',
                         'Household Number' => $beneficiary->household?->household_no ?? '(auto-grouped)',
                     ] as $label => $value)
                         <div>

@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\BeneficiaryRegistrationController;
 use App\Models\AuditLog;
-use App\Models\Barangay;
 use App\Models\Beneficiary;
 use App\Models\Permission;
 use App\Models\Role;
@@ -13,22 +12,6 @@ beforeEach(function () {
     seedRoles();
     $this->seed(BarangaySeeder::class);
 });
-
-function validRegistration(array $overrides = []): array
-{
-    return [
-        'first_name' => 'Juan',
-        'middle_name' => 'Abenoja',
-        'last_name' => 'Dela Cruz',
-        'birthdate' => now()->subYears(45)->toDateString(),
-        'address' => 'Purok 3',
-        'barangay_id' => Barangay::firstWhere('name', 'Poblacion')->id,
-        'contact_number' => '0917-123-4567',
-        'farm_location' => 'Poblacion (1.5 hectares)',
-        'crop_type' => 'Cabbage',
-        ...$overrides,
-    ];
-}
 
 it('shows the add beneficiary form to encoders and admins, without the RSBSA workflow', function (string $role) {
     $this->actingAs(userWithRole($role))->get('/beneficiaries/create')->assertOk()

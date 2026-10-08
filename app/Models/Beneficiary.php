@@ -17,8 +17,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 #[Fillable([
-    'first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'barangay_id', 'contact_number',
-    'farm_location', 'crop_type', 'rsbsa_number', 'rsbsa_status', 'rsbsa_status_reason', 'life_status',
+    'first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'house_no', 'street', 'sitio', 'barangay_id', 'contact_number',
+    'farm_area_ha', 'crop_type', 'rsbsa_number', 'rsbsa_status', 'rsbsa_status_reason', 'life_status',
     'encoding_issue', 'source', 'created_by', 'updated_by',
 ])]
 class Beneficiary extends Model
@@ -41,8 +41,18 @@ class Beneficiary extends Model
     /** Bookkeeping changes that are not user edits. */
     protected array $auditIgnore = ['household_id', 'updated_by'];
 
+    /** Every farmer lives in Bontoc: the barangay list is the town's, so these parts of the address are fixed. */
+    public const MUNICIPALITY = 'Bontoc';
+
+    public const PROVINCE = 'Mountain Province';
+
+    public const REGION = 'Cordillera Administrative Region (CAR)';
+
+    /** Address parts, in government-form order; "address" stores them joined. */
+    public const ADDRESS_PARTS = ['house_no', 'street', 'sitio'];
+
     /** Free-text fields stored trimmed with single spaces, so typed and imported data match alike. */
-    public const SQUISHED = ['first_name', 'middle_name', 'last_name', 'address', 'farm_location', 'crop_type'];
+    public const SQUISHED = ['first_name', 'middle_name', 'last_name', 'address', 'house_no', 'street', 'sitio', 'crop_type'];
 
     protected static function booted(): void
     {
@@ -51,6 +61,12 @@ class Beneficiary extends Model
                 if (is_string($beneficiary->{$field})) {
                     $beneficiary->{$field} = self::squish($beneficiary->{$field});
                 }
+            }
+            // The parts are the source; a one-line address given on its own (older code, tests) becomes the sitio.
+            if ($beneficiary->isDirty(self::ADDRESS_PARTS) || ! $beneficiary->isDirty('address')) {
+                $beneficiary->address = self::joinAddress($beneficiary->only(self::ADDRESS_PARTS)) ?? $beneficiary->address;
+            } else {
+                $beneficiary->fill(['house_no' => null, 'street' => null, 'sitio' => $beneficiary->address]);
             }
             if ($beneficiary->isDirty('rsbsa_number')) {
                 $beneficiary->rsbsa_number = self::normalizeRsbsa($beneficiary->rsbsa_number);
@@ -76,6 +92,37 @@ class Beneficiary extends Model
         $value = trim((string) preg_replace('/\s+/u', ' ', (string) $value));
 
         return $value === '' ? null : $value;
+    }
+
+    /**
+     * "12, Rizal St., Purok 3"; null when every part is blank.
+     *
+     * @param  array<string, string|null>  $parts
+     */
+    public static function joinAddress(array $parts): ?string
+    {
+        $joined = collect($parts)->map(fn ($part) => self::squish($part))->filter()->implode(', ');
+
+        return $joined === '' ? null : $joined;
+    }
+
+    /** "12, Rizal St., Purok 3, Barangay Poblacion, Bontoc, Mountain Province". */
+    public function fullAddress(): string
+    {
+        $barangay = $this->barangay?->name;
+        $local = (string) $this->address;
+        // Older imports stored "Barangay Poblacion" as the address: do not repeat it.
+        if ($barangay && ! str_contains(mb_strtolower($local), mb_strtolower("Barangay {$barangay}"))) {
+            $local = ltrim("{$local}, Barangay {$barangay}", ', ');
+        }
+
+        return "{$local}, ".self::MUNICIPALITY.', '.self::PROVINCE;
+    }
+
+    /** "1.5 ha", or null when not recorded. */
+    public function farmAreaDisplay(): ?string
+    {
+        return $this->farm_area_ha === null ? null : rtrim(rtrim(number_format((float) $this->farm_area_ha, 2), '0'), '.').' ha';
     }
 
     /** Whether a unique-key violation is on the RSBSA number (other unique keys are not reported as an RSBSA clash). */
