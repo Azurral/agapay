@@ -16,26 +16,24 @@ return [
             ['label' => 'Home', 'route' => 'dashboard', 'icon' => 'home', 'permission' => 'dashboard.view'],
             ['label' => 'DA Intervention', 'route' => 'interventions.da', 'icon' => 'report', 'permission' => 'interventions.view'],
             ['label' => 'LGU Intervention', 'route' => 'interventions.lgu', 'icon' => 'report', 'permission' => 'interventions.view'],
-            ['label' => 'Newly Registered', 'route' => 'rsbsa.register', 'icon' => 'newly-registered', 'permission' => 'rsbsa.process'],
-            ['label' => 'Disaster Reports', 'route' => 'damage.index', 'icon' => 'disaster', 'permission' => 'damage.view'],
+            ['label' => 'Crisis Reports', 'route' => 'damage.index', 'icon' => 'disaster', 'permission' => 'damage.view'],
             ['label' => 'User Management', 'route' => 'users.index', 'icon' => 'user-mgmt', 'permission' => 'users.manage'],
             ['label' => 'Audit Trail', 'route' => 'audit.index', 'icon' => 'audit', 'permission' => 'audit.view'],
-            ['label' => 'Reports', 'route' => 'reports.index', 'icon' => 'audit', 'permission' => 'reports.generate'],
+            ['label' => 'Download Reports', 'route' => 'reports.index', 'icon' => 'audit', 'permission' => 'reports.generate'],
         ],
         Role::AGRITECH => [
             ['label' => 'Home', 'route' => 'dashboard', 'icon' => 'home', 'permission' => 'dashboard.view'],
-            ['label' => 'Beneficiary Validation', 'route' => 'validation.index', 'icon' => 'validation', 'permission' => 'interventions.validate'],
             ['label' => 'DA Intervention', 'route' => 'interventions.da', 'icon' => 'report', 'permission' => 'interventions.view'],
             ['label' => 'LGU Intervention', 'route' => 'interventions.lgu', 'icon' => 'report', 'permission' => 'interventions.view'],
-            ['label' => 'Disaster Reports', 'route' => 'damage.index', 'icon' => 'disaster', 'permission' => 'damage.view'],
-            ['label' => 'Reports', 'route' => 'reports.index', 'icon' => 'audit', 'permission' => 'reports.generate'],
+            ['label' => 'Crisis Reports', 'route' => 'damage.index', 'icon' => 'disaster', 'permission' => 'damage.view'],
+            ['label' => 'Download Reports', 'route' => 'reports.index', 'icon' => 'audit', 'permission' => 'reports.generate'],
         ],
         Role::ENCODER => [
             ['label' => 'Home', 'route' => 'dashboard', 'icon' => 'home', 'permission' => 'dashboard.view'],
             ['label' => 'Beneficiary Profiles', 'route' => 'beneficiaries.index', 'icon' => 'profile', 'permission' => 'beneficiaries.manage'],
             ['label' => 'Intervention Records', 'route' => 'intervention-records.index', 'icon' => 'report', 'permission' => 'intervention_records.manage'],
             ['label' => 'Inventory', 'route' => 'inventory.index', 'icon' => 'inventory', 'permission' => 'inventory.view'],
-            ['label' => 'Reports', 'route' => 'reports.index', 'icon' => 'audit', 'permission' => 'reports.generate'],
+            ['label' => 'Download Reports', 'route' => 'reports.index', 'icon' => 'audit', 'permission' => 'reports.generate'],
         ],
     ],
 
@@ -49,37 +47,15 @@ return [
             ['label' => 'Inventory', 'route' => 'inventory.index', 'permission' => 'inventory.view'],
         ]],
         Role::AGRITECH => ['width' => 226, 'gap' => 17, 'items' => [
-            ['label' => 'File Disaster Report', 'route' => 'damage.create', 'permission' => 'damage.create'],
+            ['label' => 'File Crisis Report', 'route' => 'damage.create', 'permission' => 'damage.create'],
             ['label' => 'Interventions', 'route' => 'interventions.index', 'permission' => 'interventions.view'],
         ]],
         Role::ENCODER => ['width' => 200, 'gap' => 22, 'items' => [
             ['label' => 'Upload Excel', 'route' => 'import.index', 'permission' => 'import.run'],
             ['label' => 'Add Beneficiary', 'route' => 'rsbsa.register', 'permission' => 'rsbsa.register'],
-            ['label' => 'Disaster Reports', 'route' => 'damage.index', 'permission' => 'damage.view'],
+            ['label' => 'Crisis Reports', 'route' => 'damage.index', 'permission' => 'damage.view'],
         ]],
     ],
-
-    // Sidebar counters per role; colors are assigned in order from 'stat_colors'.
-    'stats' => [
-        Role::ADMIN => [
-            'total_beneficiaries' => 'Total Beneficiaries',
-            'pending_rsbsa' => 'Pending RSBSA',
-            'active_interventions' => 'Active Interventions',
-            'active_users' => 'Active Users',
-        ],
-        Role::AGRITECH => [
-            'pending_validation' => 'Pending Validation',
-            'active_interventions' => 'Active Interventions',
-            'reports_filed_this_month' => 'Reports Filed This Month',
-        ],
-        Role::ENCODER => [
-            'encoded_this_month' => 'Encoded This Month',
-            'records_to_update' => 'Records to be Updated',
-            'low_stock_items' => 'Low Stock Items',
-        ],
-    ],
-
-    'stat_colors' => ['#da37ff', '#8037ff', '#4671ff', '#0bcaff'],
 
     // Beneficiary rows in the distribution report PDF (DomPDF memory); the Excel workbook lists everyone.
     'report_pdf_max_rows' => 1000,

@@ -7,7 +7,6 @@ use App\Models\Disaster;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\DamageCalculator;
-use App\Support\DashboardStats;
 use Database\Seeders\DatabaseSeeder;
 
 it('computes loss and cost from crop values', function () {
@@ -67,15 +66,6 @@ describe('seeded data', function () {
             ->and($report->areaLabel())->toBe('1.20 ha / 0.30 ha')
             ->and($report->statusLabel())->toBe('Validated')
             ->and($report->statusTone())->toBe('ok');
-    });
-
-    it('counts damage reports filed this month for the agri tech stat', function () {
-        $agritech = User::where('username', 'Agritech_02')->sole();
-        DamageReport::factory()->count(2)->create();
-        DamageReport::factory()->create(['created_at' => now()->subMonth()]);
-        DamageReport::factory()->create()->delete();
-
-        expect(DashboardStats::value('reports_filed_this_month', $agritech))->toBe(2);
     });
 
     it('gives damage.configure to the administrator only', function () {

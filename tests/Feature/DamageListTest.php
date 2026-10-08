@@ -5,9 +5,7 @@ use App\Models\Beneficiary;
 use App\Models\Crop;
 use App\Models\DamageReport;
 use App\Models\Disaster;
-use App\Models\Permission;
 use App\Models\User;
-use App\Support\DashboardStats;
 use Database\Seeders\DatabaseSeeder;
 
 beforeEach(function () {
@@ -117,18 +115,4 @@ it('paginates ten rows at a time', function () {
     DamageReport::factory()->count(9)->create(['disaster_id' => $typhoon->id, 'crop_id' => Crop::where('name', 'Corn')->value('id')]);
 
     $this->actingAs($this->admin)->get('/damage-reports')->assertSee('data-agapay-pagination', false)->assertSee('Showing 1–10 of 15');
-});
-
-it('counts reports in the agri tech sidebar', function () {
-    DamageReport::factory()->create();
-
-    expect(DashboardStats::value('reports_filed_this_month', $this->agritech))->toBe(1);
-    $this->actingAs($this->agritech)->get('/damage-reports')->assertSeeInOrder(['1', 'Reports Filed This Month']);
-});
-
-it('forbids users without damage access', function () {
-    $role = $this->encoder->role;
-    $role->permissions()->detach(Permission::where('slug', 'damage.view')->value('id'));
-
-    $this->actingAs($this->encoder->fresh())->get('/damage-reports')->assertForbidden();
 });

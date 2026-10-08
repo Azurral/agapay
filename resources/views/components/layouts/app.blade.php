@@ -10,13 +10,13 @@
     <link rel="alternate icon" href="{{ asset('favicon.ico') }}" sizes="any">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen min-w-[1280px] bg-white font-sans text-ink antialiased">
+<body x-data="{ nav: false }" class="min-h-screen min-w-[1280px] bg-white font-sans text-ink antialiased">
     <x-app.header :title="$title" />
 
-    <div class="flex">
-        <x-app.sidebar />
+    <x-app.sidebar />
 
-        <main class="bg-grid relative mt-[11px] min-h-[calc(100vh-81px)] flex-1 overflow-hidden rounded-tl-[20px] border-t-[1.5px] border-l-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px]">
+    <div class="flex">
+        <main class="bg-grid relative mt-[11px] min-h-[calc(100vh-81px)] flex-1 overflow-hidden rounded-t-[20px] border-t-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px]">
             <x-app.greeting />
             @can('beneficiaries.view')
                 <x-app.search-bar class="mt-[34px]" />
