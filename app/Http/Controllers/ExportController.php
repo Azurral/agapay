@@ -24,7 +24,11 @@ class ExportController extends Controller
     public function download(): BinaryFileResponse
     {
         $export = new BeneficiaryListExport;
-        AuditLogger::record('Exported Beneficiary List', null, 'Beneficiary List', [], ['rows' => $export->query()->count()]);
+        $rows = 0;
+        $export->query()->reorder()->chunkById(500, function ($beneficiaries) use ($export, &$rows) {
+            $rows += $beneficiaries->sum(fn ($b) => count($export->map($b)));
+        });
+        AuditLogger::record('Exported Beneficiary List', null, 'Beneficiary List', [], ['rows' => $rows]);
 
         return Excel::download($export, 'agapay-beneficiaries-'.today()->format('Y-m-d').'.xlsx');
     }
