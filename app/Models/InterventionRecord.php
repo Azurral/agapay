@@ -98,7 +98,7 @@ class InterventionRecord extends Model
         return self::VALIDATIONS[$status] ?? '—';
     }
 
-    /** Pending needs an Agri Tech; every checked status shows green (Figma 407:323). */
+    /** Every known status shows green (Figma 407:323); an unknown value is flagged. */
     public static function validationTone(string $status): string
     {
         return array_key_exists($status, self::VALIDATIONS) ? 'ok' : 'bad';

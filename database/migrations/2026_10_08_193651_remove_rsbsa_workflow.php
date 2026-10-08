@@ -13,8 +13,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::table('beneficiaries')->update(['rsbsa_status' => 'registered', 'rsbsa_status_reason' => null]);
+        // Workflow notes (a returned application's reason was also its encoding issue) leave the encoding queue.
+        DB::table('beneficiaries')->whereColumn('encoding_issue', 'rsbsa_status_reason')->update(['encoding_issue' => null]);
         DB::table('beneficiaries')->where('encoding_issue', 'Missing RSBSA Number')->update(['encoding_issue' => null]);
+        DB::table('beneficiaries')->update(['rsbsa_status' => 'registered', 'rsbsa_status_reason' => null]);
 
         Schema::table('beneficiaries', function (Blueprint $table) {
             $table->string('rsbsa_status', 32)->default('registered')->change();

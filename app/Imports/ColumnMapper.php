@@ -14,7 +14,9 @@ final class ColumnMapper
         'last_name' => ['last name', 'lastname', 'surname', 'family name', 'lname'],
         'full_name' => ['name', 'full name', 'fullname', 'farmer name', 'farmer', 'beneficiary', 'beneficiary name'],
         'birthdate' => ['birthdate', 'birthday', 'birth date', 'date of birth', 'dob'],
-        'address' => ['address', 'purok', 'sitio', 'street', 'house no'],
+        'address' => ['address', 'purok', 'sitio', 'sitio purok', 'purok sitio'],
+        'house_no' => ['house no', 'house number', 'house', 'lot no', 'house lot no', 'house lot bldg no'],
+        'street' => ['street', 'street name'],
         'barangay' => ['barangay', 'brgy', 'bgy', 'barangay name'],
         'contact_number' => ['contact', 'contact no', 'contact number', 'mobile', 'mobile no', 'cellphone', 'cellphone no', 'cp no', 'phone'],
         'farm_area_ha' => ['farm area', 'farm area ha', 'area', 'area ha', 'hectares', 'hectare', 'farm size', 'ha', 'farm'],
@@ -28,7 +30,7 @@ final class ColumnMapper
 
     public const LABELS = [
         'first_name' => 'First Name', 'middle_name' => 'Middle Name', 'last_name' => 'Last Name', 'full_name' => 'Name',
-        'birthdate' => 'Birthdate', 'address' => 'Address', 'sitio' => 'Address', 'barangay' => 'Barangay', 'contact_number' => 'Contact No.',
+        'birthdate' => 'Birthdate', 'address' => 'Address', 'sitio' => 'Address', 'house_no' => 'House No.', 'street' => 'Street', 'barangay' => 'Barangay', 'contact_number' => 'Contact No.',
         'farm_area_ha' => 'Farm Area', 'crop_type' => 'Crop Type', 'rsbsa_number' => 'RSBSA No.',
         'intervention' => 'Intervention', 'quantity' => 'Quantity', 'cycle' => 'Cycle', 'date_distributed' => 'Date Distributed',
     ];

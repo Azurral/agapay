@@ -131,12 +131,30 @@ class Beneficiary extends Model
         return str_contains($e->getMessage(), 'rsbsa_number');
     }
 
-    /** RSBSA numbers are stored trimmed and in upper case ("rsbsa-0777" → "RSBSA-0777"). */
-    public static function normalizeRsbsa(?string $number): ?string
+    /** What people type for "no RSBSA number" (N/A is also AGAPAY's own display text). */
+    public const NO_RSBSA_PLACEHOLDERS = ['n/a', 'na', 'n.a.', 'none', 'wala', '-', '--', '(pending)', 'pending'];
+
+    public static function isNoRsbsa(?string $number): bool
     {
         $number = self::squish($number);
 
-        return $number === null ? null : mb_strtoupper($number);
+        return $number === null || in_array(mb_strtolower($number), self::NO_RSBSA_PLACEHOLDERS, true);
+    }
+
+    /** RSBSA numbers are stored trimmed and in upper case ("rsbsa-0777" → "RSBSA-0777"); placeholders like "N/A" are no number. */
+    public static function normalizeRsbsa(?string $number): ?string
+    {
+        return self::isNoRsbsa($number) ? null : mb_strtoupper(self::squish($number));
+    }
+
+    /** "Poblacion (1.5 hectares)" → "1.5"; text without a number of hectares ("Sitio Ili 2", "500 sqm") → null. */
+    public static function hectaresIn(?string $text): ?string
+    {
+        if (! preg_match('/(\d+(?:\.\d+)?)\s*(?:ha|has|hectares?)\b/i', (string) $text, $match) || (float) $match[1] > 9999.99) {
+            return null;
+        }
+
+        return $match[1];
     }
 
     protected function casts(): array

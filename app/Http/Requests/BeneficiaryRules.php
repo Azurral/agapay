@@ -18,7 +18,7 @@ trait BeneficiaryRules
             'birthdate' => ['required', 'date', 'before_or_equal:'.now()->subYears(18)->toDateString()],
             'house_no' => ['nullable', 'string', 'max:100'],
             'street' => ['nullable', 'string', 'max:100'],
-            'sitio' => ['required', 'string', 'max:100'],
+            'sitio' => ['required', 'string', 'max:255'],
             'barangay_id' => ['required', 'integer', Rule::exists('barangays', 'id')],
             'contact_number' => ['nullable', 'regex:/^09\d{2}-?\d{3}-?\d{4}$/'],
             'farm_area_ha' => ['nullable', 'numeric', 'min:0', 'max:9999.99'],

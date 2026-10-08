@@ -50,7 +50,8 @@ class BeneficiaryController extends Controller
         $others = $beneficiary->otherHouseholdMembers();
         $cycle = DistributionCycle::current();
         $claimable = $records->filter(fn (InterventionRecord $r) => ! $r->isClaimed()
-            && in_array($r->validation_status, InterventionRecord::CLAIMABLE, true))->values();
+            && in_array($r->validation_status, InterventionRecord::CLAIMABLE, true)
+            && ($beneficiary->rsbsa_number || ! $r->intervention->requiresRsbsa()))->values();
         // The banner's claim check covers every cycle Process Claim offers, the current one first.
         $cycleIds = $claimable->pluck('distribution_cycle_id')->push($cycle?->id)->filter()->unique()->values();
 
@@ -85,6 +86,8 @@ class BeneficiaryController extends Controller
         $beneficiary->fill($request->validated());
         $beneficiary->rsbsa_number = $request->validated('rsbsa_number') ?: null;
         $beneficiary->updated_by = $request->user()->id;
+        // Saving the profile is how an encoder resolves an item in their encoding queue.
+        $beneficiary->encoding_issue = null;
 
         // A first number gets its own audit entry, so the trail shows when the farmer joined the RSBSA.
         $recordsNumber = ! $old['rsbsa_number'] && $beneficiary->rsbsa_number;

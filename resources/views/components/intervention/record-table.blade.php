@@ -12,6 +12,9 @@
 @endphp
 
 <form method="GET" class="relative mt-[20.5px] flex h-[39px] items-center pl-[1.5px]" style="gap: 25px">
+    @if ($source === 'lgu')
+        <input type="hidden" name="tab" value="records">
+    @endif
     <x-ui.pill-input name="name" placeholder="Search Name..." :value="request()->queryText('name')" :width="$filterWidth" />
     <x-ui.pill-input name="rsbsa" placeholder="RSBSA Number..." :value="request()->queryText('rsbsa')" :width="$filterWidth" />
     <x-ui.pill-select name="barangay" label="Barangay" :options="['' => 'All'] + $barangays->all()" :selected="request()->queryText('barangay')" :width="$filterWidth" />

@@ -45,7 +45,7 @@ final class ClaimService
 
     /**
      * @param  array{date_distributed?: string|null, quantity?: float|int|string|null, proxy_claimant?: string|null, proof_note?: string|null, override_reason?: string|null}  $input
-     * @param  bool  $historical  Encoding a past distribution from a logbook: skips only the pending-validation check.
+     * @param  bool  $historical  Encoding a past distribution from a logbook (audited as "Historical Encoding").
      */
     public function claim(InterventionRecord $record, User $actor, array $input = [], bool $historical = false): InterventionRecord
     {

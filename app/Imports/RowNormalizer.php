@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Models\Beneficiary;
 use App\Models\DistributionCycle;
 use App\Models\Intervention;
 use Carbon\CarbonImmutable;
@@ -22,7 +23,7 @@ final class RowNormalizer
     /** Column sizes of the beneficiaries table (as in BeneficiaryRules); MariaDB refuses longer values. */
     private const MAX_LENGTHS = [
         'first_name' => 100, 'middle_name' => 100, 'last_name' => 100,
-        'sitio' => 100, 'crop_type' => 255, 'rsbsa_number' => 50,
+        'house_no' => 100, 'street' => 100, 'sitio' => 255, 'crop_type' => 255, 'rsbsa_number' => 50,
     ];
 
     private const DATE_FORMATS = ['Y-m-d', 'm/d/Y', 'M j, Y', 'F j, Y', 'M d, Y', 'F d, Y', 'j M Y', 'd-M-Y', 'Y/m/d'];
@@ -98,7 +99,9 @@ final class RowNormalizer
             }
         }
         $data['crop_type'] = $raw['crop_type'] ?? null;
-        $data['rsbsa_number'] = $raw['rsbsa_number'] ?? null;
+        $data['rsbsa_number'] = Beneficiary::isNoRsbsa($raw['rsbsa_number'] ?? null) ? null : $raw['rsbsa_number'];
+        $data['house_no'] = $raw['house_no'] ?? null;
+        $data['street'] = $raw['street'] ?? null;
         $data['contact_number'] = null;
         if ($raw['contact_number'] ?? null) {
             $data['contact_number'] = self::contact($raw['contact_number']);

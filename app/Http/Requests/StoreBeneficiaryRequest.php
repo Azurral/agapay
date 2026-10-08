@@ -15,7 +15,8 @@ class StoreBeneficiaryRequest extends FormRequest
         $this->trimNames();
 
         if (is_string($this->input('rsbsa_number'))) {
-            $this->merge(['rsbsa_number' => trim($this->input('rsbsa_number'))]);
+            $number = trim($this->input('rsbsa_number'));
+            $this->merge(['rsbsa_number' => Beneficiary::isNoRsbsa($number) ? null : $number]);
         }
     }
 

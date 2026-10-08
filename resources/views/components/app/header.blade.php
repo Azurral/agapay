@@ -2,7 +2,7 @@
 <header class="relative z-20 flex h-[70px] items-center justify-between border border-white bg-white/10 pr-[15px] shadow-[0_4px_4px_0_rgba(0,0,0,0.05)]">
     <div class="flex items-center">
         <button type="button" @click="nav = ! nav" :aria-expanded="nav.toString()" aria-controls="side-panel"
-                aria-label="Open menu" class="hover-tint ml-[14px] flex size-[42px] items-center justify-center rounded-[12px]">
+                aria-label="Open menu" :aria-label="nav ? 'Close menu' : 'Open menu'" class="hover-tint ml-[14px] flex size-[42px] items-center justify-center rounded-[12px]">
             <svg class="size-[24px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
                 <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>

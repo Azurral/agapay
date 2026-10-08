@@ -105,12 +105,12 @@ it('excludes a birthdate that is only a year', function () {
 it('excludes values longer than their field', function () {
     $batch = stageRows([
         ['First Name', 'Last Name', 'Birthdate', 'Barangay', 'RSBSA No.', 'Address'],
-        [str_repeat('a', 101), 'Ramos', '1980-05-10', 'Poblacion', str_repeat('9', 51), str_repeat('b', 101)],
-        [str_repeat('a', 100), 'Ramos', '1980-05-10', 'Poblacion', str_repeat('9', 50), str_repeat('b', 100)],
+        [str_repeat('a', 101), 'Ramos', '1980-05-10', 'Poblacion', str_repeat('9', 51), str_repeat('b', 256)],
+        [str_repeat('a', 100), 'Ramos', '1980-05-10', 'Poblacion', str_repeat('9', 50), str_repeat('b', 255)],
     ]);
 
     expect(stagedRow($batch, 2))->status->toBe('unreadable')->issues->toBe([
-        'First Name is longer than 100 characters', 'Address is longer than 100 characters', 'RSBSA No. is longer than 50 characters',
+        'First Name is longer than 100 characters', 'Address is longer than 255 characters', 'RSBSA No. is longer than 50 characters',
     ])->and(stagedRow($batch, 3)->status)->toBe('ready');
 });
 
