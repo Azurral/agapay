@@ -188,17 +188,70 @@ The Administrator can change what each role may do under **User Management → C
 - **Download Reports:** choose a cycle, a program, the dates and PDF or Excel. Every generated file stays under Generated Reports so it can be downloaded again.
 - **Crisis reports:** go to Crisis Reports → + New Damage Report. Loss and cost are computed from the crop values, which the Administrator edits under "Crises & Crop Values" (also where new crises, e.g. a typhoon, are added).
 
-## Using it on the office network
+## Installing at the office
 
-Run AGAPAY on one office PC and open it from the others:
+For everyday use at OMAG, one office PC runs AGAPAY for everyone. Do these three things once, after the Setup above. The steps assume XAMPP is in `C:\xampp` and PHP 8.5 in `C:\php`; change the paths if yours differ.
 
-```bash
-php artisan serve --host=0.0.0.0 --port=8765
+### 1. Give MySQL a password
+
+A fresh XAMPP lets anyone on the PC open the database as `root` with no password.
+
+1. XAMPP Control Panel → MySQL **Admin** (phpMyAdmin) → **User accounts**.
+2. For every `root` row (`localhost`, `127.0.0.1`, `::1`): **Edit privileges** → **Change password** → type a strong password → **Go**.
+3. Put the same password in AGAPAY's `.env`: `DB_PASSWORD=your-password`.
+4. phpMyAdmin will now ask for it: in `C:\xampp\phpMyAdmin\config.inc.php`, change `'auth_type'` from `'config'` to `'cookie'`.
+
+### 2. Run AGAPAY with Apache
+
+`php artisan serve` stops when its window closes. Apache (part of XAMPP) runs in the background and serves many users at once. XAMPP's own PHP is too old, so Apache is pointed at PHP 8.5:
+
+1. Open `C:\xampp\apache\conf\httpd.conf` in Notepad. Put `#` in front of the line that starts with `Include "conf/extra/httpd-xampp.conf"` (XAMPP's old PHP).
+2. At the end of the same file, add (fix the AGAPAY path):
+
+```apache
+LoadModule php_module "C:/php/php8apache2_4.dll"
+PHPIniDir "C:/php"
+AddHandler application/x-httpd-php .php
+DirectoryIndex index.php
+
+<VirtualHost *:80>
+    DocumentRoot "C:/AGAPAY/public"
+    <Directory "C:/AGAPAY/public">
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
 ```
 
-The other PCs then open `http://<that PC's IP address>:8765`. Allow port 8765 in Windows Firewall. For a permanent setup, point an Apache virtual host at the `public/` folder instead of using `php artisan serve`. Also set `APP_URL` in `.env` to the address people use.
+3. Check that `LoadModule rewrite_module modules/mod_rewrite.so` has no `#` in front.
+4. XAMPP Control Panel → **Start** Apache. Tick **Svc** beside Apache and MySQL so both start with Windows.
+5. In `.env`, set `APP_URL=http://<this PC's IP address>` and `APP_ENV=production`, `APP_DEBUG=false`. Then, in the AGAPAY folder:
 
-The **"Use my location"** button on the damage form only works over `https://` or on the PC itself (`localhost`). Over plain `http://` on the network, type the coordinates in.
+```bash
+php artisan optimize
+```
+
+6. Allow port 80 in Windows Firewall. Other PCs open `http://<this PC's IP address>`.
+
+After any later change to `.env`, run `php artisan optimize` again.
+
+### 3. Back up every night
+
+`backup.bat` (in the AGAPAY folder) copies the database and the photos/reports folder into a dated folder, and deletes backups older than 30 days.
+
+1. Open `backup.bat` in Notepad and set, at the top: `XAMPP`, `DB_PASS` (the MySQL password from step 1) and `BACKUP_DIR` (a USB drive or another disk, e.g. `D:\AGAPAY-Backups`).
+2. Double-click it once. It should say **Backup saved to …**.
+3. Start → **Task Scheduler** → **Create Basic Task** → name it "AGAPAY backup" → **Daily**, e.g. 6:00 PM → **Start a program** → choose `backup.bat` → **Finish**.
+
+**To restore** a backup (e.g. on a new PC after Setup):
+
+```bash
+C:\xampp\mysql\bin\mysql -u root -p agapay < D:\AGAPAY-Backups\<date>\agapay.sql
+```
+
+Then copy the backup's `files` folder back into `storage\app\private`.
+
+The **"Use my location"** button on the damage form only works over `https://` or on the PC itself (`localhost`). Over plain `http://` on the office network, type the coordinates in.
 
 ## Putting AGAPAY online (Railway)
 
@@ -248,15 +301,7 @@ If uploading a damage photo fails with a "permission denied" message, add the va
 
 ## Backups
 
-Back up two things regularly:
-
-1. **The database:** phpMyAdmin → `agapay` → **Export** → **Go**. Or, in a terminal:
-
-```bash
-C:\xampp\mysql\bin\mysqldump -u root agapay > agapay-backup.sql
-```
-
-2. **Uploaded and generated files:** the folder `storage/app/private`. It holds damage photos and generated reports.
+At the office, `backup.bat` copies the database and the `storage/app/private` folder (damage photos, generated reports) every night; see **Installing at the office**, step 3. On a laptop you can also double-click it any time. For the online (Railway) copy, use the **Backups** tab on the Railway MySQL service and volume (available on paid plans).
 
 ## Tests
 
