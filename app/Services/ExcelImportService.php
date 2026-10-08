@@ -37,6 +37,7 @@ final class ExcelImportService
 
     public function stage(UploadedFile $file, User $actor): ImportBatch
     {
+        $this->clearAbandoned();
         $extension = strtolower($file->getClientOriginalExtension());
         if (! in_array($extension, self::EXTENSIONS, true)) {
             throw new ImportFileException('Upload an .xlsx, .xls or .csv file.');
@@ -186,6 +187,32 @@ final class ExcelImportService
             AuditLogger::record('Discarded Excel Import', $batch, null, ['status' => ImportBatch::STAGED], ['status' => ImportBatch::DISCARDED], $actor);
         });
         $this->deleteUpload($batch);
+    }
+
+    /** Days an upload may wait for Confirm or Discard before its file and rows are cleared. */
+    public const KEEP_UNCONFIRMED_DAYS = 7;
+
+    /**
+     * Uploads nobody confirmed (and discarded ones) hold personal data: after a week their files and rows are
+     * cleared, along with stray files left in the upload folder. Imported batches keep their rows as the record.
+     */
+    private function clearAbandoned(): void
+    {
+        $cutoff = now()->subDays(self::KEEP_UNCONFIRMED_DAYS);
+        $disk = Storage::disk('local');
+
+        ImportBatch::whereIn('status', [ImportBatch::STAGED, ImportBatch::DISCARDED])->where('created_at', '<', $cutoff)
+            ->each(function (ImportBatch $batch) {
+                $this->deleteUpload($batch);
+                $batch->rows()->delete();
+                $batch->update(['status' => ImportBatch::DISCARDED]);
+            });
+
+        $known = ImportBatch::whereNotNull('stored_path')->where('status', ImportBatch::STAGED)->pluck('stored_path')->all();
+        $disk->delete(array_filter(
+            array_diff($disk->files('imports'), $known),
+            fn (string $path) => $disk->lastModified($path) < $cutoff->getTimestamp(),
+        ));
     }
 
     /** The masterlist holds personal data: once imported or discarded only its staged rows are kept as the record. */

@@ -86,3 +86,24 @@ it('upper-cases RSBSA numbers an import records', function () {
 
     expect($federico->fresh()->rsbsa_number)->toBe('RSBSA-0777');
 });
+
+it('clears week-old unconfirmed and discarded uploads when someone uploads again', function () {
+    $old = stageHardening([['Name', 'Birthdate', 'Barangay'], ['Pablo Ramos', '1980-05-10', 'Poblacion']]);
+    $discarded = stageHardening([['Name', 'Birthdate', 'Barangay'], ['Ben Talawec', '1975-01-03', 'Samoki']]);
+    app(ExcelImportService::class)->discard($discarded, $this->encoder);
+    $recent = stageHardening([['Name', 'Birthdate', 'Barangay'], ['Rita Bangsoy', '1977-07-07', 'Samoki']]);
+    ImportBatch::whereKey([$old->id, $discarded->id])->update(['created_at' => now()->subDays(8)]);
+    Storage::disk('local')->put('imports/stray-leftover.xlsx', 'x');
+    touch(Storage::disk('local')->path('imports/stray-leftover.xlsx'), now()->subDays(8)->getTimestamp());
+
+    stageHardening([['Name', 'Birthdate', 'Barangay'], ['Joy Tayag', '1979-09-09', 'Samoki']]);
+
+    expect($old->fresh())->status->toBe(ImportBatch::DISCARDED)
+        ->and($old->rows()->count())->toBe(0)
+        ->and(Storage::disk('local')->exists($old->stored_path))->toBeFalse()
+        ->and($discarded->rows()->count())->toBe(0)
+        ->and(Storage::disk('local')->exists('imports/stray-leftover.xlsx'))->toBeFalse()
+        ->and($recent->fresh()->status)->toBe(ImportBatch::STAGED)
+        ->and($recent->rows()->count())->toBe(1)
+        ->and(Storage::disk('local')->exists($recent->stored_path))->toBeTrue();
+});
