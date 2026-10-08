@@ -6,7 +6,6 @@
         : $beneficiary->address;
     $bar = match ($variant) {
         'edit' => ['EDIT MODE', 'Editing beneficiary profile - remember to save your changes.', 'Save Changes'],
-        'eligibility' => ['ELIGIBILITY VERIFICATION', 'Checking eligibility status for current intervention cycle...', 'Verify Eligibility'],
         default => ['CLAIM VERIFICATION', 'Checking household claim status for current intervention cycle...', 'Process Claim'],
     };
     $field = 'h-[28px] w-full rounded-[10px] bg-brand-soft/10 px-[6px] text-[14px] font-medium text-brand-soft outline-none focus:ring-2 focus:ring-brand-soft/40';
@@ -120,15 +119,11 @@
         $failedHere = $failed && $records->contains('id', $failed);
         $barButton = 'h-[39px] w-[253px] rounded-[50px] bg-white text-[20px] font-bold text-ink';
     @endphp
+    {{-- Agri Techs only view profiles: eligibility is no longer checked in AGAPAY. --}}
+    @if ($variant !== 'view')
     <x-beneficiary.action-bar :title="$bar[0]" :subtitle="$bar[1]" class="mt-[7px]">
         @if ($isEdit)
             <button type="submit" form="profile-edit" class="hover-tint {{ $barButton }} hover:bg-[#efeaff] hover:text-brand">{{ $bar[2] }}</button>
-        @elseif ($variant === 'eligibility')
-            @if ($records->isNotEmpty())
-                <button type="button" x-data @click="$dispatch('open-modal', 'verify-eligibility')" class="{{ $barButton }} transition-colors hover:bg-[#4b32c3] hover:text-white">{{ $bar[2] }}</button>
-            @else
-                <button type="button" disabled title="No intervention records to verify." class="{{ $barButton }} cursor-not-allowed opacity-80">{{ $bar[2] }}</button>
-            @endif
         @else
             @if ($claimable->isNotEmpty() && auth()->user()->can('interventions.claim'))
                 <button type="button" x-data @click="$dispatch('open-modal', 'process-claim')" class="{{ $barButton }} transition-colors hover:bg-[#4b32c3] hover:text-white">{{ $bar[2] }}</button>
@@ -137,6 +132,7 @@
             @endif
         @endif
     </x-beneficiary.action-bar>
+    @endif
 
     @if ($variant === 'claim' && $claimable->isNotEmpty())
         @php($picked = (string) ($failedHere && $claimable->contains('id', $failed) ? $failed : $claimable->first()->id))
@@ -168,38 +164,4 @@
         </x-ui.modal>
     @endif
 
-    @if ($variant === 'eligibility' && $records->isNotEmpty())
-        {{-- Figma 337:18 "Validate Beneficiary" modal; one status per record, so the options are single-choice. --}}
-        @php($first = $records->firstWhere('validation_status', 'pending') ?? $records->first())
-        @php($picked = (string) ($failedHere ? $failed : $first->id))
-        <x-ui.modal name="verify-eligibility" :title="'Validate Beneficiary: '.$beneficiary->fullName()" :open="$failedHere" width="560">
-            <form method="POST" :action="urls[picked]" class="-mt-[18px] flex flex-col"
-                  x-data="{ picked: @js($picked), urls: @js($records->mapWithKeys(fn ($r) => [$r->id => route('intervention-records.validate', $r)])), statuses: @js($records->pluck('validation_status', 'id')), status: '' }"
-                  x-init="status = statuses[picked]; $watch('picked', v => status = statuses[v])">
-                @csrf
-                <p class="text-[14px] font-medium leading-[20px] text-muted">{{ $beneficiary->rsbsaDisplay() }} - Check all that apply, per DA/barangay cross-check</p>
-                @if ($records->count() > 1)
-                    <label class="mt-[14px] flex h-[40px] items-center rounded-[10px] border border-field bg-white px-[14px] text-[14px] font-bold">
-                        <span class="shrink-0">Record:</span>
-                        <select x-model="picked" class="ml-[6px] h-full min-w-0 flex-1 cursor-pointer bg-transparent font-bold outline-none">
-                            @foreach ($records as $record)
-                                <option value="{{ $record->id }}">{{ $record->deLabel() }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-                @endif
-                <div class="mt-[18px] flex flex-col gap-[18px]">
-                    @foreach (\App\Models\InterventionRecord::VALIDATIONS as $value => $label)
-                        <label class="flex cursor-pointer items-center gap-[12px] text-[16px] font-medium leading-[20px]">
-                            <input type="radio" name="validation_status" value="{{ $value }}" x-model="status" required class="size-[22px] cursor-pointer accent-brand">
-                            {{ $value === 'pending' ? 'Not yet validated' : ($value === 'ofw' ? 'OFW (Overseas Filipino Worker)' : $label) }}
-                        </label>
-                    @endforeach
-                </div>
-                @error('validation_status', 'intervention')<p class="mt-[8px] text-[12px] font-semibold text-danger">{{ $message }}</p>@enderror
-                <button type="submit" class="bg-brand-bar gradient-button mt-[24px] h-[44px] rounded-[50px] text-[16px] font-bold text-white">Confirm Validation</button>
-                <button type="button" @click="open = false" class="mt-[10px] text-center text-[14px] font-medium text-muted hover:text-brand">Cancel</button>
-            </form>
-        </x-ui.modal>
-    @endif
 </x-layouts.app>

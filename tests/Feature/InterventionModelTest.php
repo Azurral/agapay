@@ -36,7 +36,6 @@ it('labels validation and claim states as in Figma', function (string $status, s
     expect(InterventionRecord::validationLabel($status))->toBe($label)
         ->and(InterventionRecord::validationTone($status))->toBe($tone);
 })->with([
-    ['pending', 'Validate', 'bad'],
     ['eligible', 'Eligible', 'ok'],
     ['ofw', 'OFW', 'ok'],
     ['bedridden', 'Bedridden', 'ok'],

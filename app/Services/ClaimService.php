@@ -67,13 +67,6 @@ final class ClaimService
             }
             InterventionAssignment::ensureRsbsaFor($record->beneficiary, $record->intervention);
 
-            if ($record->validation_status === InterventionRecord::VALIDATION_PENDING) {
-                if (! $historical) {
-                    throw new InterventionRuleViolation('Validate eligibility first.');
-                }
-                $record->validation_status = InterventionRecord::VALIDATION_ELIGIBLE;
-            }
-
             if (! in_array($record->validation_status, InterventionRecord::CLAIMABLE, true)) {
                 throw new InterventionRuleViolation('Not eligible: '.InterventionRecord::validationLabel($record->validation_status).'.');
             }

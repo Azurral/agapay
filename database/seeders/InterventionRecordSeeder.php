@@ -21,10 +21,10 @@ class InterventionRecordSeeder extends Seeder
         $active = [
             ['Juan', 'Dela Cruz', 'da', 'Certified Rice Seeds', '2026-Q3', 'eligible', 'claimed', '2026-07-18', 2],
             ['Rosa', 'Mendez', 'da', 'Organic Liquid Fertilizer', '2026-Q2', 'ofw', 'claimed', '2026-07-15', 5],
-            ['Carlos', 'Ibanez', 'da', 'Complete Fertilizer', '2026-Q3', 'pending', 'unclaimed', null, 1],
+            ['Carlos', 'Ibanez', 'da', 'Complete Fertilizer', '2026-Q3', 'eligible', 'unclaimed', null, 1],
             ['Liza', 'Domingo', 'da', 'PAFF', '2026-Q1', 'bedridden', 'unclaimed', null, null],
             ['Maria', 'Santos', 'lgu', 'Complete Fertilizer', '2026-Q3', 'bedridden', 'unclaimed', null, 1],
-            ['Pedro', 'Reyes', 'lgu', 'Emergency Seedlings', '2026-Q3', 'pending', 'unclaimed', null, 10],
+            ['Pedro', 'Reyes', 'lgu', 'Emergency Seedlings', '2026-Q3', 'eligible', 'unclaimed', null, 10],
             ['Ana', 'Gomez', 'lgu', 'Municipal Cash Subsidy', '2026-Q3', 'duplicate', 'unclaimed', null, null],
         ];
 

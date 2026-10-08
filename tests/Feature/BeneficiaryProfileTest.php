@@ -42,9 +42,14 @@ it('shows each role its Figma action bar', function (string $role, string $title
         ->assertOk()->assertSee($title)->assertSee($button);
 })->with([
     [Role::ADMIN, 'CLAIM VERIFICATION', 'Process Claim'],
-    [Role::AGRITECH, 'ELIGIBILITY VERIFICATION', 'Verify Eligibility'],
     [Role::ENCODER, 'EDIT MODE', 'Save Changes'],
 ]);
+
+it('shows agri techs a read-only profile without an eligibility step', function () {
+    $this->actingAs(userWithRole(Role::AGRITECH))->get(route('beneficiaries.show', $this->juan))
+        ->assertOk()->assertSee('BENEFICIARY PROFILE')
+        ->assertDontSee('Verify Eligibility')->assertDontSee('Process Claim')->assertDontSee('Save Changes');
+});
 
 it('links the encoder list Edit chip to the edit variant', function () {
     $this->actingAs(userWithRole(Role::ENCODER))->get('/beneficiaries')

@@ -16,7 +16,7 @@ final class PermissionCatalog
         'beneficiaries.manage' => ['Add and edit beneficiary profiles', 'Beneficiaries'],
         'rsbsa.register' => ['Add beneficiaries', 'Beneficiaries'],
         'interventions.view' => ['View DA and LGU intervention lists', 'Interventions'],
-        'interventions.validate' => ['Validate beneficiary eligibility', 'Interventions'],
+        'interventions.validate' => ['Change eligibility status (e.g. Deceased, Duplicate)', 'Interventions'],
         'interventions.claim' => ['Process intervention claims', 'Interventions'],
         'interventions.archive' => ['Archive and restore intervention records', 'Interventions'],
         'intervention_records.manage' => ['Encode intervention records', 'Interventions'],

@@ -69,10 +69,10 @@ class BeneficiaryController extends Controller
                     ->latest('date_distributed')->latest('id')->first()
                 : null,
             // 430:1461 is the only Data Encoder profile frame, so encoders always edit;
-            // Agri Techs verify eligibility (407:1181); Administrators process claims (329:2822).
+            // Agri Techs view the profile; Administrators process claims (329:2822).
             'variant' => match (true) {
                 $user->role?->slug === Role::ENCODER && $user->can('beneficiaries.manage') => 'edit',
-                $user->role?->slug === Role::AGRITECH => 'eligibility',
+                $user->role?->slug === Role::AGRITECH => 'view',
                 default => 'claim',
             },
             'barangays' => Barangay::orderBy('name')->get(['id', 'name']),

@@ -22,7 +22,6 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ValidationQueueController;
 use App\Models\Intervention;
 use Illuminate\Support\Facades\Route;
 
@@ -127,7 +126,6 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/import/{batch}/confirm', [ImportController::class, 'confirm'])->name('import.confirm');
         Route::post('/import/{batch}/discard', [ImportController::class, 'discard'])->name('import.discard');
     });
-    Route::get('/validation', ValidationQueueController::class)->middleware('can:interventions.validate')->name('validation.index');
     Route::post('/intervention-records/{record}/validation', [InterventionRecordActionController::class, 'validate'])
         ->middleware('can:interventions.validate')->name('intervention-records.validate');
     Route::middleware('can:interventions.claim')->group(function () {

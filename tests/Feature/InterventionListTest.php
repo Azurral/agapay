@@ -88,28 +88,22 @@ it('validates and claims through the dropdown routes', function () {
     $this->post(route('intervention-records.unclaim', $carlos))->assertSessionHasNoErrors();
     expect($carlos->fresh()->claim_status)->toBe('unclaimed');
 
-    $this->post(route('intervention-records.claim', seededRecord('Pedro', 'Reyes')))
-        ->assertSessionHasErrorsIn('intervention', ['intervention' => 'Validate eligibility first.']);
+    // Records start eligible: no validation step before a release.
+    $this->post(route('intervention-records.claim', seededRecord('Pedro', 'Reyes')), ['quantity' => 5])->assertSessionHasNoErrors();
     $this->post(route('intervention-records.validate', $carlos), ['validation_status' => ['eligible']])
         ->assertSessionHasErrorsIn('intervention', 'validation_status');
 });
 
-it('lists pending records in the validation queue', function () {
-    $this->actingAs($this->agritech)->get('/validation')->assertOk()
-        ->assertSee('BENEFICIARY VALIDATION')
-        ->assertSee('Carlos Ibanez')->assertSee('Pedro Reyes')
-        ->assertSee('DA - Complete Fertilizer (Batch 2026-Q3)')
-        ->assertDontSee('Juan Dela Cruz');
-
-    InterventionRecord::where('validation_status', 'pending')->update(['validation_status' => 'eligible']);
-    $this->get('/validation')->assertSee('No records are waiting for validation.');
+it('has no beneficiary validation queue any more', function () {
+    expect(Route::has('validation.index'))->toBeFalse()
+        ->and(InterventionRecord::where('validation_status', 'pending')->exists())->toBeFalse();
+    $this->actingAs($this->agritech)->get('/validation')->assertNotFound();
 });
 
 it('keeps lists and actions behind their permissions', function () {
     $carlos = seededRecord('Carlos', 'Ibanez');
 
     $this->actingAs($this->encoder)->get('/interventions/da')->assertForbidden();
-    $this->actingAs($this->encoder)->get('/validation')->assertForbidden();
     $this->actingAs($this->encoder)->post(route('intervention-records.validate', $carlos), ['validation_status' => 'eligible'])->assertForbidden();
 });
 

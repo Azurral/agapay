@@ -80,15 +80,12 @@ it('lets the admin override the household block with a reason', function () {
     expect($record->fresh()->override_reason)->toBe('Separate farm with its own RSBSA');
 });
 
-it('verifies eligibility from the agri tech profile', function () {
+it('lets agri techs mark special cases without a validation step on the profile', function () {
     $carlos = ($this->person)('Carlos', 'Ibanez');
     $record = $carlos->interventionRecords()->sole();
 
     $this->actingAs($this->agritech)->get(route('beneficiaries.show', $carlos))->assertOk()
-        ->assertSee('Validate Beneficiary: Carlos Ibanez')
-        ->assertSee('RSBSA-0099 - Check all that apply, per DA/barangay cross-check')
-        ->assertSeeInOrder(['Eligible', 'OFW', 'Bedridden', 'Deceased', 'Inactive', 'Relocated', 'Duplicate', 'Confirm Validation', 'Cancel'])
-        ->assertDontSee('title="No intervention records to verify."', false);
+        ->assertDontSee('Validate Beneficiary')->assertDontSee('Confirm Validation');
 
     $this->actingAs($this->agritech)->post(route('intervention-records.validate', $record), ['validation_status' => 'bedridden'])
         ->assertSessionHasNoErrors();
@@ -100,8 +97,6 @@ it('disables the buttons when there is nothing to process', function () {
 
     $this->actingAs($this->admin)->get(route('beneficiaries.show', $teresa))
         ->assertSee('title="No claimable interventions."', false)->assertSee('No interventions recorded yet.');
-    $this->actingAs($this->agritech)->get(route('beneficiaries.show', $teresa))
-        ->assertSee('title="No intervention records to verify."', false);
 });
 
 it('gives the encoder claim dropdowns in history outside the edit form', function () {

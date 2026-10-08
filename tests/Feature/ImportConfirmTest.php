@@ -78,7 +78,7 @@ it('creates intervention records and deducts stock for distributed rows', functi
     $claimed = InterventionRecord::whereHas('beneficiary', fn ($q) => $q->where('rsbsa_number', 'RSBSA-0901'))->sole();
     $assigned = InterventionRecord::whereHas('beneficiary', fn ($q) => $q->where('rsbsa_number', 'RSBSA-0902'))->sole();
     expect($claimed)->claim_status->toBe(InterventionRecord::CLAIM_CLAIMED)->date_distributed->toDateString()->toBe('2026-07-20')
-        ->and($assigned)->claim_status->toBe(InterventionRecord::CLAIM_UNCLAIMED)->validation_status->toBe(InterventionRecord::VALIDATION_PENDING)
+        ->and($assigned)->claim_status->toBe(InterventionRecord::CLAIM_UNCLAIMED)->validation_status->toBe(InterventionRecord::VALIDATION_ELIGIBLE)
         ->and($rice->fresh()->balance())->toEqual($balance - 2);
 });
 
