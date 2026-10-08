@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Barangay;
+use App\Models\Beneficiary;
 use App\Models\InterventionRecord;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
@@ -45,6 +46,32 @@ it('gives agri techs validation and status dropdowns without archive controls', 
         ->assertSee('name="claim_status"', false)
         ->assertDontSee('>Archive<', false)
         ->assertDontSee('Archived/Restore');
+});
+
+it('lists every farmer on the LGU page with address, farm area and crisis reports', function () {
+    $juan = Beneficiary::where('rsbsa_number', 'RSBSA-0231')->sole();
+    Beneficiary::where('first_name', 'Lorna')->sole()->delete();
+
+    $this->actingAs($this->admin)->get('/interventions/lgu')->assertOk()
+        ->assertSee('LGU Beneficiaries')
+        ->assertSee('href="'.route('interventions.lgu', ['tab' => 'records']).'"', false)
+        ->assertSeeInOrder(['Name', 'RSBSA', 'Address', 'Farm Area', 'Barangay', 'Crisis Reports'])
+        ->assertSeeInOrder(['Juan Dela Cruz', 'RSBSA-0231', 'Purok 3', $juan->farmAreaDisplay(), 'Poblacion', (string) $juan->damageReports()->count()])
+        ->assertSeeInOrder(['Ana Gomez', 'N/A', 'Purok 2'])
+        ->assertDontSee('Lorna Reyes');   // archived
+
+    $this->get('/interventions/lgu?name=juan+dela')->assertSee('Juan Dela Cruz')->assertDontSee('Ana Gomez');
+    $this->get('/interventions/lgu?barangay='.brgy('Samoki'))->assertSee('Maria Santos')->assertDontSee('Juan Dela Cruz');
+    $this->actingAs($this->agritech)->get('/interventions/lgu')->assertOk()->assertSee('LGU Beneficiaries');
+});
+
+it('counts only active crisis reports per farmer', function () {
+    $juan = Beneficiary::where('rsbsa_number', 'RSBSA-0231')->sole();
+    $before = $juan->damageReports()->count();
+    $juan->damageReports()->firstOrFail()->delete();
+
+    expect($juan->damageReports()->count())->toBe($before - 1)
+        ->and(Beneficiary::withCount('damageReports')->find($juan->id)->damage_reports_count)->toBe($before - 1);
 });
 
 it('lists LGU program records like DA ones, with N/A for a missing RSBSA number', function () {

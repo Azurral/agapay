@@ -159,6 +159,12 @@ class Beneficiary extends Model
         return $this->hasMany(InterventionRecord::class);
     }
 
+    /** Crisis (damage) reports filed for this farmer; archived reports are left out by default. */
+    public function damageReports(): HasMany
+    {
+        return $this->hasMany(DamageReport::class);
+    }
+
     /** The newest active record (by cycle, then id). */
     public function latestRecord(): HasOne
     {

@@ -4,9 +4,16 @@
     <x-intervention.flash />
 
     <x-ui.card :title="$label.' Intervention Beneficiaries'">
-        @if ($canArchive)
+        @if ($canArchive || $source === 'lgu')
             <x-slot:actions>
-                <div class="-mt-[11.5px] -mr-[18.5px]"><x-intervention.segmented-toggle :source="$source" active="records" /></div>
+                <div class="-mt-[11.5px] -mr-[18.5px] flex gap-[12px]">
+                    @if ($source === 'lgu')
+                        <x-intervention.lgu-tabs active="records" />
+                    @endif
+                    @if ($canArchive)
+                        <x-intervention.segmented-toggle :source="$source" active="records" />
+                    @endif
+                </div>
             </x-slot:actions>
         @endif
 

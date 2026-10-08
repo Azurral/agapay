@@ -36,6 +36,11 @@ class InterventionController extends Controller
 
     public function list(Request $request, string $source): View
     {
+        // The LGU page opens on every farmer (municipal list); its program records are the second tab.
+        if ($source === Intervention::SOURCE_LGU && $request->queryText('tab') !== 'records') {
+            return $this->lguBeneficiaries($request);
+        }
+
         $interventions = Intervention::where('source', $source)->orderBy('name')->pluck('name', 'id');
         $interventionId = ctype_digit($request->queryText('intervention')) ? (int) $request->queryText('intervention') : null;
         $barangayId = ctype_digit($request->queryText('barangay')) ? (int) $request->queryText('barangay') : null;
@@ -66,6 +71,24 @@ class InterventionController extends Controller
             // Figma: the Administrator sees read-only chips and archives; others work the dropdowns.
             'variant' => $user->role?->slug === Role::ADMIN ? 'chips' : 'dropdowns',
             'canArchive' => $user->role?->slug === Role::ADMIN && $user->can('interventions.archive'),
+        ]);
+    }
+
+    /** LGU Beneficiaries: all active farmers with their address, farm area and number of crisis reports. */
+    private function lguBeneficiaries(Request $request): View
+    {
+        $name = mb_substr($request->queryText('name'), 0, 100);
+        $barangayId = ctype_digit($request->queryText('barangay')) ? (int) $request->queryText('barangay') : null;
+
+        return view('interventions.lgu-beneficiaries', [
+            'beneficiaries' => Beneficiary::query()
+                ->with('barangay:id,name')
+                ->withCount('damageReports')
+                ->when($name !== '', fn (Builder $q) => $q->search($name))
+                ->when($barangayId, fn (Builder $q) => $q->where('barangay_id', $barangayId))
+                ->orderBy('last_name')->orderBy('first_name')->orderBy('id')
+                ->paginate(15)->withQueryString(),
+            'barangays' => Barangay::orderBy('name')->pluck('name', 'id'),
         ]);
     }
 }
