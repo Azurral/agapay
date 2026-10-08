@@ -229,7 +229,6 @@ CACHE_STORE=database
 TRUSTED_PROXIES=*
 LOG_CHANNEL=stderr
 AGAPAY_SEED_PASSWORD=<a new strong password>
-RAILPACK_PHP_EXTENSIONS=gd,intl,zip,bcmath,pdo_mysql
 ```
 
    **Do not use the default password from `.env.example`.** This repository is public, so anyone could read it.
