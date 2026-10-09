@@ -128,3 +128,9 @@ it('pins the header only while the side panel is open', function () {
         ->assertSee("'sticky top-0 bg-white': nav || hiding", false)
         ->assertSee("'-translate-y-full': hiding", false);
 });
+
+it('gives the header a solid white background', function () {
+    $html = $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')->getContent();
+
+    expect($html)->toContain('border border-white bg-white pr-[15px]')->not->toContain('bg-white/10 pr-[15px]');
+});
