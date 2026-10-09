@@ -116,3 +116,15 @@ it('scales every page to the screen and asks phones and tablets to use a desktop
     'login' => ['/login', false],
     'dashboard' => ['/dashboard', true],
 ]);
+
+it('puts a dark mode switch above Return to Login in the side panel', function () {
+    $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')
+        ->assertSeeInOrder(['id="side-panel"', 'Download Reports', 'DARK MODE', 'role="switch"', 'RETURN TO LOGIN'], false)
+        ->assertSee(':aria-checked="night.toString()"', false);
+});
+
+it('pins the header only while the side panel is open', function () {
+    $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')
+        ->assertSee("'sticky top-0 bg-white': nav || hiding", false)
+        ->assertSee("'-translate-y-full': hiding", false);
+});

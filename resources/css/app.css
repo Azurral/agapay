@@ -157,3 +157,7 @@
     }
     body { overflow: hidden; }
 }
+
+/* The header drops in when the side panel is opened on a scrolled page. */
+@keyframes header-drop { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+.header-drop { animation: header-drop 200ms ease-out; }

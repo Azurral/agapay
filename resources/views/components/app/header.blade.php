@@ -1,5 +1,8 @@
 @props(['title'])
-<header class="relative z-20 flex h-[70px] items-center justify-between border border-white bg-white/10 pr-[15px] shadow-[0_4px_4px_0_rgba(0,0,0,0.05)]">
+{{-- Pinned to the top only while the side panel is open, so both stay together when the page scrolls. --}}
+<header class="relative z-20 flex h-[70px] items-center justify-between border border-white bg-white/10 pr-[15px] shadow-[0_4px_4px_0_rgba(0,0,0,0.05)] transition-transform duration-200"
+        :class="{ 'sticky top-0 bg-white': nav || hiding, '-translate-y-full': hiding, 'header-drop': nav && window.scrollY > 0 }"
+        x-bind:style="(nav || hiding) && 'position: sticky'">
     {{-- The logo is the menu button: it opens the side panel (▾ turns while open). --}}
     <button type="button" @click="nav = ! nav" :aria-expanded="nav.toString()" aria-controls="side-panel"
             aria-label="Open menu" :aria-label="nav ? 'Close menu' : 'Open menu'"

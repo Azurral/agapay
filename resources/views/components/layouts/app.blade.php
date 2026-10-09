@@ -11,7 +11,9 @@
     <x-screen-fit />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body x-data="{ nav: false }" class="min-h-[var(--app-vh,100vh)] min-w-[1280px] bg-white font-sans text-ink antialiased">
+{{-- "hiding": after the panel closes on a scrolled page, the pinned header slides up out of view before it unpins. --}}
+<body x-data="{ nav: false, hiding: false }"
+      x-init="$watch('nav', open => { if (! open && window.scrollY > 0) { hiding = true; setTimeout(() => hiding = false, 220); } })" class="min-h-[var(--app-vh,100vh)] min-w-[1280px] bg-white font-sans text-ink antialiased">
     <x-desktop-only />
     <x-app.header :title="$title" />
 
