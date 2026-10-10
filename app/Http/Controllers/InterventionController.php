@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AssistanceRequest;
 use App\Models\Barangay;
 use App\Models\Beneficiary;
+use App\Models\Disaster;
 use App\Models\Intervention;
 use App\Models\InterventionRecord;
 use App\Models\Role;
+use App\Services\AssistanceRequestStats;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -37,6 +40,9 @@ class InterventionController extends Controller
     public function list(Request $request, string $source): View
     {
         // The LGU page opens on every farmer (municipal list); its program records are the second tab.
+        if ($source === Intervention::SOURCE_LGU && $request->queryText('tab') === 'requests') {
+            return $this->lguRequests($request);
+        }
         if ($source === Intervention::SOURCE_LGU && $request->queryText('tab') !== 'records') {
             return $this->lguBeneficiaries($request);
         }
@@ -89,6 +95,41 @@ class InterventionController extends Controller
                 ->orderBy('last_name')->orderBy('first_name')->orderBy('id')
                 ->paginate(15)->withQueryString(),
             'barangays' => Barangay::orderBy('name')->pluck('name', 'id'),
+        ]);
+    }
+
+    /**
+     * The Requests tab's filters from the query string (crisis, status, program).
+     *
+     * @return array{disaster: int|null, status: string|null, intervention: int|null}
+     */
+    public static function requestFilters(Request $request): array
+    {
+        $id = fn (string $key) => ctype_digit($request->queryText($key)) ? (int) $request->queryText($key) : null;
+        $status = $request->queryText('status');
+
+        return [
+            'disaster' => $id('disaster'),
+            'status' => array_key_exists($status, AssistanceRequest::STATUSES) ? $status : null,
+            'intervention' => $id('intervention'),
+        ];
+    }
+
+    /** LGU Requests tab: how many farmers asked for help, by barangay, sitio/purok, crisis and crop, plus the requests to decide. */
+    private function lguRequests(Request $request): View
+    {
+        $filters = self::requestFilters($request);
+
+        return view('interventions.lgu-requests', [
+            'filters' => $filters,
+            'stats' => app(AssistanceRequestStats::class)->build($filters),
+            'requests' => AssistanceRequestStats::query($filters)
+                ->with(['beneficiary.barangay:id,name', 'intervention', 'disaster:id,name', 'record:id,claim_status'])
+                ->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END")->latest()->latest('id')
+                ->paginate(15)->withQueryString(),
+            'disasters' => Disaster::orderByDesc('occurred_on')->orderByDesc('id')->pluck('name', 'id'),
+            'interventions' => Intervention::orderBy('source')->orderBy('name')->get()->mapWithKeys(fn ($i) => [$i->id => $i->sourcedName()]),
+            'canDecide' => $request->user()->can('requests.decide'),
         ]);
     }
 }

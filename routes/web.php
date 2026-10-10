@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AssistanceRequestController;
 use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BeneficiaryController;
@@ -78,7 +79,18 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
     // Farmer search for the Add Record and New Damage Report forms (existing profiles only).
     Route::get('/beneficiary-lookup', BeneficiaryLookupController::class)
-        ->middleware('can.any:intervention_records.manage,damage.create')->name('beneficiaries.lookup');
+        ->middleware('can.any:intervention_records.manage,damage.create,requests.create')->name('beneficiaries.lookup');
+
+    Route::middleware('can:requests.create')->group(function () {
+        Route::get('/assistance-requests/create', [AssistanceRequestController::class, 'create'])->name('assistance-requests.create');
+        Route::post('/assistance-requests', [AssistanceRequestController::class, 'store'])->name('assistance-requests.store');
+    });
+    Route::get('/assistance-requests/export', [AssistanceRequestController::class, 'export'])
+        ->middleware('can:interventions.view')->name('assistance-requests.export');
+    Route::middleware('can:requests.decide')->group(function () {
+        Route::post('/assistance-requests/{assistanceRequest}/approve', [AssistanceRequestController::class, 'approve'])->name('assistance-requests.approve');
+        Route::post('/assistance-requests/{assistanceRequest}/deny', [AssistanceRequestController::class, 'deny'])->name('assistance-requests.deny');
+    });
 
     Route::middleware('can:damage.create')->group(function () {
         Route::get('/damage-reports/create', [DamageReportController::class, 'create'])->name('damage.create');

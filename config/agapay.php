@@ -4,7 +4,7 @@ use App\Models\Role;
 
 return [
     // The release shown on screen; bumped with every release (the commit is named after it, e.g. "v0.9.3").
-    'version' => '0.9.4',
+    'version' => '0.10.0',
 
     // Development/demo password for seeded accounts. Change in .env for any real deployment.
     'seed_password' => env('AGAPAY_SEED_PASSWORD', 'Agapay@2026'),
@@ -52,11 +52,13 @@ return [
         Role::AGRITECH => ['width' => 226, 'gap' => 17, 'items' => [
             ['label' => 'File Crisis Report', 'route' => 'damage.create', 'permission' => 'damage.create'],
             ['label' => 'Interventions', 'route' => 'interventions.index', 'permission' => 'interventions.view'],
+            ['label' => 'New Request', 'route' => 'assistance-requests.create', 'permission' => 'requests.create'],
         ]],
         Role::ENCODER => ['width' => 200, 'gap' => 22, 'items' => [
             ['label' => 'Upload Excel', 'route' => 'import.index', 'permission' => 'import.run'],
             ['label' => 'Add Beneficiary', 'route' => 'beneficiaries.create', 'permission' => 'rsbsa.register'],
             ['label' => 'Crisis Reports', 'route' => 'damage.index', 'permission' => 'damage.view'],
+            ['label' => 'New Request', 'route' => 'assistance-requests.create', 'permission' => 'requests.create'],
         ]],
     ],
 

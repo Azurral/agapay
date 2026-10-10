@@ -21,6 +21,8 @@ final class PermissionCatalog
         'interventions.archive' => ['Archive and restore intervention records', 'Interventions'],
         'intervention_records.manage' => ['Encode intervention records', 'Interventions'],
         'cycles.manage' => ['Manage distribution cycles', 'Interventions'],
+        'requests.create' => ['File assistance requests', 'Interventions'],
+        'requests.decide' => ['Approve or deny assistance requests', 'Interventions'],
         'inventory.view' => ['View inventory', 'Inventory'],
         'inventory.manage' => ['Record stock movements', 'Inventory'],
         'damage.view' => ['View agricultural damage reports', 'Damage Recording'],
@@ -46,13 +48,13 @@ final class PermissionCatalog
             Role::AGRITECH => [
                 'dashboard.view', 'beneficiaries.view',
                 'interventions.view', 'interventions.validate', 'interventions.claim',
-                'damage.view', 'damage.create', 'damage.validate', 'reports.generate',
+                'damage.view', 'damage.create', 'damage.validate', 'reports.generate', 'requests.create',
             ],
             Role::ENCODER => [
                 'dashboard.view', 'beneficiaries.view', 'beneficiaries.manage', 'rsbsa.register',
                 'intervention_records.manage', 'interventions.claim',
                 'inventory.view', 'inventory.manage', 'import.run',
-                'damage.view', 'damage.create', 'reports.generate',
+                'damage.view', 'damage.create', 'reports.generate', 'requests.create',
             ],
         ];
     }

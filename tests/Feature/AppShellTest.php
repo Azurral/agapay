@@ -31,8 +31,8 @@ it('builds each role\'s quick actions with Figma pill sizes', function (string $
         ->and($actions['gap'])->toBe($gap);
 })->with([
     'admin' => [Role::ADMIN, ['Add User', 'Export List', 'Interventions', 'Upload Excel', 'Inventory'], 176, 14],
-    'agritech' => [Role::AGRITECH, ['File Crisis Report', 'Interventions'], 226, 17],
-    'encoder' => [Role::ENCODER, ['Upload Excel', 'Add Beneficiary', 'Crisis Reports'], 200, 22],
+    'agritech' => [Role::AGRITECH, ['File Crisis Report', 'Interventions', 'New Request'], 226, 17],
+    'encoder' => [Role::ENCODER, ['Upload Excel', 'Add Beneficiary', 'Crisis Reports', 'New Request'], 200, 22],
 ]);
 
 it('renders the dashboard shell for every role', function (string $role, string $greeting) {
@@ -142,7 +142,7 @@ it('switches to the dark theme by colours only, keeping the grid', function () {
         ->assertSee("localStorage.getItem('agapay-theme') === 'dark'", false)              // applied before the page paints
         ->assertSee("document.documentElement.classList.toggle('dark', night)", false);   // the switch flips it
 
-    expect($css)->toContain('html.dark .bg-grid')->toContain("grid-bg-dark.svg")
+    expect($css)->toContain('html.dark .bg-grid')->toContain('grid-bg-dark.svg')
         ->and(file_exists(public_path('images/figma/grid-bg-dark.svg')))->toBeTrue()
         // Colour-only: no layout properties inside the dark block.
         ->and(preg_match('/html\.dark[^{]*\{[^}]*\b(width|height|margin|padding|display|position|top|left|font-size)\s*:/', $css))->toBe(0);

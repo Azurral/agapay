@@ -213,3 +213,22 @@ test('5.9 to 5.11 cycles, download reports and the audit trail', async ({ page }
     await page.goto('/audit-trail?action=' + encodeURIComponent('Validated Damage Report'));
     await expect(page.locator('td', { hasText: 'Validated Damage Report' }).first()).toBeVisible();
 });
+
+test('5.12 assistance requests: filed, summarised and approved', async ({ page }) => {
+    await login(page, 'Encoder_03');
+    await page.getByRole('link', { name: 'New Request' }).click();
+    await pickFarmer(page, 'Teresa Ibanez');
+    await page.selectOption('[name=source]', 'lgu');
+    await page.selectOption('[name=intervention_id]', { label: 'Emergency Seedlings' });
+    await page.selectOption('[name=disaster_id]', { label: 'Typhoon Cristina' });
+    await page.fill('[name=reason]', 'Terrace walls collapsed');
+    await page.getByRole('button', { name: 'File Request' }).click();
+    await expect(page.getByText('Request filed for Teresa Ibanez.')).toBeVisible();
+
+    await login(page, 'Admin_01');
+    await page.goto('/interventions/lgu?tab=requests');
+    await expect(page.getByText('By Barangay')).toBeVisible();
+    const row = page.locator('div.grid').filter({ hasText: 'Teresa Ibanez' }).filter({ hasText: 'Emergency Seedlings' }).first();
+    await row.getByRole('button', { name: 'Approve' }).click();
+    await expect(page.getByText('Approved: Teresa Ibanez - Emergency Seedlings added to 2026-Q3.')).toBeVisible();
+});
