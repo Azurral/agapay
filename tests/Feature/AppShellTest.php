@@ -147,3 +147,12 @@ it('switches to the dark theme by colours only, keeping the grid', function () {
         // Colour-only: no layout properties inside the dark block.
         ->and(preg_match('/html\.dark[^{]*\{[^}]*\b(width|height|margin|padding|display|position|top|left|font-size)\s*:/', $css))->toBe(0);
 });
+
+it('draws the content container like Figma: left gap and border, rounded top-left only, flush right', function () {
+    $html = $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')->getContent();
+
+    expect($html)->toContain('ml-[10px] mt-[11px]')
+        ->toContain('rounded-tl-[20px] border-t-[1.5px] border-l-[1.5px]')
+        ->not->toContain('rounded-t-[20px]')
+        ->toContain('class="[zoom:0.85]"');   // the content inside is drawn 15% smaller
+});

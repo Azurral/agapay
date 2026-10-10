@@ -20,14 +20,18 @@
     <x-app.sidebar />
 
     <div class="flex">
-        <main class="bg-grid relative mt-[11px] min-h-[calc(var(--app-vh,100vh)-81px)] flex-1 overflow-hidden rounded-t-[20px] border-t-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px]">
-            <x-app.greeting />
-            @can('beneficiaries.view')
-                <x-app.search-bar class="mt-[34px]" />
-            @endcan
+        {{-- Figma: the grid container sits in from the left and top (border and rounded corner there), flush right and bottom. --}}
+        <main class="bg-grid relative ml-[10px] mt-[11px] min-h-[calc(var(--app-vh,100vh)-81px)] flex-1 overflow-hidden rounded-tl-[20px] border-t-[1.5px] border-l-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px]">
+            {{-- Everything inside is drawn 15% smaller, so pages fit the screen with less scrolling. --}}
+            <div class="[zoom:0.85]">
+                <x-app.greeting />
+                @can('beneficiaries.view')
+                    <x-app.search-bar class="mt-[34px]" />
+                @endcan
 
-            <div class="mt-[28px] flex flex-col gap-[14px]">
-                {{ $slot }}
+                <div class="mt-[28px] flex flex-col gap-[14px]">
+                    {{ $slot }}
+                </div>
             </div>
         </main>
     </div>
