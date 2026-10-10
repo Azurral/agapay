@@ -1,7 +1,7 @@
 @props(['label' => 'Agapay logo'])
 @php($gradient = 'agapay-plot-'.\Illuminate\Support\Str::random(6))
 {{-- The logo (public/images/logo.svg) drawn inline so its bars can grow one after another on load and bounce on hover. --}}
-<svg {{ $attributes->class('agapay-logo') }} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"
+<svg {{ $attributes->class('agapay-logo') }} viewBox="0 0 100 100" fill="none" overflow="visible" xmlns="http://www.w3.org/2000/svg"
      @if ($label) role="img" aria-label="{{ $label }}" @else aria-hidden="true" @endif>
     <defs>
         <linearGradient id="{{ $gradient }}" x1="8" y1="92" x2="92" y2="20" gradientUnits="userSpaceOnUse">

@@ -25,6 +25,8 @@ it('draws the logo inline so its bars can grow, on the landing, login and app he
 it('keeps the leaf riding on top of the tallest bar so they never overlap', function () {
     $html = $this->get('/login')->getContent();
 
+    // The bar's overshoot lifts the leaf past the top of the 100x100 box, so the logo may not clip it.
+    expect($html)->toContain('overflow="visible"');
     expect($html)->toMatch('/<g class="logo-ride">\s*<path class="logo-leaf"/');
 });
 
