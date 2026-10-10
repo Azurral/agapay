@@ -156,3 +156,9 @@ it('draws the content container like Figma: left gap and border, rounded top-lef
         ->not->toContain('rounded-t-[20px]')
         ->toContain('class="[zoom:0.85]"');   // the content inside is drawn 15% smaller
 });
+
+it('lines the side panel up with the grid container and draws its contents smaller', function () {
+    $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')
+        ->assertSee('fixed top-[81px] left-[10px] z-40 h-[calc(var(--app-vh,100vh)-81px)]', false)
+        ->assertSee('class="[zoom:0.85] flex h-full flex-col pb-[16px]"', false);
+});
