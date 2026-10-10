@@ -1,4 +1,4 @@
-{{-- Dark mode switch (styled like Return to Login). For now it only remembers the choice; the night theme comes later. --}}
+{{-- Dark mode switch (styled like Return to Login): remembers the choice and flips the page's colours (app.css, html.dark). --}}
 <div x-data="{ night: (() => { try { return localStorage.getItem('agapay-theme') === 'dark'; } catch (e) { return false; } })() }"
      {{ $attributes->class('bg-brand-card relative flex h-[60px] w-[211px] items-center justify-between rounded-[15px] pr-[12px] pl-[14px]') }}>
     <div class="text-white">
@@ -6,7 +6,7 @@
         <p class="text-[12px] leading-[16px]" x-text="night ? 'On' : 'Off'">Off</p>
     </div>
     <button type="button" role="switch" :aria-checked="night.toString()" aria-checked="false" aria-label="Dark mode"
-            @click="night = ! night; try { localStorage.setItem('agapay-theme', night ? 'dark' : 'light'); } catch (e) {}"
+            @click="night = ! night; document.documentElement.classList.toggle('dark', night); try { localStorage.setItem('agapay-theme', night ? 'dark' : 'light'); } catch (e) {}"
             class="relative h-[28px] w-[54px] shrink-0 rounded-full transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             :class="night ? 'bg-[#2b2d6e]' : 'bg-white/35'">
         {{-- Stars fade in on the night track. --}}

@@ -4,6 +4,9 @@
     Phones and tablets are not scaled: they get the desktop-only notice instead (see <x-desktop-only>).
 --}}
 <script>
+    // The saved theme is applied before the page paints, so a dark page never flashes white.
+    try { document.documentElement.classList.toggle('dark', localStorage.getItem('agapay-theme') === 'dark'); } catch (e) {}
+
     (function () {
         const DESIGN_WIDTH = 1600;
         const touchOnly = window.matchMedia('(hover: none) and (pointer: coarse)');

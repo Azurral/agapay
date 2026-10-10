@@ -134,3 +134,16 @@ it('gives the header a solid white background', function () {
 
     expect($html)->toContain('border border-white bg-white pr-[15px]')->not->toContain('bg-white/10 pr-[15px]');
 });
+
+it('switches to the dark theme by colours only, keeping the grid', function () {
+    $css = file_get_contents(resource_path('css/app.css'));
+
+    $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')
+        ->assertSee("localStorage.getItem('agapay-theme') === 'dark'", false)              // applied before the page paints
+        ->assertSee("document.documentElement.classList.toggle('dark', night)", false);   // the switch flips it
+
+    expect($css)->toContain('html.dark .bg-grid')->toContain("grid-bg-dark.svg")
+        ->and(file_exists(public_path('images/figma/grid-bg-dark.svg')))->toBeTrue()
+        // Colour-only: no layout properties inside the dark block.
+        ->and(preg_match('/html\.dark[^{]*\{[^}]*\b(width|height|margin|padding|display|position|top|left|font-size)\s*:/', $css))->toBe(0);
+});

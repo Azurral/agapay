@@ -161,3 +161,89 @@
 /* The header drops in when the side panel is opened on a scrolled page. */
 @keyframes header-drop { from { transform: translateY(-100%); } to { transform: translateY(0); } }
 .header-drop { animation: header-drop 200ms ease-out; }
+
+/* ==== Dark theme (html.dark, set by the side panel's switch) ====
+   Colours only: nothing here may change a size, position or spacing, so both themes share one layout.
+   Unlayered rules, so they win over Tailwind's utilities. PDFs and Excel files are separate and stay light. */
+html.dark {
+    color-scheme: dark;
+    --dark-page: #0f1020;
+    --dark-surface: #1c1e2e;
+    --dark-chrome: #171827;
+    --dark-field: #23253a;
+    --dark-tint: #2a2b55;
+    --dark-border: #2c2f45;
+    --dark-text: #e8e9f3;
+    --dark-muted: #8b8fa8;
+    --dark-brand: #a5a7ff;
+}
+
+/* Page backgrounds, with the same grid drawn in faint white. */
+html.dark body,
+html.dark body.bg-white { background-color: var(--dark-page); color: var(--dark-text); }
+html.dark .bg-grid,
+html.dark .bg-grid-login { background-color: var(--dark-page); background-image: url('/images/figma/grid-bg-dark.svg'); }
+
+/* Surfaces: white cards, panels and fields. White pills on the purple gradient cards and bars stay white. */
+html.dark .bg-white:not(.bg-brand-card *):not(.bg-brand-bar *),
+html.dark .bg-\[\#f7f7f9\],
+html.dark .bg-\[\#ececec\] { background-color: var(--dark-surface); }
+html.dark header.bg-white,
+html.dark #side-panel.bg-white { background-color: var(--dark-chrome); }
+html.dark .bg-brand-bar .bg-white { background-color: var(--dark-surface); color: var(--dark-text); }
+html.dark .bg-brand-card .bg-white { color: #2f2f2f; }
+html.dark .bg-brand-soft\/10,
+html.dark .bg-field\/60 { background-color: var(--dark-field); }
+html.dark .bg-brand-soft\/20,
+html.dark .bg-\[\#efeaff\] { background-color: var(--dark-tint); }
+
+/* Text */
+html.dark .text-ink,
+html.dark .text-black { color: var(--dark-text); }
+html.dark .text-muted,
+html.dark .text-subtle,
+html.dark .invalid\:text-muted:invalid { color: var(--dark-muted); }
+html.dark .text-arrow { color: #9da0b8; }
+html.dark .text-brand,
+html.dark .hover\:text-brand:hover { color: var(--dark-brand); }
+html.dark .text-danger { color: #ff8a8a; }
+html.dark .text-\[\#1f7a35\] { color: #7ee08f; }
+html.dark .placeholder\:text-muted::placeholder { color: #6f7390; }
+
+/* Lines and borders */
+html.dark .border-field,
+html.dark .border-white { border-color: var(--dark-border); }
+html.dark .border-muted { border-color: #3a3d58; }
+html.dark .border-black\/5 { border-color: rgb(255 255 255 / 0.06); }
+html.dark .border-black\/10 { border-color: rgb(255 255 255 / 0.1); }
+html.dark .border-black\/15 { border-color: rgb(255 255 255 / 0.15); }
+html.dark .divider { border-top-color: rgb(255 255 255 / 0.12); }
+
+/* Status chips and coloured outlines: the same green and red, toned for a dark background. */
+html.dark .border-ok { border-color: #3fb95f; }
+html.dark .border-bad { border-color: #b8484a; }
+html.dark .border-ok.bg-white { background-color: #12301c; color: #8fe3a3; }
+html.dark .border-bad.bg-white { background-color: #3a1618; color: #f3a5a6; }
+
+/* Gradient-outlined inputs, pills and pop-up windows keep their cyan-to-purple outline on a dark fill. */
+html.dark .border-gradient {
+    background:
+        linear-gradient(var(--dark-surface), var(--dark-surface)) padding-box,
+        linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
+}
+html.dark .pill-button:hover {
+    background:
+        linear-gradient(90deg, #13343a, var(--dark-tint)) padding-box,
+        linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
+}
+
+/* Hover states */
+html.dark .hover-tint:hover,
+html.dark .hover\:bg-\[\#efeaff\]:hover { background-color: var(--dark-tint); color: var(--dark-brand); }
+html.dark .account-trigger:hover { background-color: var(--dark-field); }
+
+/* Black and grey line icons become light; the purple ones and icons already turned white (on gradient buttons) stay. */
+html.dark img[src*="/images/figma/icons/"]:not(.invert):not([src*="task.svg"]):not([src*="plus.svg"]):not([src*="calendar.svg"]):not([src*="ring.svg"]) { filter: invert(0.88); }
+
+/* The phone/tablet notice keeps its blur, over a dark wash. */
+html.dark .desktop-only-notice { background: rgb(15 16 32 / 0.6); }
