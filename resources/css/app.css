@@ -219,11 +219,11 @@ html.dark .border-black\/10 { border-color: rgb(255 255 255 / 0.1); }
 html.dark .border-black\/15 { border-color: rgb(255 255 255 / 0.15); }
 html.dark .divider { border-top-color: rgb(255 255 255 / 0.12); }
 
-/* Status chips and coloured outlines: the same green and red, toned for a dark background. */
-html.dark .border-ok { border-color: #3fb95f; }
-html.dark .border-bad { border-color: #b8484a; }
-html.dark .border-ok.bg-white { background-color: #12301c; color: #8fe3a3; }
-html.dark .border-bad.bg-white { background-color: #3a1618; color: #f3a5a6; }
+/* Status chips and coloured outlines: the light theme's pastel green and red, kept bright on the dark background. */
+html.dark .border-ok { border-color: #a8f9b1; }
+html.dark .border-bad { border-color: #f9a8a9; }
+html.dark .border-ok.bg-white { background-color: rgb(168 249 177 / 0.1); color: #c4fccb; }
+html.dark .border-bad.bg-white { background-color: rgb(249 168 169 / 0.1); color: #fcc6c7; }
 
 /* Gradient-outlined inputs, pills and pop-up windows keep their cyan-to-purple outline on a dark fill. */
 html.dark .border-gradient {
