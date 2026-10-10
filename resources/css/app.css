@@ -206,6 +206,18 @@
     animation: logo-grow 650ms cubic-bezier(.3, 1.35, .5, 1) calc(var(--i) * 120ms) both;
 }
 .agapay-logo .logo-leaf { transform-origin: 0% 100%; animation: logo-leaf 450ms cubic-bezier(.3, 1.4, .5, 1) 420ms both; }
+/* The tallest bar is 62 high and grows from its foot, so its top sits 62 * (1 - scaleY) below its final place:
+   the leaf's group moves by exactly that, with the bar's own timing (overshoot and hover bounce included). */
+@keyframes logo-ride { from { transform: translateY(62px); } }
+@keyframes logo-ride-bounce { 35% { transform: translateY(-8.68px); } 65% { transform: translateY(3.72px); } 100% { transform: none; } }
+.agapay-logo .logo-ride { animation: logo-ride 650ms cubic-bezier(.3, 1.35, .5, 1) 240ms both; }
+.group:hover .agapay-logo .logo-ride, .agapay-logo:hover .logo-ride {
+    animation-name: logo-ride, logo-ride-bounce;
+    animation-duration: 650ms, 500ms;
+    animation-delay: 240ms, 140ms;
+    animation-timing-function: cubic-bezier(.3, 1.35, .5, 1), ease;
+    animation-fill-mode: both, none;
+}
 .group:hover .agapay-logo .logo-bar, .agapay-logo:hover .logo-bar {
     animation-name: logo-grow, logo-bounce;
     animation-duration: 650ms, 500ms;
@@ -252,8 +264,8 @@ html.dark .theme-sun { transform: rotate(90deg) scale(0); opacity: 0; }
 html.dark .theme-moon { transform: none; opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
-    .agapay-logo .logo-bar, .agapay-logo .logo-leaf, .enter-rise, .enter-settle, .flash, .nav-enter, .chip-dot, .chip-pop,
-    .group:hover .agapay-logo .logo-bar, .agapay-logo:hover .logo-bar { animation: none; }
+    .agapay-logo .logo-bar, .agapay-logo .logo-leaf, .agapay-logo .logo-ride, .enter-rise, .enter-settle, .flash, .nav-enter, .chip-dot, .chip-pop,
+    .group:hover .agapay-logo .logo-bar, .agapay-logo:hover .logo-bar, .group:hover .agapay-logo .logo-ride, .agapay-logo:hover .logo-ride { animation: none; }
     .gradient-button:hover::after { transition: none; translate: -120% 0; }
     .nav-icon, .theme-sun, .theme-moon { transition: none; }
 }

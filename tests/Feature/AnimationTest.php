@@ -22,6 +22,12 @@ it('draws the logo inline so its bars can grow, on the landing, login and app he
     'dashboard' => ['/dashboard', true],
 ]);
 
+it('keeps the leaf riding on top of the tallest bar so they never overlap', function () {
+    $html = $this->get('/login')->getContent();
+
+    expect($html)->toMatch('/<g class="logo-ride">\s*<path class="logo-leaf"/');
+});
+
 it('brings the landing page in step by step, the log in button last', function () {
     $html = $this->get('/')->getContent();
     preg_match_all('/class="[^"]*enter-(rise|settle)[^"]*"[^>]*style="--d: (\d+)ms"/', $html, $m);

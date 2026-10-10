@@ -13,5 +13,8 @@
     <rect class="logo-bar" style="--i: 0" x="8" y="62" width="24" height="30" rx="6.24" fill="url(#{{ $gradient }})"/>
     <rect class="logo-bar" style="--i: 1" x="38" y="42" width="24" height="50" rx="6.24" fill="url(#{{ $gradient }})"/>
     <rect class="logo-bar" style="--i: 2" x="68" y="30" width="24" height="62" rx="6.24" fill="url(#{{ $gradient }})"/>
-    <path class="logo-leaf" d="M69.26 27C69.26 13.11 78.11 4.26 92 4.26C92 18.16 83.16 27 69.26 27Z" fill="#22D3FF"/>
+    {{-- The leaf rides on the tallest bar's top (same timing), so the bar never grows into it. --}}
+    <g class="logo-ride">
+        <path class="logo-leaf" d="M69.26 27C69.26 13.11 78.11 4.26 92 4.26C92 18.16 83.16 27 69.26 27Z" fill="#22D3FF"/>
+    </g>
 </svg>
