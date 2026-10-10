@@ -40,6 +40,7 @@
                     LOGIN
                 </button>
             </form>
+            <p class="mt-[14px] text-[12px] font-medium text-muted">AGAPAY v{{ config('agapay.version') }}</p>
         </div>
     </main>
 </x-layouts.guest>

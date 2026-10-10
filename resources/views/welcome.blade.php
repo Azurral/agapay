@@ -42,6 +42,6 @@
     </main>
 
     <footer class="pb-[28px] text-center text-[12px] text-arrow">
-        Office of the Municipal Agriculturist · Bontoc, Mountain Province
+        Office of the Municipal Agriculturist · Bontoc, Mountain Province · AGAPAY v{{ config('agapay.version') }}
     </footer>
 </x-layouts.guest>

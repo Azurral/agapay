@@ -162,3 +162,13 @@ it('lines the side panel up with the grid container and draws its contents small
         ->assertSee('fixed top-[81px] left-[10px] z-40 h-[calc(var(--app-vh,100vh)-81px)]', false)
         ->assertSee('class="[zoom:0.85] flex h-full flex-col pb-[16px]"', false);
 });
+
+it('shows the system version on the landing page, login and side panel', function () {
+    $version = 'v'.config('agapay.version');
+    expect(config('agapay.version'))->toMatch('/^\d+\.\d+\.\d+$/');
+
+    $this->get('/')->assertSee("AGAPAY {$version}");
+    $this->get('/login')->assertSee("AGAPAY {$version}");
+    $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')
+        ->assertSeeInOrder(['RETURN TO LOGIN', "AGAPAY {$version}"]);
+});
