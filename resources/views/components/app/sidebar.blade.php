@@ -9,7 +9,7 @@
        x-transition:enter="transition ease-out duration-200" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full"
        @keydown.escape.window="nav = false"
-       class="fixed top-[81px] left-[10px] z-40 h-[calc(var(--app-vh,100vh)-81px)] w-[224px] overflow-y-auto rounded-tl-[20px] rounded-tr-[20px] border-t-[1.5px] border-r-[1.5px] border-l-[1.5px] border-black/15 bg-white shadow-[4px_0_16px_rgba(0,0,0,0.08)]">
+       class="fixed top-[81px] left-0 z-40 h-[calc(var(--app-vh,100vh)-81px)] w-[224px] overflow-y-auto rounded-tr-[20px] border-t-[1.5px] border-r-[1.5px] border-black/15 bg-white shadow-[4px_0_16px_rgba(0,0,0,0.08)]">
     <div class="[zoom:0.85] flex h-full flex-col pb-[16px]">
     <div class="relative z-30 mt-[10px] pl-[12px]">
         <x-app.account-menu :user="$user" />

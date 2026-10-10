@@ -4,7 +4,7 @@ use App\Models\Role;
 
 return [
     // The release shown on screen; bumped with every release (the commit is named after it, e.g. "v0.9.3").
-    'version' => '0.9.3',
+    'version' => '0.9.4',
 
     // Development/demo password for seeded accounts. Change in .env for any real deployment.
     'seed_password' => env('AGAPAY_SEED_PASSWORD', 'Agapay@2026'),
