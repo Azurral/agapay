@@ -2,16 +2,16 @@
 
 use App\Models\Role;
 
-it('shows the Agapay logo on the login screen and in the app header', function () {
+it('draws the Agapay logo on the login screen and in the app header', function () {
     seedRoles();
 
     $this->get('/login')->assertOk()
-        ->assertSee('src="'.asset('images/logo.svg').'"', false)
-        ->assertSee('alt="Agapay logo"', false)
+        ->assertSee('class="agapay-logo block size-[84px]"', false)
+        ->assertSee('aria-label="Agapay logo"', false)
         ->assertDontSee('logo-box', false);
 
     $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')->assertOk()
-        ->assertSee('src="'.asset('images/logo.svg').'"', false)
+        ->assertSee('class="agapay-logo block size-[38px]"', false)
         ->assertDontSee('logo-box', false);
 });
 

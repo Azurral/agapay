@@ -5,7 +5,7 @@
 @endphp
 <x-layouts.app title="ADD BENEFICIARY">
     @if (session('status'))
-        <p class="rounded-[10px] border-[1.5px] border-ok bg-white px-[16px] py-[10px] text-[14px] font-bold" role="status">{{ session('status') }}</p>
+        <p class="flash rounded-[10px] border-[1.5px] border-ok bg-white px-[16px] py-[10px] text-[14px] font-bold" role="status" data-autohide>{{ session('status') }}</p>
     @endif
 
     {{-- Figma 329:3290 form card + 329:3330 submit bar (20px apart); the address follows the RSBSA form's parts. --}}

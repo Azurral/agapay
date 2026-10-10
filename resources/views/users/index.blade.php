@@ -1,7 +1,7 @@
 @php($editBag = $errors->getBag('editUser'))
 <x-layouts.app title="USER MANAGEMENT">
     @if (session('status'))
-        <p class="rounded-[10px] border-[1.5px] border-ok bg-white px-[16px] py-[10px] text-[14px] font-bold" role="status">{{ session('status') }}</p>
+        <p class="flash rounded-[10px] border-[1.5px] border-ok bg-white px-[16px] py-[10px] text-[14px] font-bold" role="status" data-autohide>{{ session('status') }}</p>
     @endif
 
     <x-ui.card title="User Management">

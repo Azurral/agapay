@@ -62,7 +62,7 @@
                 @foreach ($cards as [$label, $value, $dot, $text])
                     <div class="h-[108px] rounded-[16px] bg-[#f7f7f9] pt-[18px] pl-[20px]">
                         <p class="flex items-center gap-[7px] text-[13px] leading-[17px]"><span class="size-[11px] rounded-[3px] {{ $dot }}"></span>{{ $label }}</p>
-                        <p class="mt-[5px] text-[30px] font-bold leading-[39px] {{ $text }}">{{ $value }}</p>
+                        <p class="mt-[5px] text-[30px] font-bold leading-[39px] tabular-nums {{ $text }}" data-count-up>{{ $value }}</p>
                     </div>
                 @endforeach
             </div>
@@ -107,7 +107,7 @@
                     @endif
                 </div>
                 @can('export.run')
-                    <a href="{{ Route::has('damage.export') ? route('damage.export', $exportQuery) : '#' }}"
+                    <a href="{{ Route::has('damage.export') ? route('damage.export', $exportQuery) : '#' }}" data-busy
                        class="flex h-[40px] w-[220px] shrink-0 items-center justify-center rounded-[10px] border border-field bg-white text-[13px] font-bold transition-colors hover:border-brand-soft hover:text-brand">Export to Excel</a>
                 @endcan
                 <a href="{{ Route::has('damage.pdf') ? route('damage.pdf', $exportQuery) : '#' }}"

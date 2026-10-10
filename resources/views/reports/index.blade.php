@@ -12,13 +12,13 @@
 <x-layouts.app title="DOWNLOAD REPORTS">
     {{-- Figma 340:51 (Admin) / 407:1694 (Agri Tech) / 470:2205 (Data Encoder) --}}
     @if ($errors->has('report'))
-        <p class="rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $errors->first('report') }}</p>
+        <p class="flash rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $errors->first('report') }}</p>
     @endif
 
     <x-ui.card title="Generate a Report" class="pb-[29px]">
         {{-- The file downloads without leaving the page: block a second click for a while so one click makes one report. --}}
         <form method="POST" action="{{ route('reports.store') }}" class="mt-[19px] grid grid-cols-[707px_710px] gap-x-[19px] gap-y-[6px] pl-[1px]"
-              x-data="{ busy: false }" @submit="busy = true; setTimeout(() => busy = false, 15000)">
+              x-data="{ busy: false }" @submit="busy = true; setTimeout(() => busy = false, 15000)" data-busy-reset="15000">
             @csrf
             <div>
                 <label for="program" class="{{ $label }}">Program</label>

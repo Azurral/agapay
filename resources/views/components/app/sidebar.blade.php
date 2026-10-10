@@ -17,7 +17,7 @@
 
     <nav class="mt-[12px] flex flex-col gap-[2px] pl-[12px]" aria-label="Main">
         @foreach ($items as $item)
-            <x-app.nav-item :$item />
+            <x-app.nav-item :$item :index="$loop->index" />
         @endforeach
     </nav>
 

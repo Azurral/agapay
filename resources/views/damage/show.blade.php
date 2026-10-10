@@ -26,10 +26,10 @@
 <x-layouts.app title="AGRICULTURAL DAMAGE REPORT">
     <x-intervention.flash />
     @if ($damageErrors->has('report'))
-        <p class="rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $damageErrors->first('report') }}</p>
+        <p class="flash rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $damageErrors->first('report') }}</p>
     @endif
     @if ($report->trashed())
-        <p class="rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold" role="status">
+        <p class="flash rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold" role="status">
             Archived on {{ $report->deleted_at->format('M j, Y g:i A') }}{{ $report->deleted_by ? ' by '.\App\Models\User::find($report->deleted_by)?->name : '' }}: {{ $report->delete_reason }}
         </p>
     @endif

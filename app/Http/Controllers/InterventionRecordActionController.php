@@ -34,12 +34,12 @@ class InterventionRecordActionController extends Controller
         // Always a live claim: past distributions are encoded through the Add/Edit form, which requires their date.
         return $this->attempt($record,
             fn () => $this->claims->claim($record, $request->user(), array_filter($input, fn ($v) => $v !== null && $v !== '')),
-            fn (InterventionRecord $r) => $r->claimLabel());
+            fn (InterventionRecord $r) => $r->claimLabel(), pop: true);
     }
 
     public function unclaim(Request $request, InterventionRecord $record): RedirectResponse
     {
-        return $this->attempt($record, fn () => $this->claims->unclaim($record, $request->user()), fn (InterventionRecord $r) => $r->claimLabel());
+        return $this->attempt($record, fn () => $this->claims->unclaim($record, $request->user()), fn (InterventionRecord $r) => $r->claimLabel(), pop: true);
     }
 
     public function archive(Request $request, InterventionRecord $record): RedirectResponse
@@ -65,7 +65,7 @@ class InterventionRecordActionController extends Controller
      * @param  Closure(): InterventionRecord  $action
      * @param  Closure(InterventionRecord): string  $stateLabel
      */
-    private function attempt(InterventionRecord $record, Closure $action, Closure $stateLabel, ?string $label = null): RedirectResponse
+    private function attempt(InterventionRecord $record, Closure $action, Closure $stateLabel, ?string $label = null, bool $pop = false): RedirectResponse
     {
         try {
             $updated = $action();
@@ -82,6 +82,9 @@ class InterventionRecordActionController extends Controller
                 ->with('intervention_failed', $record->id);
         }
 
-        return back()->with('status', ($label ?? $updated->auditRecordLabel()).": {$stateLabel($updated)}.");
+        $redirect = back()->with('status', ($label ?? $updated->auditRecordLabel()).": {$stateLabel($updated)}.");
+
+        // After a claim or unclaim, changed_record gives that row's claim chip a quick pop.
+        return $pop ? $redirect->with('changed_record', $record->id) : $redirect;
     }
 }

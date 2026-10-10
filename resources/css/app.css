@@ -94,8 +94,23 @@
     /* Filled brand-gradient buttons (LOGIN, Log out, Save ...): a darker indigo shadow grounds the pale end
        of the gradient; on hover they brighten, lift and the shadow deepens. */
     .gradient-button {
+        position: relative;
+        overflow: hidden;
         box-shadow: 0 4px 12px rgb(75 50 195 / 0.38);
         transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+    }
+    /* A soft shine sweeps across on hover (it starts and ends outside the button, so leaving snaps back unseen). */
+    .gradient-button::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.38) 50%, transparent 70%);
+        translate: -120% 0;
+        pointer-events: none;
+    }
+    .gradient-button:hover::after {
+        translate: 120% 0;
+        transition: translate 700ms ease;
     }
     .gradient-button:hover {
         filter: brightness(1.07) saturate(1.1);
@@ -179,6 +194,69 @@
 .menu-fold.menu-fold-x > span:last-child { transform: translate(-50%, -50%) rotate(-45deg); }
 .group:hover .menu-fold.menu-fold-x, .group:focus-visible .menu-fold.menu-fold-x { transform: rotate(90deg); }
 @media (prefers-reduced-motion: reduce) { .menu-fold, .menu-fold > span { transition: none; } }
+
+/* Logo: the bars grow up one after another on load (the leaf last) and bounce on hover. logo-grow stays in the
+   hover list so it is not restarted when the bounce is added or removed. */
+@keyframes logo-grow { from { transform: scaleY(0); } }
+@keyframes logo-leaf { from { transform: scale(0) rotate(-40deg); opacity: 0; } }
+@keyframes logo-bounce { 35% { transform: scaleY(1.14); } 65% { transform: scaleY(0.94); } 100% { transform: scaleY(1); } }
+.agapay-logo .logo-bar, .agapay-logo .logo-leaf { transform-box: fill-box; }
+.agapay-logo .logo-bar {
+    transform-origin: 50% 100%;
+    animation: logo-grow 650ms cubic-bezier(.3, 1.35, .5, 1) calc(var(--i) * 120ms) both;
+}
+.agapay-logo .logo-leaf { transform-origin: 0% 100%; animation: logo-leaf 450ms cubic-bezier(.3, 1.4, .5, 1) 420ms both; }
+.group:hover .agapay-logo .logo-bar, .agapay-logo:hover .logo-bar {
+    animation-name: logo-grow, logo-bounce;
+    animation-duration: 650ms, 500ms;
+    animation-delay: calc(var(--i) * 120ms), calc(var(--i) * 70ms);
+    animation-timing-function: cubic-bezier(.3, 1.35, .5, 1), ease;
+    animation-fill-mode: both, none;
+}
+
+/* Landing page entrance: text and cards rise in order (--d), the Log in button settles last. */
+@keyframes enter-rise { from { opacity: 0; transform: translateY(16px); } }
+@keyframes enter-settle { 0% { opacity: 0; transform: translateY(12px) scale(.92); } 70% { opacity: 1; transform: translateY(0) scale(1.04); } 100% { transform: none; } }
+.enter-rise { animation: enter-rise 600ms cubic-bezier(.2, .8, .2, 1) var(--d, 0ms) both; }
+.enter-settle { animation: enter-settle 650ms cubic-bezier(.2, .8, .2, 1) var(--d, 0ms) both; }
+
+/* Busy buttons (resources/js/app.js): a small spinner while the server works. */
+@keyframes busy-spin { to { transform: rotate(360deg); } }
+.busy-spinner {
+    display: inline-block; flex-shrink: 0; width: 0.9em; height: 0.9em; margin-right: 0.45em; vertical-align: -0.12em;
+    border: 2px solid currentColor; border-right-color: transparent; border-radius: 9999px; animation: busy-spin 700ms linear infinite;
+}
+.is-busy { cursor: progress; }
+
+/* Messages slide down into place; app.js fades and folds away the green success ones after a few seconds. */
+@keyframes flash-in { from { opacity: 0; transform: translateY(-10px); } }
+.flash { animation: flash-in 350ms cubic-bezier(.2, .8, .2, 1) both; }
+.flash.flash-out { opacity: 0; transition: opacity 300ms ease, height 300ms ease, margin 300ms ease, padding 300ms ease, border-width 300ms ease; }
+
+/* Side panel: items slide in one after another each time it opens (it is display: none while closed). */
+@keyframes nav-enter { from { opacity: 0; transform: translateX(-14px); } }
+.nav-enter { animation: nav-enter 320ms cubic-bezier(.2, .8, .2, 1) calc(90ms + var(--i, 0) * 40ms) both; }
+.nav-icon { transition: transform 200ms ease; }
+.nav-enter:hover .nav-icon { transform: translateX(3px); }
+
+/* Status chips: a slow pulsing dot while waiting; the chip just claimed or unclaimed pops once. */
+@keyframes chip-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.7); } }
+@keyframes chip-pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); box-shadow: 0 0 0 6px rgb(126 128 255 / 0.25); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgb(126 128 255 / 0); } }
+.chip-dot { width: 8px; height: 8px; margin-right: 8px; flex-shrink: 0; border-radius: 9999px; background: #7e80ff; animation: chip-dot 1.6s ease-in-out infinite; }
+.chip-pop { animation: chip-pop 650ms cubic-bezier(.3, 1.4, .5, 1) 250ms both; }
+
+/* Dark mode switch: the sun spins away while the moon turns in. */
+.theme-sun, .theme-moon { transition: transform 400ms cubic-bezier(.3, 1.3, .5, 1), opacity 250ms ease; }
+.theme-moon { transform: rotate(-90deg) scale(0); opacity: 0; }
+html.dark .theme-sun { transform: rotate(90deg) scale(0); opacity: 0; }
+html.dark .theme-moon { transform: none; opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+    .agapay-logo .logo-bar, .agapay-logo .logo-leaf, .enter-rise, .enter-settle, .flash, .nav-enter, .chip-dot, .chip-pop,
+    .group:hover .agapay-logo .logo-bar, .agapay-logo:hover .logo-bar { animation: none; }
+    .gradient-button:hover::after { transition: none; translate: -120% 0; }
+    .nav-icon, .theme-sun, .theme-moon { transition: none; }
+}
 
 /* ==== Dark theme (html.dark, set by the side panel's switch) ====
    Colours only: nothing here may change a size, position or spacing, so both themes share one layout.

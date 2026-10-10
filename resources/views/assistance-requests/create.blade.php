@@ -6,7 +6,7 @@
 @endphp
 <x-layouts.app title="ASSISTANCE REQUESTS">
     @if (session('status'))
-        <p class="rounded-[10px] border-[1.5px] border-ok bg-white px-[16px] py-[10px] text-[14px] font-bold" role="status">{{ session('status') }}</p>
+        <p class="flash rounded-[10px] border-[1.5px] border-ok bg-white px-[16px] py-[10px] text-[14px] font-bold" role="status" data-autohide>{{ session('status') }}</p>
     @endif
 
     <section class="rounded-[20px] border-[1.5px] border-black/10 bg-white pt-[19.5px] pr-[26.5px] pb-[22px] pl-[21.5px]">
@@ -115,7 +115,7 @@
                 <span class="truncate pr-[12px]">{{ $filed->beneficiary->fullName() }}</span>
                 <span class="truncate pr-[12px]">{{ $filed->intervention->sourcedName() }}</span>
                 <span>{{ $filed->created_at->format('M j, Y') }}</span>
-                <x-ui.status-chip :tone="$filed->statusTone()">{{ $filed->statusLabel() }}</x-ui.status-chip>
+                <x-ui.status-chip :tone="$filed->statusTone()" :pulse="$filed->isPending()">{{ $filed->statusLabel() }}</x-ui.status-chip>
             </div>
         @empty
             <p class="py-[14px] pl-[4px] text-[13px] font-bold">You have not filed any requests yet.</p>

@@ -47,10 +47,10 @@
             </span>
             <span>
                 @if ($canClaim)
-                    <x-intervention.chip-select name="claim_status" :options="$claimOptions" :selected="$record->claim_status" :tone="$record->claimTone()"
+                    <x-intervention.chip-select name="claim_status" :options="$claimOptions" :selected="$record->claim_status" :tone="$record->claimTone()" :pop="session('changed_record') === $record->id"
                                                 :actions="['claimed' => route('intervention-records.claim', $record), 'unclaimed' => route('intervention-records.unclaim', $record)]" />
                 @else
-                    <x-ui.status-chip :tone="$record->claimTone()">{{ $record->claimLabel() }}</x-ui.status-chip>
+                    <x-ui.status-chip :tone="$record->claimTone()" :pop="session('changed_record') === $record->id">{{ $record->claimLabel() }}</x-ui.status-chip>
                 @endif
             </span>
         </div>

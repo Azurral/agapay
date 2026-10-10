@@ -17,10 +17,10 @@
 @endphp
 <x-layouts.app :title="$editing ? 'EDIT DAMAGE REPORT' : 'NEW DAMAGE REPORT'">
     @if ($tooLarge)
-        <p class="rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">The photos are too large to upload at once — up to 10 photos of 5 MB each.</p>
+        <p class="flash rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">The photos are too large to upload at once — up to 10 photos of 5 MB each.</p>
     @endif
     @error('report')
-        <p class="rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $message }}</p>
+        <p class="flash rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $message }}</p>
     @enderror
 
     <form method="POST" action="{{ $editing ? route('damage.update', $report) : route('damage.store') }}" enctype="multipart/form-data"

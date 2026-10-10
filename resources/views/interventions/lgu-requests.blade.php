@@ -9,10 +9,10 @@
 <x-layouts.app title="LGU INTERVENTION LIST">
     <x-intervention.flash />
     @error('request')
-        <p class="rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $message }}</p>
+        <p class="flash rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $message }}</p>
     @enderror
     @error('decision_note')
-        <p class="rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $message }}</p>
+        <p class="flash rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $message }}</p>
     @enderror
 
     <x-ui.card title="Assistance Requests">
@@ -31,7 +31,7 @@
                 @can('requests.create')
                     <a href="{{ route('assistance-requests.create') }}" class="border-gradient pill-button flex h-[39px] items-center rounded-[50px] px-[20px] text-[15px] font-bold">+ New Request</a>
                 @endcan
-                <a href="{{ route('assistance-requests.export', $query) }}" class="border-gradient pill-button flex h-[39px] items-center rounded-[50px] px-[20px] text-[15px] font-bold">Export as .xlsx</a>
+                <a href="{{ route('assistance-requests.export', $query) }}" data-busy class="border-gradient pill-button flex h-[39px] items-center rounded-[50px] px-[20px] text-[15px] font-bold">Export as .xlsx</a>
             </div>
         </form>
 
@@ -39,7 +39,7 @@
             @foreach ($cards as $key => $label)
                 <div class="rounded-[15px] border-[1.5px] border-black/10 bg-white px-[16px] py-[12px]">
                     <p class="text-[13px] font-medium text-muted">{{ $label }}</p>
-                    <p class="text-[26px] font-bold leading-[32px]">{{ $stats['totals'][$key] }}</p>
+                    <p class="text-[26px] font-bold leading-[32px] tabular-nums" data-count-up>{{ $stats['totals'][$key] }}</p>
                 </div>
             @endforeach
         </div>
@@ -81,7 +81,7 @@
                 <span class="truncate pr-[12px]" title="{{ $item->reason }}">{{ $item->intervention->sourcedName() }}</span>
                 <span>{{ $item->quantity === null ? '—' : rtrim(rtrim((string) $item->quantity, '0'), '.') }}</span>
                 <span class="truncate pr-[12px]">{{ $item->disaster?->name ?? '—' }}</span>
-                <x-ui.status-chip :tone="$item->statusTone()">{{ $item->statusLabel() }}</x-ui.status-chip>
+                <x-ui.status-chip :tone="$item->statusTone()" :pulse="$item->isPending()">{{ $item->statusLabel() }}</x-ui.status-chip>
                 @if ($canDecide && $item->isPending())
                     <div class="flex items-center gap-[8px] pl-[12px]">
                         <form method="POST" action="{{ route('assistance-requests.approve', $item) }}">
