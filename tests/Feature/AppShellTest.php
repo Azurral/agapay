@@ -5,6 +5,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Support\KnownAccounts;
 use App\Support\Navigation;
+use Illuminate\Support\Str;
 
 beforeEach(fn () => seedRoles());
 
@@ -92,6 +93,16 @@ it('lists remembered accounts in the account menu', function () {
         ->assertOk()
         ->assertSee('Agritech_02')
         ->assertDontSee('Encoder_05');
+});
+
+it('draws the account menu arrow as two bars that fold into an X while open', function () {
+    $page = $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')->getContent();
+    $html = Str::between($page, 'account-trigger', 'Log out');
+
+    expect(substr_count($html, 'class="menu-fold'))->toBe(2)
+        ->and($html)->toContain("fold ? 'menu-fold-x' : ''")
+        ->and($html)->not->toContain('icons/arrow-down.svg')
+        ->and($html)->not->toContain('icons/arrow-up.svg');
 });
 
 it('rings only the switchable accounts, spinning on hover', function () {

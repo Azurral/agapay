@@ -1,22 +1,23 @@
 @props(['user'])
 @php($others = \App\Support\KnownAccounts::others(request(), $user))
-<div x-data="{ open: false }" class="relative h-[56px] w-[235px]" @click.outside="open = false" @keydown.escape.window="open = false">
+{{-- fold flips a frame after the menu shows, so its close arrow visibly folds from ▾ into an X (like the old hamburger). --}}
+<div x-data="{ open: false, fold: false }" class="relative h-[56px] w-[235px]" @click.outside="open = false" @keydown.escape.window="open = false"
+     x-init="$watch('open', v => v ? requestAnimationFrame(() => requestAnimationFrame(() => fold = true)) : fold = false)">
     <button type="button" @click="open = true" :aria-expanded="open" aria-haspopup="true"
-            class="account-trigger relative block h-[56px] w-[235px] rounded-[15px] border-[1.5px] border-black/15 bg-white text-left">
+            class="account-trigger group relative block h-[56px] w-[235px] rounded-[15px] border-[1.5px] border-black/15 bg-white text-left">
         <x-app.avatar :user="$user" class="absolute top-[8.5px] left-[9.5px]" />
         <span class="absolute top-[5px] left-[50px] text-[16px] font-bold leading-[20px]">{{ $user->username }}</span>
         <span class="absolute top-[25px] left-[50px] text-[13px] font-medium leading-[17px] text-subtle">{{ $user->roleShortName() }}</span>
-        {{-- Same 26px hover circle and position as the menu's close (up) arrow. --}}
+        {{-- Same 26px hover circle and position as the menu's close arrow. --}}
         <span class="hover-tint absolute top-[14.5px] left-[200.5px] flex size-[26px] items-center justify-center rounded-full">
-            <img src="{{ asset('images/figma/icons/arrow-down.svg') }}" alt="" class="size-[18px]">
+            <span class="menu-fold" aria-hidden="true"><span></span><span></span></span>
         </span>
     </button>
 
     <div x-cloak x-show="open"
          class="absolute top-0 left-0 z-40 flex w-[235px] flex-col rounded-[15px] border-[1.5px] border-black/15 bg-white pt-[6.5px] pb-[8.5px]">
-        <button type="button" @click="open = false" class="hover-tint absolute top-[14.5px] left-[200.5px] z-10 flex size-[26px] items-center justify-center rounded-full" aria-label="Close account menu">
-            {{-- Figma uses the same asset rotated 180° ("Account Button Back"). --}}
-            <img src="{{ asset('images/figma/icons/arrow-up.svg') }}" alt="" class="size-[18px] rotate-180">
+        <button type="button" @click="open = false" class="group hover-tint absolute top-[14.5px] left-[200.5px] z-10 flex size-[26px] items-center justify-center rounded-full" aria-label="Close account menu">
+            <span class="menu-fold" :class="fold ? 'menu-fold-x' : ''" aria-hidden="true"><span></span><span></span></span>
         </button>
 
         <div class="relative h-[41px] pl-[9.5px]">

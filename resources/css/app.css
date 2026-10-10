@@ -168,6 +168,18 @@
 .group:hover .switch-ring, .group:focus-visible .switch-ring { color: #5a5de3; animation: switch-spin 1.2s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .group:hover .switch-ring, .group:focus-visible .switch-ring { animation: none; } }
 
+/* Account menu arrow: two bars forming a down chevron that dips on hover and folds into an X once the menu is open. */
+.menu-fold { position: relative; display: block; width: 16px; height: 16px; color: var(--color-muted); transition: color 200ms, transform 300ms; }
+.menu-fold > span { position: absolute; top: 50%; left: 50%; width: 9px; height: 2.5px; border-radius: 9999px; background: currentColor; transition: transform 300ms ease, width 300ms ease; }
+.menu-fold > span:first-child { transform: translate(-50%, -50%) translate(-3px, 1px) rotate(45deg); }
+.menu-fold > span:last-child { transform: translate(-50%, -50%) translate(3px, 1px) rotate(-45deg); }
+.group:hover .menu-fold, .group:focus-visible .menu-fold { color: var(--color-brand); transform: translateY(2px); }
+.menu-fold.menu-fold-x > span { width: 15px; }
+.menu-fold.menu-fold-x > span:first-child { transform: translate(-50%, -50%) rotate(45deg); }
+.menu-fold.menu-fold-x > span:last-child { transform: translate(-50%, -50%) rotate(-45deg); }
+.group:hover .menu-fold.menu-fold-x, .group:focus-visible .menu-fold.menu-fold-x { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) { .menu-fold, .menu-fold > span { transition: none; } }
+
 /* ==== Dark theme (html.dark, set by the side panel's switch) ====
    Colours only: nothing here may change a size, position or spacing, so both themes share one layout.
    Unlayered rules, so they win over Tailwind's utilities. PDFs and Excel files are separate and stay light. */
@@ -255,3 +267,5 @@ html.dark img[src*="/images/figma/icons/"]:not(.invert):not([src*="task.svg"]):n
 html.dark .desktop-only-notice { background: rgb(15 16 32 / 0.6); }
 html.dark .switch-ring { color: #b3b5ff; }
 html.dark .group:hover .switch-ring, html.dark .group:focus-visible .switch-ring { color: #d4d5ff; }
+html.dark .menu-fold { color: var(--dark-muted); }
+html.dark .group:hover .menu-fold, html.dark .group:focus-visible .menu-fold { color: var(--dark-brand); }
