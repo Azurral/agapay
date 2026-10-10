@@ -162,6 +162,12 @@
 @keyframes header-drop { from { transform: translateY(-100%); } to { transform: translateY(0); } }
 .header-drop { animation: header-drop 200ms ease-out; }
 
+/* Account menu: the ring around switchable accounts rests still and spins while its row is hovered. */
+@keyframes switch-spin { to { transform: rotate(360deg); } }
+.switch-ring { color: #7e80ff; transform-origin: center; transition: color 150ms; }
+.group:hover .switch-ring, .group:focus-visible .switch-ring { color: #5a5de3; animation: switch-spin 1.2s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .group:hover .switch-ring, .group:focus-visible .switch-ring { animation: none; } }
+
 /* ==== Dark theme (html.dark, set by the side panel's switch) ====
    Colours only: nothing here may change a size, position or spacing, so both themes share one layout.
    Unlayered rules, so they win over Tailwind's utilities. PDFs and Excel files are separate and stay light. */
@@ -247,3 +253,5 @@ html.dark img[src*="/images/figma/icons/"]:not(.invert):not([src*="task.svg"]):n
 
 /* The phone/tablet notice keeps its blur, over a dark wash. */
 html.dark .desktop-only-notice { background: rgb(15 16 32 / 0.6); }
+html.dark .switch-ring { color: #b3b5ff; }
+html.dark .group:hover .switch-ring, html.dark .group:focus-visible .switch-ring { color: #d4d5ff; }

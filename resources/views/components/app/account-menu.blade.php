@@ -29,9 +29,13 @@
             <form method="POST" action="{{ route('account.switch') }}" class="{{ $loop->first ? 'mt-[16px]' : 'mt-[10px]' }}">
                 @csrf
                 <input type="hidden" name="username" value="{{ $other->username }}">
-                <button type="submit" class="hover-tint relative block h-[41px] w-full rounded-[10px] text-left" title="Sign in as {{ $other->username }}">
+                <button type="submit" class="group hover-tint relative block h-[41px] w-full rounded-[10px] text-left" title="Sign in as {{ $other->username }}">
                     <x-app.avatar :user="$other" class="absolute top-[2px] left-[9.5px]" />
-                    <img src="{{ asset('images/figma/icons/ring.svg') }}" alt="" class="absolute top-[2.5px] left-[10.5px]">
+                    {{-- A switch ring around accounts you can jump to: still at rest, it spins while hovered. --}}
+                    <svg class="switch-ring pointer-events-none absolute top-[-2px] left-[5.5px] size-[44px]" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+                        <circle cx="22" cy="22" r="21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="22 5" />
+                        <path d="M36.9 1.6v5.6h-5.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
                     <span class="absolute top-0 left-[51.5px] text-[16px] font-bold leading-[20px]">{{ $other->username }}</span>
                     <span class="absolute top-[20px] left-[51.5px] text-[13px] font-medium leading-[17px] text-subtle">{{ $other->roleShortName() }}</span>
                 </button>

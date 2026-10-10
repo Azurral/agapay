@@ -94,6 +94,19 @@ it('lists remembered accounts in the account menu', function () {
         ->assertDontSee('Encoder_05');
 });
 
+it('rings only the switchable accounts, spinning on hover', function () {
+    $admin = userWithRole(Role::ADMIN, ['username' => 'Admin_01']);
+    $encoder = userWithRole(Role::ENCODER, ['username' => 'Encoder_03']);
+    $agritech = userWithRole(Role::AGRITECH, ['username' => 'Agritech_02']);
+
+    $html = $this->actingAs($admin)
+        ->withCookie(KnownAccounts::COOKIE, json_encode([$admin->id, $encoder->id, $agritech->id]))
+        ->get('/dashboard')->getContent();
+
+    expect(substr_count($html, 'class="switch-ring'))->toBe(2)
+        ->and($html)->not->toContain('icons/ring.svg');
+});
+
 it('ignores a garbage remembered-accounts cookie', function () {
     $this->actingAs(userWithRole(Role::ADMIN))
         ->withCookie(KnownAccounts::COOKIE, 'not-json{')
