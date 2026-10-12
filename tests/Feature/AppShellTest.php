@@ -196,3 +196,12 @@ it('shows the system version on the landing page, login and side panel', functio
     $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')
         ->assertSeeInOrder(['RETURN TO LOGIN', "AGAPAY {$version}"]);
 });
+
+it('slides the grid container right with the side panel without resizing it', function () {
+    $html = $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')->getContent();
+
+    // Moved by the panel's width (224px) with a transform, so nothing inside reflows; the overflow is clipped, not scrolled.
+    expect($html)->toContain(':class="nav && \'translate-x-[224px]\'"')
+        ->toContain('transition-transform duration-200 ease-out')
+        ->toContain('<div class="flex overflow-x-clip">');
+});

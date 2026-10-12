@@ -19,9 +19,12 @@
 
     <x-app.sidebar />
 
-    <div class="flex">
-        {{-- Figma: the grid container sits in from the left and top (border and rounded corner there), flush right and bottom. --}}
-        <main class="bg-grid relative ml-[10px] mt-[11px] min-h-[calc(var(--app-vh,100vh)-81px)] flex-1 overflow-hidden rounded-tl-[20px] border-t-[1.5px] border-l-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px]">
+    {{-- Clipped, not scrolled: while the panel is open the container's right edge slides past the window. --}}
+    <div class="flex overflow-x-clip">
+        {{-- Figma: the grid container sits in from the left and top (border and rounded corner there), flush right and bottom.
+             It slides right with the side panel (same width and timing) instead of resizing, so its contents keep their layout. --}}
+        <main :class="nav && 'translate-x-[224px]'"
+              class="bg-grid relative ml-[10px] mt-[11px] min-h-[calc(var(--app-vh,100vh)-81px)] flex-1 overflow-hidden rounded-tl-[20px] border-t-[1.5px] border-l-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px] transition-transform duration-200 ease-out">
             {{-- Everything inside is drawn 15% smaller, so pages fit the screen with less scrolling. --}}
             <div class="[zoom:0.85]">
                 <x-app.greeting />
