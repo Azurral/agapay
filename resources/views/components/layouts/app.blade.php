@@ -1,6 +1,9 @@
 @props(['title'])
+@php($navOpen = (bool) auth()->user()?->sidebar_open)
 <!DOCTYPE html>
-<html lang="en">
+{{-- data-nav is drawn by the server so a page opened with the panel open shows it in place, with no slide or jump
+     (app.css); nav-restored also skips the menu stagger until the user toggles the panel again. --}}
+<html lang="en" data-nav="{{ $navOpen ? 'open' : 'closed' }}" @if ($navOpen) class="nav-restored" @endif>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,8 +15,14 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 {{-- "hiding": after the panel closes on a scrolled page, the pinned header slides up out of view before it unpins. --}}
-<body x-data="{ nav: false, hiding: false }"
-      x-init="$watch('nav', open => { if (! open && window.scrollY > 0) { hiding = true; setTimeout(() => hiding = false, 220); } })" class="min-h-[var(--app-vh,100vh)] min-w-[1280px] bg-white font-sans text-ink antialiased">
+<body x-data="{ nav: {{ $navOpen ? 'true' : 'false' }}, hiding: false }"
+      x-init="$watch('nav', open => {
+          document.documentElement.dataset.nav = open ? 'open' : 'closed';
+          document.documentElement.classList.remove('nav-restored');
+          if (! open && window.scrollY > 0) { hiding = true; setTimeout(() => hiding = false, 220); }
+          // Saved on the account, so each user on the shared PC finds the panel as they left it.
+          fetch(@js(route('account.sidebar')), { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }, body: JSON.stringify({ open }) });
+      })" class="min-h-[var(--app-vh,100vh)] min-w-[1280px] bg-white font-sans text-ink antialiased">
     <x-desktop-only />
     <x-app.header :title="$title" />
 
@@ -22,9 +31,8 @@
     {{-- Clipped, not scrolled: while the panel is open the container's right edge slides past the window. --}}
     <div class="flex overflow-x-clip">
         {{-- Figma: the grid container sits in from the left and top (border and rounded corner there), flush right and bottom.
-             It slides right with the side panel (same width and timing) instead of resizing, so its contents keep their layout. --}}
-        <main :class="nav && 'translate-x-[224px]'"
-              class="bg-grid relative ml-[10px] mt-[11px] min-h-[calc(var(--app-vh,100vh)-81px)] flex-1 overflow-hidden rounded-tl-[20px] border-t-[1.5px] border-l-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px] transition-transform duration-200 ease-out">
+             It slides right with the side panel (app.css, html[data-nav="open"]) instead of resizing, so its contents keep their layout. --}}
+        <main class="bg-grid relative ml-[10px] mt-[11px] min-h-[calc(var(--app-vh,100vh)-81px)] flex-1 overflow-hidden rounded-tl-[20px] border-t-[1.5px] border-l-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px] nav-shift">
             {{-- Everything inside is drawn 15% smaller, so pages fit the screen with less scrolling. --}}
             <div class="[zoom:0.85]">
                 <x-app.greeting />

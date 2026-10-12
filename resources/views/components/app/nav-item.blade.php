@@ -1,6 +1,7 @@
 @props(['item', 'index' => 0])
-{{-- nav-enter: slides in after the one above it each time the panel opens; the icon nudges right on hover. --}}
-<a href="{{ $item['url'] }}" @click="nav = false" @if ($item['active']) aria-current="page" @endif style="--i: {{ $index }}"
+{{-- nav-enter: slides in after the one above it each time the panel opens; the icon nudges right on hover.
+     A click keeps the panel open: it stays as the user left it on the next page. --}}
+<a href="{{ $item['url'] }}" @if ($item['active']) aria-current="page" @endif style="--i: {{ $index }}"
    @class([
        'nav-enter relative block h-[42px] w-[235px] shrink-0 rounded-[13px]',
        'hover-tint' => ! $item['active'],

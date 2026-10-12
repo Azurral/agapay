@@ -245,6 +245,15 @@
 .flash { animation: flash-in 350ms cubic-bezier(.2, .8, .2, 1) both; }
 .flash.flash-out { opacity: 0; transition: opacity 300ms ease, height 300ms ease, margin 300ms ease, padding 300ms ease, border-width 300ms ease; }
 
+/* The side panel's open state is drawn by the server (html[data-nav]), so a page opened with the panel open shows it
+   at once: the grid container already moved aside, the panel visible before Alpine starts, and no stagger replayed. */
+/* The grid container slides by its margins, not a transform: its width stays the same (no reflow), and pop-up
+   windows inside it (position: fixed) stay centred on the screen instead of being trapped in a moved box. */
+.nav-shift { transition: margin 200ms ease-out; }
+html[data-nav="open"] .nav-shift { margin-left: 234px; margin-right: -224px; }
+html[data-nav="open"] #side-panel[x-cloak] { display: block !important; }
+html.nav-restored .nav-enter { animation: none; }
+
 /* Side panel: items slide in one after another each time it opens (it is display: none while closed). */
 @keyframes nav-enter { from { opacity: 0; transform: translateX(-14px); } }
 .nav-enter { animation: nav-enter 320ms cubic-bezier(.2, .8, .2, 1) calc(90ms + var(--i, 0) * 40ms) both; }

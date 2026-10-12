@@ -42,6 +42,7 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'password' => 'hashed',
             'must_change_password' => 'boolean',
+            'sidebar_open' => 'boolean',
         ];
     }
 

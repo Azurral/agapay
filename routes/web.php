@@ -23,6 +23,7 @@ use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SidebarController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VerificationController;
 use App\Models\Intervention;
@@ -36,6 +37,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
     Route::post('/switch-account', [LoginController::class, 'switch'])->name('account.switch');
+    Route::post('/account/sidebar', SidebarController::class)->middleware('active')->name('account.sidebar');
 });
 
 // The public landing page, for everyone; its Log in button takes signed-in users straight to their dashboard.

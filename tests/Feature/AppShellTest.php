@@ -200,8 +200,39 @@ it('shows the system version on the landing page, login and side panel', functio
 it('slides the grid container right with the side panel without resizing it', function () {
     $html = $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')->getContent();
 
-    // Moved by the panel's width (224px) with a transform, so nothing inside reflows; the overflow is clipped, not scrolled.
-    expect($html)->toContain(':class="nav && \'translate-x-[224px]\'"')
-        ->toContain('transition-transform duration-200 ease-out')
-        ->toContain('<div class="flex overflow-x-clip">');
+    // Moved by the panel's width through its margins (app.css .nav-shift), so nothing inside reflows and pop-ups stay
+    // centred; the overflow is clipped, not scrolled.
+    expect($html)->toContain(' nav-shift"')
+        ->toContain('<div class="flex overflow-x-clip">')
+        ->not->toContain('bg-black/20');   // no dimmed overlay: the content stays usable beside the panel
+});
+
+it('remembers each user\'s side panel, open or closed', function () {
+    $admin = userWithRole(Role::ADMIN);
+    $encoder = userWithRole(Role::ENCODER);
+
+    expect($this->actingAs($admin)->get('/dashboard')->getContent())->toContain('data-nav="closed"')->toContain('nav: false');
+
+    $this->postJson(route('account.sidebar'), ['open' => true])->assertNoContent();
+    expect($admin->fresh()->sidebar_open)->toBeTrue();
+
+    // Opened without replaying the slide-in or the menu stagger on every page.
+    expect($this->get('/dashboard')->getContent())->toContain('data-nav="open"')->toContain('class="nav-restored"')->toContain('nav: true');
+    // Someone else on the same PC keeps their own setting.
+    expect($this->actingAs($encoder)->get('/dashboard')->getContent())->toContain('data-nav="closed"');
+
+    $this->actingAs($admin)->postJson(route('account.sidebar'), ['open' => false])->assertNoContent();
+    expect($admin->fresh()->sidebar_open)->toBeFalse();
+});
+
+it('keeps the side panel open while moving between pages', function () {
+    $html = $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')->getContent();
+
+    expect(Str::betweenFirst($html, 'aria-label="Main"', '</nav>'))->not->toContain('nav = false');
+});
+
+it('rejects a malformed side panel setting and guests', function () {
+    $this->actingAs(userWithRole(Role::ADMIN))->postJson(route('account.sidebar'), ['open' => 'sometimes'])->assertUnprocessable();
+    auth()->logout();
+    $this->post(route('account.sidebar'), ['open' => 1])->assertRedirect(route('login'));
 });

@@ -38,10 +38,15 @@ test('guests see the landing page, then each role lands on its own dashboard wit
     ]) {
         await login(page, user);
         await expect(page.getByText(greeting)).toBeVisible();
+        // Earlier tests may have left this user's panel open, and that is remembered: start from closed.
+        if (await page.locator('#side-panel').isVisible()) {
+            await page.getByRole('button', { name: 'Close menu' }).click();
+        }
         await expect(page.locator('#side-panel')).toBeHidden();
         await page.getByRole('button', { name: 'Open menu' }).click();
         await expect(page.locator('#side-panel').getByText(item, { exact: true })).toBeVisible();
-        await page.keyboard.press('Escape');
+        // The logo button closes it again (the open/closed state is remembered per user).
+        await page.getByRole('button', { name: 'Close menu' }).click();
         await expect(page.locator('#side-panel')).toBeHidden();
     }
 });
