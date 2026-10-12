@@ -257,6 +257,22 @@
 .chip-dot { width: 8px; height: 8px; margin-right: 8px; flex-shrink: 0; border-radius: 9999px; background: #7e80ff; animation: chip-dot 1.6s ease-in-out infinite; }
 .chip-pop { animation: chip-pop 650ms cubic-bezier(.3, 1.4, .5, 1) 250ms both; }
 
+/* Damage bar charts grow from the left, one after another. */
+@keyframes bar-grow { from { transform: scaleX(0); } }
+.damage-bar {
+    background: linear-gradient(90deg, #7e80ff, #5a5de3);
+    transform-origin: left center;
+    animation: bar-grow 700ms cubic-bezier(.2, .8, .2, 1) calc(150ms + var(--i, 0) * 70ms) both;
+}
+@media (prefers-reduced-motion: reduce) { .damage-bar { animation: none; } }
+
+/* Eligibility checks: a green tick for a passed check, an amber "!" for a flag a person must review. */
+.check-pass, .check-flag { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 9999px; font-size: 11px; font-weight: 800; line-height: 1; }
+.check-pass { background: #dcfce4; color: #15803d; }
+.check-flag { background: #fde7c7; color: #b45309; }
+html.dark .check-pass { background: rgb(168 249 177 / 0.16); color: #a8f9b1; }
+html.dark .check-flag { background: rgb(253 200 120 / 0.16); color: #fcd08a; }
+
 /* Dark mode switch: the sun spins away while the moon turns in. */
 .theme-sun, .theme-moon { transition: transform 400ms cubic-bezier(.3, 1.3, .5, 1), opacity 250ms ease; }
 .theme-moon { transform: rotate(-90deg) scale(0); opacity: 0; }

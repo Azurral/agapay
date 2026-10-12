@@ -48,10 +48,11 @@ it('shows each role its Figma action bar', function (string $role, string $title
     [Role::ENCODER, 'EDIT MODE', 'Save Changes'],
 ]);
 
-it('shows agri techs a read-only profile without an eligibility step', function () {
+it('shows agri techs the eligibility verification bar, disabled while nothing is waiting', function () {
     $this->actingAs(userWithRole(Role::AGRITECH))->get(route('beneficiaries.show', $this->juan))
-        ->assertOk()->assertSee('BENEFICIARY PROFILE')
-        ->assertDontSee('Verify Eligibility')->assertDontSee('Process Claim')->assertDontSee('Save Changes');
+        ->assertOk()->assertSee('BENEFICIARY PROFILE')->assertSee('ELIGIBILITY VERIFICATION')
+        ->assertSee('No unclaimed intervention records to verify.')
+        ->assertDontSee('Process Claim')->assertDontSee('Save Changes');
 });
 
 it('links the encoder list Edit chip to the edit variant', function () {

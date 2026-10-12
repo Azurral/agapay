@@ -20,6 +20,15 @@
         .rows tr { page-break-inside: avoid; }
         .num { text-align: right; }
         .muted { color: #888; }
+        .charts { margin: 0 0 12px; }
+        .charts > tbody > tr > td { width: 50%; vertical-align: top; padding: 0 6px 0 0; }
+        .chart { border: 1px solid #999; padding: 8px 10px; }
+        .chart-title { font-size: 10.5px; font-weight: bold; color: #000; margin-bottom: 6px; }
+        .chart td { padding: 2px 3px; }
+        .chart .name { width: 26%; }
+        .chart .track { width: 46%; }
+        .pdf-bar { height: 9px; background: #555; }
+        .chart .amount { width: 28%; text-align: right; white-space: nowrap; }
         .footer { position: fixed; bottom: -24px; left: 0; right: 0; font-size: 8.5px; color: #888; }
     </style>
 </head>
@@ -36,6 +45,32 @@
             <td><div class="label">Total Area Damaged (ha)</div><div class="value">{{ DamageCalculator::decimal((float) $summary->area) }}</div></td>
             <td><div class="label">Production Loss (MT)</div><div class="value">{{ DamageCalculator::decimal((float) $summary->loss) }}</div></td>
             <td><div class="label">Est. Cost of Damage</div><div class="value">₱{{ DamageCalculator::decimal((float) $summary->cost) }}</div></td>
+        </tr>
+    </table>
+
+    {{-- The same bar charts as the Crisis Reports page, printed in grey. --}}
+    <table class="charts">
+        <tr>
+            @foreach (['barangays' => 'Cost of Damage by Barangay', 'crops' => 'Cost of Damage by Crop'] as $key => $title)
+                <td>
+                    <div class="chart">
+                        <div class="chart-title">{{ $title }}</div>
+                        @if (empty($charts[$key]))
+                            <div class="muted">No damage to chart for these filters.</div>
+                        @else
+                            <table>
+                                @foreach ($charts[$key] as $bar)
+                                    <tr>
+                                        <td class="name">{{ $bar['name'] }}</td>
+                                        <td class="track"><div class="pdf-bar" style="width: {{ max($bar['percent'], 1) }}%"></div></td>
+                                        <td class="amount">₱{{ DamageCalculator::decimal($bar['value']) }} <span class="muted">· {{ $bar['farmers'] }}</span></td>
+                                    </tr>
+                                @endforeach
+                            </table>
+                        @endif
+                    </div>
+                </td>
+            @endforeach
         </tr>
     </table>
 

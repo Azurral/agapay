@@ -70,7 +70,7 @@ it('ignores archived records for the household rule and the LGU duplicate flag',
     $old = $this->claims->claim(record($juan, $fertilizer, ['validation_status' => 'eligible', 'distribution_cycle_id' => $this->q2->id]), $this->admin);
     $this->claims->archive($old, 'Wrong beneficiary', $this->admin);
 
-    expect($this->assign->assign($juan, $fertilizer, $this->q3, [], $this->admin)->validation_status)->toBe('eligible');
+    expect($this->assign->assign($juan, $fertilizer, $this->q3, [], $this->admin)->validation_status)->toBe('pending');
 });
 
 it('gives DA programs only to farmers with an RSBSA number, LGU programs to anyone', function () {
@@ -95,11 +95,13 @@ it('refuses to release a DA program after the RSBSA number was removed', functio
         ->toThrow(InterventionRuleViolation::class, "Juan Dela Cruz has no RSBSA No. DA programs need one; LGU programs don't.");
 });
 
-it('releases a newly assigned record without a validation step', function () {
+it('releases a newly assigned record once its eligibility is verified', function () {
     [$juan] = sameHousehold(['Juan']);
     $record = $this->assign->assign($juan, program('da', 'Certified Rice Seeds'), $this->q3, ['quantity' => 1], $this->admin);
 
-    $claimed = $this->claims->claim($record, $this->admin, ['date_distributed' => '2026-07-01']);
+    expect(fn () => $this->claims->claim($record, $this->admin))->toThrow(InterventionRuleViolation::class, 'Verify eligibility first.');
+    $this->claims->validate($record, 'eligible', $this->agritech);
+    $claimed = $this->claims->claim($record->fresh(), $this->admin, ['date_distributed' => '2026-07-01']);
     expect($claimed)->claim_status->toBe('claimed')->validation_status->toBe('eligible')
         ->and($claimed->date_distributed->toDateString())->toBe('2026-07-01');
 });
@@ -155,8 +157,8 @@ it('flags a repeated LGU assistance as Duplicate unless repeats are allowed', fu
     }
 
     expect($this->assign->assign($juan, $fertilizer, $this->q3, [], $this->admin)->validation_status)->toBe('duplicate')
-        ->and($this->assign->assign($juan, $seedlings, $this->q3, [], $this->admin)->validation_status)->toBe('eligible')
-        ->and($this->assign->assign($juan, $daSeeds, $this->q3, [], $this->admin)->validation_status)->toBe('eligible');
+        ->and($this->assign->assign($juan, $seedlings, $this->q3, [], $this->admin)->validation_status)->toBe('pending')
+        ->and($this->assign->assign($juan, $daSeeds, $this->q3, [], $this->admin)->validation_status)->toBe('pending');
 });
 
 it('refuses the same intervention twice in one cycle and archived beneficiaries', function () {

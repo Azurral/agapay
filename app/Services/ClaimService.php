@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-/** Eligibility validation, claims, archive and restore of intervention records (paper rules 3, 5, 6). */
+/** Eligibility verification, claims, archive and restore of intervention records (paper rules 3, 5, 6). */
 final class ClaimService
 {
     public function __construct(private readonly InterventionAssignment $assignment, private readonly InventoryService $inventory) {}
@@ -66,6 +66,14 @@ final class ClaimService
                 throw new InterventionRuleViolation('Already claimed.');
             }
             InterventionAssignment::ensureRsbsaFor($record->beneficiary, $record->intervention);
+
+            // A live release needs a person to have verified eligibility; a past distribution from a logbook was already released.
+            if ($record->validation_status === InterventionRecord::VALIDATION_PENDING) {
+                if (! $historical) {
+                    throw new InterventionRuleViolation('Verify eligibility first.');
+                }
+                $record->validation_status = InterventionRecord::VALIDATION_ELIGIBLE;
+            }
 
             if (! in_array($record->validation_status, InterventionRecord::CLAIMABLE, true)) {
                 throw new InterventionRuleViolation('Not eligible: '.InterventionRecord::validationLabel($record->validation_status).'.');
@@ -226,7 +234,8 @@ final class ClaimService
     }
 
     /** The household member's claimed record that blocks this claim, if any (run after lockHousehold). */
-    private function householdClaim(InterventionRecord $record): ?InterventionRecord
+    /** Another household member's claimed record of the same one-per-household program and cycle, if any. */
+    public function householdClaim(InterventionRecord $record): ?InterventionRecord
     {
         $householdId = $record->beneficiary->household_id;
 

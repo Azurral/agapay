@@ -114,6 +114,19 @@ test('5.4 giving programs: DA needs an RSBSA number', async ({ page }) => {
     await expect(page.getByText('Intervention record saved.')).toBeVisible();
 });
 
+test('5.4b eligibility verification: automatic checks, then a person confirms', async ({ page }) => {
+    await login(page, 'Agritech_02');
+    await page.goto('/verification');
+    await expect(page.getByRole('link', { name: 'Maria Dela Cruz' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Ana Dela Cruz' })).toBeVisible();
+    // Estrella's DA record has no RSBSA No.: flagged for a person to decide, not confirmed automatically.
+    await expect(page.getByText(/flag to review/).first()).toBeVisible();
+    await page.getByRole('button', { name: /Confirm all that passed/ }).click();
+    await expect(page.getByText(/verified as Eligible\./)).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Maria Dela Cruz' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Estrella Domogen' })).toBeVisible();
+});
+
 test('5.5 releasing and the household rule with an override', async ({ page }) => {
     await login(page, 'Admin_01');
     const processClaim = async (name, override = null) => {
@@ -230,5 +243,5 @@ test('5.12 assistance requests: filed, summarised and approved', async ({ page }
     await expect(page.getByText('By Barangay')).toBeVisible();
     const row = page.locator('div.grid').filter({ hasText: 'Teresa Ibanez' }).filter({ hasText: 'Emergency Seedlings' }).first();
     await row.getByRole('button', { name: 'Approve' }).click();
-    await expect(page.getByText('Approved: Teresa Ibanez - Emergency Seedlings added to 2026-Q3.')).toBeVisible();
+    await expect(page.getByText('Approved: Teresa Ibanez - Emergency Seedlings added to 2026-Q3, waiting for eligibility verification.')).toBeVisible();
 });

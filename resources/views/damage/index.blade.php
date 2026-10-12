@@ -67,6 +67,12 @@
                 @endforeach
             </div>
 
+            {{-- Graphical summary of the same filtered reports (paper 1.4.1). --}}
+            <div class="mt-[20px] grid grid-cols-2 gap-[20px] pl-[1.5px]">
+                <x-damage.bar-chart title="Cost of Damage by Barangay" :bars="$charts['barangays']" />
+                <x-damage.bar-chart title="Cost of Damage by Crop" :bars="$charts['crops']" />
+            </div>
+
             <h3 class="mt-[22px] pl-[1.5px] text-[16px] font-bold leading-[20px]">Reported Damage Records</h3>
             <div class="mt-[10px] ml-[1.5px] h-[2px] bg-[#ececec]"></div>
             <div class="mt-[16px] grid {{ $cols }} pl-[1.5px] text-[14px] font-medium leading-[20px] text-muted" aria-hidden="true">
