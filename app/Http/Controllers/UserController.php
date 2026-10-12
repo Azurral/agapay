@@ -41,7 +41,10 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request): RedirectResponse
     {
-        $user = User::create($request->validated());
+        // The administrator chose this password, so the person picks their own at the first sign-in.
+        $user = new User($request->validated());
+        $user->must_change_password = true;
+        $user->save();
 
         return redirect()->route('users.index')->with('status', "{$user->username} was added.");
     }
@@ -54,7 +57,12 @@ class UserController extends Controller
             unset($data['password']);
         }
 
-        $user->update($data);
+        $user->fill($data);
+        // A password reset by the administrator is temporary; changing your own here needs no second step.
+        if (isset($data['password']) && ! $user->is($request->user())) {
+            $user->must_change_password = true;
+        }
+        $user->save();
 
         return redirect()->route('users.index')->with('status', "{$user->username} was updated.");
     }

@@ -11,7 +11,13 @@
         <form method="GET" class="mt-[20.5px] flex h-[39px] items-center gap-[25px] pl-[1.5px]">
             <x-ui.pill-input name="name" placeholder="Search Name..." :value="request()->queryText('name')" :width="260" />
             <x-ui.pill-select name="barangay" label="Barangay" :options="['' => 'All'] + $barangays->all()" :selected="request()->queryText('barangay')" :width="260" />
+            <x-ui.pill-select name="rsbsa" label="RSBSA" :options="['' => 'All', 'with' => 'Has a number', 'none' => 'No RSBSA No. yet']" :selected="request()->queryText('rsbsa')" :width="260" />
             <button type="submit" class="sr-only">Apply filters</button>
+            {{-- RSBSA monitoring: farmers OMAG still has to help register, within the name and barangay filters. --}}
+            <a href="{{ request()->fullUrlWithQuery(['rsbsa' => 'none', 'page' => null]) }}"
+               class="ml-auto text-[14px] font-bold {{ $withoutRsbsa > 0 ? 'text-danger hover:underline' : 'text-muted' }}">
+                {{ $withoutRsbsa }} {{ \Illuminate\Support\Str::plural('farmer', $withoutRsbsa) }} without an RSBSA No.
+            </a>
         </form>
 
         <div class="divider mt-[15px]"></div>

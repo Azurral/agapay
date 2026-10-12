@@ -19,6 +19,7 @@ use App\Http\Controllers\InterventionController;
 use App\Http\Controllers\InterventionRecordActionController;
 use App\Http\Controllers\InterventionRecordController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SearchController;
@@ -40,7 +41,9 @@ Route::middleware('auth')->group(function () {
 // The public landing page, for everyone; its Log in button takes signed-in users straight to their dashboard.
 Route::view('/', 'welcome')->name('home');
 
-Route::middleware(['auth', 'active'])->group(function () {
+Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
+    Route::get('/account/password', [PasswordController::class, 'edit'])->name('password.edit');
+    Route::put('/account/password', [PasswordController::class, 'update'])->name('password.update');
     Route::get('/dashboard', DashboardController::class)->middleware('can:dashboard.view')->name('dashboard');
     Route::get('/audit-trail', [AuditTrailController::class, 'index'])->middleware('can:audit.view')->name('audit.index');
 

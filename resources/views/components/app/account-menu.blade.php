@@ -45,6 +45,13 @@
 
         <div class="divider mt-[7px] ml-[10.5px] w-[210px]"></div>
 
+        <a href="{{ route('password.edit') }}" class="hover-tint mt-[6px] ml-[7.5px] flex h-[34px] w-[215px] items-center gap-[10px] rounded-[10px] px-[10px] text-[14px] font-bold">
+            <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+            </svg>
+            Change password
+        </a>
+
         <form method="POST" action="{{ route('logout') }}" class="mt-[10.5px] pl-[7.5px]">
             @csrf
             <button type="submit" class="bg-brand-logout gradient-button h-[39px] w-[215px] rounded-[30px] text-[20px] font-bold text-white">Log out</button>

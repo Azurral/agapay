@@ -85,16 +85,23 @@ class InterventionController extends Controller
     {
         $name = mb_substr($request->queryText('name'), 0, 100);
         $barangayId = ctype_digit($request->queryText('barangay')) ? (int) $request->queryText('barangay') : null;
+        // RSBSA monitoring: who already has a number, and who OMAG still has to follow up.
+        $rsbsa = in_array($request->queryText('rsbsa'), ['with', 'none'], true) ? $request->queryText('rsbsa') : '';
+
+        $filtered = Beneficiary::query()
+            ->when($name !== '', fn (Builder $q) => $q->search($name))
+            ->when($barangayId, fn (Builder $q) => $q->where('barangay_id', $barangayId));
 
         return view('interventions.lgu-beneficiaries', [
-            'beneficiaries' => Beneficiary::query()
+            'beneficiaries' => (clone $filtered)
                 ->with('barangay:id,name')
                 ->withCount('damageReports')
-                ->when($name !== '', fn (Builder $q) => $q->search($name))
-                ->when($barangayId, fn (Builder $q) => $q->where('barangay_id', $barangayId))
+                ->when($rsbsa === 'with', fn (Builder $q) => $q->whereNotNull('rsbsa_number'))
+                ->when($rsbsa === 'none', fn (Builder $q) => $q->whereNull('rsbsa_number'))
                 ->orderBy('last_name')->orderBy('first_name')->orderBy('id')
                 ->paginate(15)->withQueryString(),
             'barangays' => Barangay::orderBy('name')->pluck('name', 'id'),
+            'withoutRsbsa' => (clone $filtered)->whereNull('rsbsa_number')->count(),
         ]);
     }
 
