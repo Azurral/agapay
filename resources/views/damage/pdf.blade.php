@@ -22,6 +22,7 @@
         .muted { color: #888; }
         .charts { margin: 0 0 12px; }
         .charts > tbody > tr > td { width: 50%; vertical-align: top; padding: 0 6px 0 0; }
+        .charts > tbody > tr > td + td { padding: 0 0 0 6px; }
         .chart { border: 1px solid #999; padding: 8px 10px; }
         .chart-title { font-size: 10.5px; font-weight: bold; color: #000; margin-bottom: 6px; }
         .chart td { padding: 2px 3px; }
@@ -63,7 +64,7 @@
                                     <tr>
                                         <td class="name">{{ $bar['name'] }}</td>
                                         <td class="track"><div class="pdf-bar" style="width: {{ max($bar['percent'], 1) }}%"></div></td>
-                                        <td class="amount">₱{{ DamageCalculator::decimal($bar['value']) }} <span class="muted">· {{ $bar['farmers'] }}</span></td>
+                                        <td class="amount">₱{{ DamageCalculator::decimal($bar['value']) }} <span class="muted">· {{ $bar['farmers'] }} {{ \Illuminate\Support\Str::plural('farmer', $bar['farmers']) }}</span></td>
                                     </tr>
                                 @endforeach
                             </table>

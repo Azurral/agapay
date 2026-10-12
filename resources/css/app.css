@@ -310,8 +310,10 @@ html.dark .bg-grid-login { background-color: var(--dark-page); background-image:
 
 /* Surfaces: white cards, panels and fields. White pills on the purple gradient cards and bars stay white. */
 html.dark .bg-white:not(.bg-brand-card *):not(.bg-brand-bar *),
-html.dark .bg-\[\#f7f7f9\],
 html.dark .bg-\[\#ececec\] { background-color: var(--dark-surface); }
+/* Grey panels inside a card (summary cards, charts, checklists) sit one step lighter, so they still read as boxes. */
+html.dark .bg-\[\#f7f7f9\] { background-color: var(--dark-field); }
+html.dark .bg-black\/5 { background-color: rgb(255 255 255 / 0.08); }
 html.dark header.bg-white,
 html.dark #side-panel.bg-white { background-color: var(--dark-chrome); }
 html.dark .bg-brand-bar .bg-white { background-color: var(--dark-surface); color: var(--dark-text); }
