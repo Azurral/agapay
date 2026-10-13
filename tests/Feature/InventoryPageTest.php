@@ -28,7 +28,7 @@ function movementInput(array $overrides = []): array
 
 it('shows Figma stock columns for the administrator', function () {
     $this->actingAs($this->admin)->get('/inventory')->assertOk()
-        ->assertSee('INVENTORY MANAGEMENT')
+        ->assertSee('<p>INVENTORY</p>', false)
         ->assertSee('Inventory Monitoring')
         ->assertSeeInOrder(['Unit', 'Stock-In', 'Stock-Out', 'Balance', '+ Record Movement'])
         ->assertSeeInOrder(['Certified Rice Seeds', 'sacks (20kg)', '120', '86', '34'])
@@ -40,7 +40,7 @@ it('shows Figma stock columns for the administrator', function () {
 });
 
 it('titles the page for the encoder', function () {
-    $this->actingAs($this->encoder)->get('/inventory')->assertOk()->assertSee('INVENTORY MONITORING')->assertSee('+ Record Movement');
+    $this->actingAs($this->encoder)->get('/inventory')->assertOk()->assertSee('<p>INVENTORY</p>', false)->assertSee('+ Record Movement');
 });
 
 it('marks low stock items', function () {

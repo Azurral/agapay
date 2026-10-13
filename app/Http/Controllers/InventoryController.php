@@ -6,7 +6,6 @@ use App\Exceptions\InsufficientStock;
 use App\Models\Intervention;
 use App\Models\InventoryItem;
 use App\Models\InventoryMovement;
-use App\Models\Role;
 use App\Services\AuditLogger;
 use App\Services\InventoryService;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -31,7 +30,7 @@ class InventoryController extends Controller
         $q = mb_substr($request->queryText('q'), 0, 100);
 
         return view('inventory.index', [
-            'title' => $request->user()->role?->slug === Role::ADMIN ? 'INVENTORY MANAGEMENT' : 'INVENTORY MONITORING',
+            'title' => 'INVENTORY',
             'items' => InventoryItem::withStock()
                 ->when($q !== '', fn ($query) => $query->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [
                     '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($q)).'%',

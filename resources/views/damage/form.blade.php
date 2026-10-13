@@ -15,7 +15,7 @@
     ]]);
     $photoErrors = collect($errors->getMessages())->filter(fn ($m, $key) => str_starts_with($key, 'photos'))->flatten()->unique();
 @endphp
-<x-layouts.app :title="$editing ? 'EDIT DAMAGE REPORT' : 'NEW DAMAGE REPORT'">
+<x-layouts.app :title="$editing ? 'EDIT CRISIS REPORT' : 'FILE CRISIS REPORT'">
     @if ($tooLarge)
         <p class="flash rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">The photos are too large to upload at once — up to 10 photos of 5 MB each.</p>
     @endif

@@ -1,4 +1,4 @@
-<x-layouts.app title="INTERVENTION TYPES">
+<x-layouts.app title="INTERVENTIONS">
     {{-- Figma 329:2475 / 407:2 --}}
     <x-ui.card title="Select Intervention Type" />
 

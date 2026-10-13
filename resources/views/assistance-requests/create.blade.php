@@ -4,7 +4,7 @@
     $border = fn (string $field) => $errors->has($field) ? 'border-bad' : 'border-field';
     $picked = old('beneficiary_id') ? \App\Models\Beneficiary::find(old('beneficiary_id')) : null;
 @endphp
-<x-layouts.app title="ASSISTANCE REQUESTS">
+<x-layouts.app title="NEW REQUEST">
     @if (session('status'))
         <p class="flash rounded-[10px] border-[1.5px] border-ok bg-white px-[16px] py-[10px] text-[14px] font-bold" role="status" data-autohide>{{ session('status') }}</p>
     @endif

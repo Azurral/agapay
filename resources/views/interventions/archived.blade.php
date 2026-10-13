@@ -1,6 +1,6 @@
 @php($label = strtoupper($source))
 @php($cols = 'grid-cols-[220px_172px_320px_220px_338px_155px]')
-<x-layouts.app :title="$label.' INTERVENTION LIST'">
+<x-layouts.app :title="$label.' INTERVENTION'">
     {{-- Figma 344:236 (DA) / 344:531 (LGU) --}}
     <x-intervention.flash />
 

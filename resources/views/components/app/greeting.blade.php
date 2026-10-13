@@ -8,8 +8,9 @@
         </p>
         <div class="mt-[3px] flex flex-wrap" style="gap: {{ $actions['gap'] }}px">
             @foreach ($actions['items'] as $action)
-                <a href="{{ $action['url'] }}"
-                   class="border-gradient pill-button flex h-[39px] items-center justify-center rounded-[50px] text-[20px] font-bold leading-[24px] whitespace-nowrap"
+                {{-- The button of the page that is open stays highlighted (is-current), matching the title at the top right. --}}
+                <a href="{{ $action['url'] }}" @if ($action['active']) aria-current="page" @endif
+                   class="border-gradient pill-button {{ $action['active'] ? 'is-current' : '' }} flex h-[39px] items-center justify-center rounded-[50px] text-[20px] font-bold leading-[24px] whitespace-nowrap"
                    style="width: {{ $actions['width'] }}px">{{ $action['label'] }}</a>
             @endforeach
         </div>

@@ -43,7 +43,7 @@ it('renders the dashboard shell for every role', function (string $role, string 
         ->assertOk()
         ->assertSee('Agapay')
         ->assertSee(now()->format('D, F j'))
-        ->assertSee('HOME DASHBOARD')
+        ->assertSee('<p>HOME</p>', false)
         ->assertSee("Hello, {$greeting}")
         ->assertSee('Select an action to get started:')
         ->assertSee('Search beneficiary by name, RSBSA No., or barangay...', false)
@@ -236,3 +236,41 @@ it('rejects a malformed side panel setting and guests', function () {
     auth()->logout();
     $this->post(route('account.sidebar'), ['open' => 1])->assertRedirect(route('login'));
 });
+
+it('highlights the quick action of the page that is open', function (string $role, string $url, string $current) {
+    $html = $this->actingAs(userWithRole($role))->get($url)->assertOk()->getContent();
+    preg_match_all('/<a href="[^"]*"\s+aria-current="page"\s+class="[^"]*pill-button is-current[^"]*"[^>]*>([^<]+)</', $html, $m);
+
+    expect($m[1])->toBe([$current]);
+})->with([
+    'encoder on Upload Excel' => [Role::ENCODER, '/import', 'Upload Excel'],
+    'encoder on Add Beneficiary' => [Role::ENCODER, '/beneficiaries/create', 'Add Beneficiary'],
+    'admin on Export List' => [Role::ADMIN, '/export', 'Export List'],
+    'admin on Add User' => [Role::ADMIN, '/users?add=1', 'Add User'],
+    'agritech on File Crisis Report' => [Role::AGRITECH, '/damage-reports/create', 'File Crisis Report'],
+]);
+
+it('highlights no quick action on pages they do not open', function () {
+    $html = $this->actingAs(userWithRole(Role::ADMIN))->get('/users')->getContent();
+
+    expect($html)->not->toContain('is-current');
+});
+
+it('names each page like the button or menu item that opens it', function (string $role, string $url, string $title) {
+    $this->actingAs(userWithRole($role))->get($url)->assertOk()
+        ->assertSee('<p>'.$title.'</p>', false);
+})->with([
+    [Role::ADMIN, '/dashboard', 'HOME'],
+    [Role::ENCODER, '/import', 'UPLOAD EXCEL'],
+    [Role::ADMIN, '/export', 'EXPORT LIST'],
+    [Role::ADMIN, '/interventions', 'INTERVENTIONS'],
+    [Role::ADMIN, '/interventions/da', 'DA INTERVENTION'],
+    [Role::ADMIN, '/interventions/lgu', 'LGU INTERVENTION'],
+    [Role::ADMIN, '/interventions/lgu?tab=requests', 'LGU INTERVENTION'],
+    [Role::ADMIN, '/damage-reports', 'CRISIS REPORTS'],
+    [Role::AGRITECH, '/damage-reports/create', 'FILE CRISIS REPORT'],
+    [Role::ENCODER, '/assistance-requests/create', 'NEW REQUEST'],
+    [Role::ADMIN, '/inventory', 'INVENTORY'],
+    [Role::ENCODER, '/inventory', 'INVENTORY'],
+    [Role::ADMIN, '/users?add=1', 'ADD USER'],
+]);

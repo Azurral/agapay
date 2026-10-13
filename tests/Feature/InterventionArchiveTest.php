@@ -15,7 +15,7 @@ beforeEach(function () {
 
 it('lists the seeded archived records under Archived/Restore', function () {
     $this->actingAs($this->admin)->get('/interventions/da/archived')->assertOk()
-        ->assertSee('DA INTERVENTION LIST')
+        ->assertSee('<p>DA INTERVENTION</p>', false)
         ->assertSee('DA Intervention - Recently Deleted')
         ->assertSeeInOrder(['Federico Wasing', 'N/A', 'Deceased - confirmed by barangay', 'Jul 8, 2026', 'Agritech_02', 'Restore'])
         ->assertSeeInOrder(['Estrella Domogen', 'Data correction - re-entered under new RSBSA no.', 'Jul 3, 2026', 'Encoder_03'])

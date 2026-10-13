@@ -30,7 +30,7 @@ function crisisText(string $first, string $last): string
 
 it('previews the beneficiary list with programs, claims, amounts and crises', function () {
     $this->actingAs($this->admin)->get('/export')->assertOk()
-        ->assertSee('EXPORT BENEFICIARY LIST')
+        ->assertSee('EXPORT LIST')
         ->assertSee('Export Beneficiary List')
         ->assertDontSee('OMAG / DA')
         ->assertSee('Birthdates and contact numbers are left out.')

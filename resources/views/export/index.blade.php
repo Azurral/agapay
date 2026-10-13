@@ -2,7 +2,7 @@
     $cols = 'grid-cols-[190px_120px_200px_190px_80px_100px_120px_100px_1fr]';
     $headings = ['Name', 'RSBSA No.', 'Address', 'Program', 'Cycle', 'Claim Status', 'Amount', 'Crises'];
 @endphp
-<x-layouts.app title="EXPORT BENEFICIARY LIST">
+<x-layouts.app title="EXPORT LIST">
     {{-- Figma 329:3134, widened to one row per program given. --}}
     <x-ui.card title="Export Beneficiary List">
         <p class="mt-[4px] pl-[3px] text-[14px] font-medium leading-[18px] text-muted">

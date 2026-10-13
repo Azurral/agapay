@@ -1,5 +1,5 @@
 @php($label = strtoupper($source))
-<x-layouts.app :title="$label.' INTERVENTION LIST'">
+<x-layouts.app :title="$label.' INTERVENTION'">
     {{-- Figma 329:1250 / 329:1423 (Admin) and 407:323 / 407:603 (Agri Tech) --}}
     <x-intervention.flash />
 

@@ -23,7 +23,7 @@ function seededReport(string $firstName): DamageReport
 
 it('shows the Figma list for each role', function (string $username, bool $exports) {
     $response = $this->actingAs(User::where('username', $username)->sole())->get('/damage-reports')->assertOk()
-        ->assertSee('AGRICULTURAL DAMAGE REPORT')
+        ->assertSee('CRISIS REPORTS')
         ->assertSeeInOrder([
             'Crisis / Crop Damage Report', 'Crisis: Typhoon Cristina', 'Barangay: All', 'Status: All', '+ New Damage Report',
             'Farmers Affected', 'Total Area Damaged (ha)', 'Production Loss (MT)', 'Est. Cost of Damage (₱)',

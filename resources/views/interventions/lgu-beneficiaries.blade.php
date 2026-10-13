@@ -1,5 +1,5 @@
 @php($cols = 'grid-cols-[260px_190px_1fr_130px_200px_150px]')
-<x-layouts.app title="LGU INTERVENTION LIST">
+<x-layouts.app title="LGU INTERVENTION">
     <x-intervention.flash />
 
     {{-- Every farmer in Bontoc, with or without an RSBSA number: LGU programs serve them all. --}}

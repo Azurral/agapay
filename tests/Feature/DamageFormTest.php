@@ -42,7 +42,7 @@ function damageInput(array $overrides = []): array
 
 it('shows the Figma form to every role', function (string $username) {
     $this->actingAs(User::where('username', $username)->sole())->get('/damage-reports/create')->assertOk()
-        ->assertSee('NEW DAMAGE REPORT')
+        ->assertSee('FILE CRISIS REPORT')
         ->assertSeeInOrder([
             'New Damage Report', 'Crisis:', 'Barangay:', 'Farmer / Beneficiary:', 'Crop / Farm Location:',
             'Crop Stage:', 'Total Area:', 'Partial Area:', 'GPS Coordinates', 'Latitude:', 'Longitude:',
@@ -106,7 +106,7 @@ it('lets the reporter edit an unvalidated report and recalculates', function () 
     $report = DamageReport::latest('id')->firstOrFail();
     $removed = $report->photos()->first();
 
-    $this->get(route('damage.edit', $report))->assertOk()->assertSee('EDIT DAMAGE REPORT')->assertSee('Save Changes');
+    $this->get(route('damage.edit', $report))->assertOk()->assertSee('EDIT CRISIS REPORT')->assertSee('Save Changes');
     $this->put(route('damage.update', $report), damageInput([
         'total_area_ha' => '2', 'partial_area_ha' => '0', 'remove_photos' => [$removed->id], 'photos' => [UploadedFile::fake()->image('c.jpg')],
     ]))->assertRedirect(route('damage.show', $report));

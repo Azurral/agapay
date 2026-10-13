@@ -1,4 +1,4 @@
-<x-layouts.app title="HOME DASHBOARD">
+<x-layouts.app title="HOME">
     @if ($showsEncodingQueue)
         {{-- Figma 237:1659 --}}
         <x-ui.card title="Pending Encoding Queue">

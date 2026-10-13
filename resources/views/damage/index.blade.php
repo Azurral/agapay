@@ -12,7 +12,7 @@
     ];
     $exportQuery = $filters->toQuery();
 @endphp
-<x-layouts.app title="AGRICULTURAL DAMAGE REPORT">
+<x-layouts.app title="CRISIS REPORTS">
     {{-- Figma 329:2978 (Admin) / 407:1554 (Agri Tech) / 470:1863 (Data Encoder) --}}
     <x-intervention.flash />
 

@@ -3,7 +3,7 @@
     $canConfirm = $batch?->isStaged() && $batch->importableCount() > 0;
     $previewCols = 'grid-cols-[70px_260px_130px_150px_150px_140px_1fr]';
 @endphp
-<x-layouts.app title="EXCEL IMPORT">
+<x-layouts.app title="UPLOAD EXCEL">
     {{-- Figma 470:540 (Admin) / 430:1887 (Data Encoder) --}}
     <x-intervention.flash />
 

@@ -6,7 +6,7 @@
     $listCols = 'grid-cols-[110px_1.3fr_120px_1.3fr_70px_1.2fr_160px_1.6fr]';
     $query = array_filter(['tab' => 'requests', 'disaster' => $filters['disaster'], 'status' => $filters['status'], 'intervention' => $filters['intervention']]);
 @endphp
-<x-layouts.app title="LGU INTERVENTION LIST">
+<x-layouts.app title="LGU INTERVENTION">
     <x-intervention.flash />
     @error('request')
         <p class="flash rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $message }}</p>

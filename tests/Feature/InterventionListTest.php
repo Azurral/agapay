@@ -21,7 +21,7 @@ function seededRecord(string $first, string $last): InterventionRecord
 
 it('shows the two intervention types', function () {
     $this->actingAs($this->admin)->get('/interventions')->assertOk()
-        ->assertSee('INTERVENTION TYPES')
+        ->assertSee('<p>INTERVENTIONS</p>', false)
         ->assertSeeInOrder(['Select Intervention Type', 'Department of Agriculture [DA]', 'National', 'View DA Beneficiary List',
             'Local Government Unit [LGU]', 'Municipal', 'View LGU Beneficiary List'])
         ->assertSee(route('interventions.da'), false)->assertSee(route('interventions.lgu'), false);
@@ -29,7 +29,7 @@ it('shows the two intervention types', function () {
 
 it('lists DA records with Figma columns for the administrator', function () {
     $this->actingAs($this->admin)->get('/interventions/da')->assertOk()
-        ->assertSee('DA INTERVENTION LIST')
+        ->assertSee('<p>DA INTERVENTION</p>', false)
         ->assertSee('DA Intervention Beneficiaries')
         ->assertSeeInOrder(['Juan Dela Cruz', 'RSBSA-0231', 'Poblacion', 'Certified Rice Seeds', '2 sacks', 'Eligible', 'Claimed'])
         ->assertSeeInOrder(['Liza Domingo', 'PAFF', 'Bedridden', 'Unclaimed'])
@@ -76,7 +76,7 @@ it('counts only active crisis reports per farmer', function () {
 
 it('lists LGU program records like DA ones, with N/A for a missing RSBSA number', function () {
     $this->actingAs($this->admin)->get('/interventions/lgu?tab=records')->assertOk()
-        ->assertSee('LGU INTERVENTION LIST')
+        ->assertSee('<p>LGU INTERVENTION</p>', false)
         ->assertSeeInOrder(['Maria Santos', 'RSBSA-0198', 'Samoki', 'Complete Fertilizer'])
         ->assertSeeInOrder(['Pedro Reyes', 'N/A', 'Bontoc Ili', 'Emergency Seedlings'])
         ->assertSee('Qty / Unit')

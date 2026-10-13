@@ -22,7 +22,7 @@ final class Navigation
             ->all();
     }
 
-    /** @return array{width:int, gap:int, items:list<array{label:string, url:string}>} */
+    /** @return array{width:int, gap:int, items:list<array{label:string, url:string, active:bool}>} */
     public static function quickActions(User $user): array
     {
         $config = config('agapay.quick_actions.'.$user->role?->slug, ['width' => 176, 'gap' => 14, 'items' => []]);
@@ -32,10 +32,17 @@ final class Navigation
             'gap' => $config['gap'],
             'items' => collect($config['items'])
                 ->filter(fn (array $item) => $user->hasPermission($item['permission']))
-                ->map(fn (array $item) => ['label' => $item['label'], 'url' => self::url($item)])
+                ->map(fn (array $item) => ['label' => $item['label'], 'url' => self::url($item), 'active' => self::isOpen($item)])
                 ->values()
                 ->all(),
         ];
+    }
+
+    /** The quick action of the page being shown: same route and, for actions like "Add User" (?add=1), the same query. */
+    private static function isOpen(array $item): bool
+    {
+        return Route::has($item['route']) && request()->routeIs($item['route'])
+            && collect($item['query'] ?? [])->every(fn ($value, string $key) => request()->query($key) === (string) $value);
     }
 
     /** Routes of modules built in later phases render as "#" until registered. */

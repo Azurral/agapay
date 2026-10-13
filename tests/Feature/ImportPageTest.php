@@ -27,7 +27,7 @@ function masterlist(): UploadedFile
 
 it('shows the Figma upload screen', function () {
     $this->actingAs($this->admin)->get('/import')->assertOk()
-        ->assertSee('EXCEL IMPORT')
+        ->assertSee('UPLOAD EXCEL')
         ->assertSeeInOrder([
             'Excel Upload',
             'Scans incoming spreadsheets and will detect, align, and parse fields despite column shifts or label differences.',

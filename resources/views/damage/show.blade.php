@@ -23,7 +23,7 @@
     $canValidate = ! $report->trashed() && ! $report->isValidated() && auth()->user()->can('damage.validate');
     $canConfigure = auth()->user()->can('damage.configure');
 @endphp
-<x-layouts.app title="AGRICULTURAL DAMAGE REPORT">
+<x-layouts.app title="CRISIS REPORTS">
     <x-intervention.flash />
     @if ($damageErrors->has('report'))
         <p class="flash rounded-[10px] border-[1.5px] border-bad bg-white px-[16px] py-[10px] text-[14px] font-bold text-danger" role="alert">{{ $damageErrors->first('report') }}</p>
