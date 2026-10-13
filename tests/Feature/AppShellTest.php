@@ -239,7 +239,7 @@ it('rejects a malformed side panel setting and guests', function () {
 
 it('highlights the quick action of the page that is open', function (string $role, string $url, string $current) {
     $html = $this->actingAs(userWithRole($role))->get($url)->assertOk()->getContent();
-    preg_match_all('/<a href="[^"]*"\s+aria-current="page"\s+class="[^"]*pill-button is-current[^"]*"[^>]*>([^<]+)</', $html, $m);
+    preg_match_all('/<a href="[^"]*"\s+aria-current="page"\s+class="[^"]*pill-button is-current[^"]*"[^>]*><span>([^<]+)</', $html, $m);
 
     expect($m[1])->toBe([$current]);
 })->with([

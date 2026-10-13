@@ -91,14 +91,22 @@
         box-shadow: 0 4px 12px rgb(90 93 227 / 0.18);
     }
 
-    /* The quick action of the open page: filled indigo with white text, so it stands out from the hover look. */
+    /* The quick action of the open page: a white pill with a thicker gradient border, the label in the brand gradient
+       and a soft lavender halo. It keeps this look on hover (no tint, no lift). */
     .pill-button.is-current,
     .pill-button.is-current:hover {
+        border-width: 2.5px;
         background:
-            linear-gradient(90deg, #5a5de3, #7e80ff) padding-box,
+            linear-gradient(#fff, #fff) padding-box,
             linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
-        color: #ffffff;
-        box-shadow: 0 4px 12px rgb(90 93 227 / 0.3);
+        box-shadow: 0 0 0 4px rgb(126 128 255 / 0.15), 0 4px 14px rgb(90 93 227 / 0.25);
+        transform: none;
+    }
+    .pill-button.is-current > span {
+        background: linear-gradient(90deg, #00c2b8, #5a5de3);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
     }
 
     /* Filled brand-gradient buttons (LOGIN, Log out, Save ...): a darker indigo shadow grounds the pale end
@@ -377,10 +385,11 @@ html.dark .border-gradient {
 html.dark .pill-button.is-current,
 html.dark .pill-button.is-current:hover {
     background:
-        linear-gradient(90deg, #5a5de3, #7e80ff) padding-box,
+        linear-gradient(var(--dark-surface), var(--dark-surface)) padding-box,
         linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
-    color: #ffffff;
+    box-shadow: 0 0 0 4px rgb(126 128 255 / 0.18), 0 4px 16px rgb(0 0 0 / 0.45);
 }
+html.dark .pill-button.is-current > span { background-image: linear-gradient(90deg, #00fff2, #a5a7ff); }
 html.dark .pill-button:not(.is-current):hover {
     background:
         linear-gradient(90deg, #13343a, var(--dark-tint)) padding-box,
