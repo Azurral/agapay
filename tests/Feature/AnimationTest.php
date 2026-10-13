@@ -98,7 +98,6 @@ it('pops the chip of the record that was just claimed', function () {
 
     expect($this->actingAs($this->admin)->get('/interventions/da')->getContent())->not->toContain('chip-pop');
 
-    $this->post(route('intervention-records.validate', $carlos), ['validation_status' => 'eligible']);
     $this->post(route('intervention-records.claim', $carlos))->assertSessionHas('changed_record', $carlos->id);
     expect(substr_count($this->get('/interventions/da')->getContent(), 'chip-pop'))->toBe(1);
 });

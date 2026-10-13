@@ -12,8 +12,8 @@ beforeEach(fn () => seedRoles());
 it('builds each role\'s Figma navigation in order', function (string $role, array $labels) {
     expect(array_column(Navigation::items(userWithRole($role)), 'label'))->toBe($labels);
 })->with([
-    'admin' => [Role::ADMIN, ['Home', 'DA Intervention', 'LGU Intervention', 'Eligibility Verification', 'Crisis Reports', 'User Management', 'Audit Trail', 'Download Reports']],
-    'agritech' => [Role::AGRITECH, ['Home', 'DA Intervention', 'LGU Intervention', 'Eligibility Verification', 'Crisis Reports', 'Download Reports']],
+    'admin' => [Role::ADMIN, ['Home', 'DA Intervention', 'LGU Intervention', 'Crisis Reports', 'User Management', 'Audit Trail', 'Download Reports']],
+    'agritech' => [Role::AGRITECH, ['Home', 'DA Intervention', 'LGU Intervention', 'Crisis Reports', 'Download Reports']],
     'encoder' => [Role::ENCODER, ['Home', 'Beneficiary Profiles', 'Intervention Records', 'Inventory', 'Download Reports']],
 ]);
 

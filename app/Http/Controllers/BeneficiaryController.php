@@ -9,7 +9,6 @@ use App\Models\DistributionCycle;
 use App\Models\InterventionRecord;
 use App\Models\Role;
 use App\Services\AuditLogger;
-use App\Services\EligibilityCheck;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -71,16 +70,12 @@ class BeneficiaryController extends Controller
                     ->latest('date_distributed')->latest('id')->first()
                 : null,
             // 430:1461 is the only Data Encoder profile frame, so encoders always edit;
-            // Agri Techs verify eligibility (407:1181); Administrators process claims (329:2822).
-            'variant' => $variant = match (true) {
+            // Agri Techs view the profile; Administrators process claims (329:2822).
+            'variant' => match (true) {
                 $user->role?->slug === Role::ENCODER && $user->can('beneficiaries.manage') => 'edit',
-                $user->role?->slug === Role::AGRITECH => 'eligibility',
+                $user->role?->slug === Role::AGRITECH => 'view',
                 default => 'claim',
             },
-            // The automatic checks shown in the Verify Eligibility window, per unclaimed record.
-            'eligibility' => $variant === 'eligibility'
-                ? $records->reject->isClaimed()->mapWithKeys(fn (InterventionRecord $r) => [$r->id => app(EligibilityCheck::class)->run($r)])
-                : collect(),
             'barangays' => Barangay::orderBy('name')->get(['id', 'name']),
         ]);
     }

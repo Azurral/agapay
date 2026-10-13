@@ -21,9 +21,7 @@ class InterventionRecord extends Model
     /** @use HasFactory<InterventionRecordFactory> */
     use Auditable, HasFactory, SoftDeletes;
 
-    /** New records wait here: AGAPAY runs the automatic checks (EligibilityCheck), and a person confirms. */
-    public const VALIDATION_PENDING = 'pending';
-
+    /** New records start eligible: eligibility is checked outside AGAPAY, special cases are set by hand. */
     public const VALIDATION_ELIGIBLE = 'eligible';
 
     public const VALIDATION_OFW = 'ofw';
@@ -40,7 +38,6 @@ class InterventionRecord extends Model
 
     /** status => chip label, in dropdown order. */
     public const VALIDATIONS = [
-        self::VALIDATION_PENDING => 'For Verification',
         self::VALIDATION_ELIGIBLE => 'Eligible',
         self::VALIDATION_OFW => 'OFW',
         self::VALIDATION_BEDRIDDEN => 'Bedridden',
@@ -101,10 +98,10 @@ class InterventionRecord extends Model
         return self::VALIDATIONS[$status] ?? '—';
     }
 
-    /** A checked status shows green (Figma 407:323); For Verification and unknown values show red. */
+    /** Every known status shows green (Figma 407:323); an unknown value is flagged. */
     public static function validationTone(string $status): string
     {
-        return $status !== self::VALIDATION_PENDING && array_key_exists($status, self::VALIDATIONS) ? 'ok' : 'bad';
+        return array_key_exists($status, self::VALIDATIONS) ? 'ok' : 'bad';
     }
 
     public function isClaimed(): bool

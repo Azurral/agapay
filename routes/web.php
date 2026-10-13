@@ -25,7 +25,6 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SidebarController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\VerificationController;
 use App\Models\Intervention;
 use Illuminate\Support\Facades\Route;
 
@@ -144,10 +143,6 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
         Route::post('/import', [ImportController::class, 'store'])->name('import.store');
         Route::post('/import/{batch}/confirm', [ImportController::class, 'confirm'])->name('import.confirm');
         Route::post('/import/{batch}/discard', [ImportController::class, 'discard'])->name('import.discard');
-    });
-    Route::middleware('can:interventions.validate')->group(function () {
-        Route::get('/verification', [VerificationController::class, 'index'])->name('verification.index');
-        Route::post('/verification/confirm-passed', [VerificationController::class, 'confirmPassed'])->name('verification.confirm-passed');
     });
     Route::post('/intervention-records/{record}/validation', [InterventionRecordActionController::class, 'validate'])
         ->middleware('can:interventions.validate')->name('intervention-records.validate');

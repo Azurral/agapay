@@ -42,7 +42,7 @@ class AssistanceRequestController extends Controller
     {
         $approved = $this->requests->approve($assistanceRequest, $request->user());
 
-        return back()->with('status', "Approved: {$approved->auditRecordLabel()} added to {$approved->record->cycle->code}, waiting for eligibility verification.");
+        return back()->with('status', "Approved: {$approved->auditRecordLabel()} added to {$approved->record->cycle->code}.");
     }
 
     public function deny(Request $request, AssistanceRequest $assistanceRequest): RedirectResponse

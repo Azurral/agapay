@@ -4,7 +4,7 @@ use App\Models\Role;
 
 return [
     // The release shown on screen; bumped with every release (the commit is named after it, e.g. "v0.9.3").
-    'version' => '0.12.5',
+    'version' => '0.13.0',
 
     // Development/demo password for seeded accounts. Change in .env for any real deployment.
     'seed_password' => env('AGAPAY_SEED_PASSWORD', 'Agapay@2026'),
@@ -19,7 +19,6 @@ return [
             ['label' => 'Home', 'route' => 'dashboard', 'icon' => 'home', 'permission' => 'dashboard.view'],
             ['label' => 'DA Intervention', 'route' => 'interventions.da', 'icon' => 'report', 'permission' => 'interventions.view'],
             ['label' => 'LGU Intervention', 'route' => 'interventions.lgu', 'icon' => 'report', 'permission' => 'interventions.view'],
-            ['label' => 'Eligibility Verification', 'route' => 'verification.index', 'icon' => 'validation', 'permission' => 'interventions.validate'],
             ['label' => 'Crisis Reports', 'route' => 'damage.index', 'icon' => 'disaster', 'permission' => 'damage.view'],
             ['label' => 'User Management', 'route' => 'users.index', 'icon' => 'user-mgmt', 'permission' => 'users.manage'],
             ['label' => 'Audit Trail', 'route' => 'audit.index', 'icon' => 'audit', 'permission' => 'audit.view'],
@@ -29,7 +28,6 @@ return [
             ['label' => 'Home', 'route' => 'dashboard', 'icon' => 'home', 'permission' => 'dashboard.view'],
             ['label' => 'DA Intervention', 'route' => 'interventions.da', 'icon' => 'report', 'permission' => 'interventions.view'],
             ['label' => 'LGU Intervention', 'route' => 'interventions.lgu', 'icon' => 'report', 'permission' => 'interventions.view'],
-            ['label' => 'Eligibility Verification', 'route' => 'verification.index', 'icon' => 'validation', 'permission' => 'interventions.validate'],
             ['label' => 'Crisis Reports', 'route' => 'damage.index', 'icon' => 'disaster', 'permission' => 'damage.view'],
             ['label' => 'Download Reports', 'route' => 'reports.index', 'icon' => 'audit', 'permission' => 'reports.generate'],
         ],

@@ -77,7 +77,7 @@ it('approves a request into a program record for the current cycle', function ()
     $request = AssistanceRequest::latest('id')->firstOrFail();
 
     $this->actingAs($this->admin)->post(route('assistance-requests.approve', $request))
-        ->assertSessionHas('status', 'Approved: Ana Dela Cruz - Emergency Seedlings added to 2026-Q3, waiting for eligibility verification.');
+        ->assertSessionHas('status', 'Approved: Ana Dela Cruz - Emergency Seedlings added to 2026-Q3.');
 
     $record = $request->fresh()->record;
     expect($request->fresh())->status->toBe('approved')->decided_by->toBe($this->admin->id)->decided_at->not->toBeNull()

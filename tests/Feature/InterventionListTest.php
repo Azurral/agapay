@@ -115,13 +115,19 @@ it('validates and claims through the dropdown routes', function () {
     $this->post(route('intervention-records.unclaim', $carlos))->assertSessionHasNoErrors();
     expect($carlos->fresh()->claim_status)->toBe('unclaimed');
 
-    // A record waiting for verification cannot be released yet.
-    $pedro = seededRecord('Pedro', 'Reyes');
-    $this->post(route('intervention-records.claim', $pedro), ['quantity' => 5])->assertSessionHasErrorsIn('intervention', ['intervention' => 'Verify eligibility first.']);
-    $this->post(route('intervention-records.validate', $pedro), ['validation_status' => 'eligible']);
-    $this->post(route('intervention-records.claim', $pedro), ['quantity' => 5])->assertSessionHasNoErrors();
+    // Records start eligible: no validation step before a release.
+    $this->post(route('intervention-records.claim', seededRecord('Pedro', 'Reyes')), ['quantity' => 5])->assertSessionHasNoErrors();
     $this->post(route('intervention-records.validate', $carlos), ['validation_status' => ['eligible']])
         ->assertSessionHasErrorsIn('intervention', 'validation_status');
+});
+
+it('has no eligibility verification step: records start eligible, special cases are tagged on the lists', function () {
+    expect(Route::has('validation.index'))->toBeFalse()
+        ->and(Route::has('verification.index'))->toBeFalse()
+        ->and(InterventionRecord::where('validation_status', 'pending')->exists())->toBeFalse();
+    $this->actingAs($this->agritech)->get('/validation')->assertNotFound();
+    $this->get('/verification')->assertNotFound();
+    $this->get('/dashboard')->assertDontSee('Eligibility Verification');
 });
 
 it('keeps lists and actions behind their permissions', function () {

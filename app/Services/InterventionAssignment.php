@@ -37,7 +37,7 @@ final class InterventionAssignment
                 'date_distributed' => $attrs['date_distributed'] ?? null,
                 'validation_status' => $this->isRepeat($beneficiary->id, $intervention, $cycle->id)
                     ? InterventionRecord::VALIDATION_DUPLICATE
-                    : InterventionRecord::VALIDATION_PENDING,
+                    : InterventionRecord::VALIDATION_ELIGIBLE,
                 'claim_status' => InterventionRecord::CLAIM_UNCLAIMED,
                 'created_by' => $actor->id,
             ]);
@@ -73,7 +73,7 @@ final class InterventionAssignment
                 if ($this->isRepeat($record->beneficiary_id, $intervention, $cycleId, $record->id)) {
                     $record->validation_status = InterventionRecord::VALIDATION_DUPLICATE;
                 } elseif ($record->validation_status === InterventionRecord::VALIDATION_DUPLICATE) {
-                    $record->validation_status = InterventionRecord::VALIDATION_PENDING;
+                    $record->validation_status = InterventionRecord::VALIDATION_ELIGIBLE;
                 }
             }
 

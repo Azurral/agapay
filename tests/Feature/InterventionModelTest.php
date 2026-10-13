@@ -71,7 +71,7 @@ it('seeds the Figma sample records idempotently', function () {
     $juan = Beneficiary::where(['first_name' => 'Juan', 'last_name' => 'Dela Cruz'])->sole();
     $federico = InterventionRecord::onlyTrashed()->whereHas('beneficiary', fn ($q) => $q->where('first_name', 'Federico'))->sole();
 
-    expect(InterventionRecord::count())->toBe(8)
+    expect(InterventionRecord::count())->toBe(7)
         ->and(InterventionRecord::onlyTrashed()->count())->toBe(4)
         ->and($juan->interventionRecords()->sole())
         ->claim_status->toBe('claimed')

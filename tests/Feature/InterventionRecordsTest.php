@@ -48,7 +48,7 @@ it('adds a not-yet-distributed record', function () {
         ->assertRedirect(route('intervention-records.index'))->assertSessionHas('status', 'Intervention record saved.');
 
     $record = InterventionRecord::where('beneficiary_id', recordInput()['beneficiary_id'])->where('intervention_id', recordInput()['intervention_id'])->sole();
-    expect($record)->validation_status->toBe('pending')->claim_status->toBe('unclaimed')->created_by->toBe($this->encoder->id)
+    expect($record)->validation_status->toBe('eligible')->claim_status->toBe('unclaimed')->created_by->toBe($this->encoder->id)
         ->and(AuditLog::where('action', 'Added Intervention Record')->exists())->toBeTrue();
 });
 
