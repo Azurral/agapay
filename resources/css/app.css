@@ -247,10 +247,11 @@
 
 /* The side panel's open state is drawn by the server (html[data-nav]), so a page opened with the panel open shows it
    at once: the grid container already moved aside, the panel visible before Alpine starts, and no stagger replayed. */
-/* The grid container slides by its margins, not a transform: its width stays the same (no reflow), and pop-up
-   windows inside it (position: fixed) stay centred on the screen instead of being trapped in a moved box. */
+/* The grid container makes room for the side panel by its left margin, so it narrows and its contents fit beside the
+   panel instead of being cut off on the right. A margin (not a transform) keeps pop-up windows inside it
+   (position: fixed) centred on the screen. */
 .nav-shift { transition: margin 200ms ease-out; }
-html[data-nav="open"] .nav-shift { margin-left: 234px; margin-right: -224px; }
+html[data-nav="open"] .nav-shift { margin-left: 234px; }
 html[data-nav="open"] #side-panel[x-cloak] { display: block !important; }
 html.nav-restored .nav-enter { animation: none; }
 

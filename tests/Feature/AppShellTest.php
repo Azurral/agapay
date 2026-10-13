@@ -197,11 +197,11 @@ it('shows the system version on the landing page, login and side panel', functio
         ->assertSeeInOrder(['RETURN TO LOGIN', "AGAPAY {$version}"]);
 });
 
-it('slides the grid container right with the side panel without resizing it', function () {
+it('makes room for the side panel by moving the grid container\'s left edge', function () {
     $html = $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')->getContent();
 
-    // Moved by the panel's width through its margins (app.css .nav-shift), so nothing inside reflows and pop-ups stay
-    // centred; the overflow is clipped, not scrolled.
+    // Its left margin grows by the panel's width (app.css .nav-shift), so the contents fit beside the panel and pop-ups
+    // stay centred; nothing scrolls sideways.
     expect($html)->toContain(' nav-shift"')
         ->toContain('<div class="flex overflow-x-clip">')
         ->not->toContain('bg-black/20');   // no dimmed overlay: the content stays usable beside the panel

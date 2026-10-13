@@ -28,10 +28,10 @@
 
     <x-app.sidebar />
 
-    {{-- Clipped, not scrolled: while the panel is open the container's right edge slides past the window. --}}
+    {{-- Clipped, never scrolled sideways, while the container moves during the panel's slide. --}}
     <div class="flex overflow-x-clip">
         {{-- Figma: the grid container sits in from the left and top (border and rounded corner there), flush right and bottom.
-             It slides right with the side panel (app.css, html[data-nav="open"]) instead of resizing, so its contents keep their layout. --}}
+             It makes room for the side panel (app.css .nav-shift), narrowing so its contents fit beside it. --}}
         <main class="bg-grid relative ml-[10px] mt-[11px] min-h-[calc(var(--app-vh,100vh)-81px)] flex-1 overflow-hidden rounded-tl-[20px] border-t-[1.5px] border-l-[1.5px] border-black/15 pt-[22px] pr-[37px] pb-[40px] pl-[36px] nav-shift">
             {{-- Everything inside is drawn 15% smaller, so pages fit the screen with less scrolling. --}}
             <div class="[zoom:0.85]">
