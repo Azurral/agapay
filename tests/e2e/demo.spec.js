@@ -191,8 +191,9 @@ test('5.8 crisis report: kept photo, filing, validation, crises list', async ({ 
 
     await login(page, 'Admin_01');
     await page.goto('/damage-reports');
-    await page.getByRole('button', { name: /Crises & Crop Values/ }).click();
+    await page.getByRole('button', { name: '+ Add Crisis' }).click();
     await expect(page.getByPlaceholder('e.g. Rain-Induced Landslide')).toBeVisible();
+    await expect(page.getByText('Crises already in AGAPAY')).toBeVisible();
 });
 
 test('5.9 to 5.11 cycles, download reports and the audit trail', async ({ page }) => {

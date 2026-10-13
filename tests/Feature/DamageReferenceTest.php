@@ -29,9 +29,34 @@ function cropValues(array $changes = []): array
 
 it('shows the reference values to administrators', function () {
     $this->actingAs($this->admin)->get('/damage-reports')
-        ->assertSee('Crises &amp; Crop Values', false)
         ->assertSee('Loss = (Total + factor × Partial) × Yield · Cost = Loss × Price')
         ->assertSee('name="crops['.Crop::where('name', 'Rice')->value('id').'][price_per_mt]"', false);
+});
+
+it('offers Add Crisis and Crop Values as two separate buttons side by side', function () {
+    $html = $this->actingAs($this->admin)->get('/damage-reports')->assertOk()->getContent();
+
+    expect($html)->toContain("\$dispatch('open-modal', 'add-crisis')")->toContain("\$dispatch('open-modal', 'crop-values')")
+        ->and($html)->toMatch('/open-modal\', \'add-crisis\'\)"[^>]*>\s*\+ Add Crisis\s*</')
+        ->and($html)->toMatch('/open-modal\', \'crop-values\'\)"[^>]*>\s*Crop Values\s*</')
+        ->and($html)->not->toContain('Crises &amp; Crop Values');
+});
+
+it('lists the existing crises in the Add Crisis window, newest first', function () {
+    $this->actingAs($this->admin)->get('/damage-reports')
+        ->assertSeeInOrder(['Crises already in AGAPAY', 'Typhoon Cristina', 'Jul 20, 2026', 'Frost (Cold Spell)']);
+});
+
+it('reopens only the window whose form had a mistake', function () {
+    $this->actingAs($this->admin)->from('/damage-reports')->post(route('damage.disasters.store'), ['name' => '', 'occurred_on' => '']);
+    $crisis = $this->get('/damage-reports')->getContent();
+
+    $this->from('/damage-reports')->put(route('damage.crops.update'), ['crops' => cropValues(['Rice' => ['price_per_mt' => 'abc']])]);
+    $crop = $this->get('/damage-reports')->getContent();
+
+    expect($crisis)->toMatch('/x-data="\{ open: true \}"[^<]*>\s*<div[^>]*aria-label="Add Crisis"/')
+        ->and($crop)->toMatch('/x-data="\{ open: true \}"[^<]*>\s*<div[^>]*aria-label="Crop Values"/')
+        ->and($crisis)->not->toMatch('/x-data="\{ open: true \}"[^<]*>\s*<div[^>]*aria-label="Crop Values"/');
 });
 
 it('updates crop values and audits only the changes', function () {

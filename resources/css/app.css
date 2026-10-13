@@ -315,6 +315,10 @@ html.dark {
     --dark-brand: #a5a7ff;
 }
 
+/* Native controls (open dropdown lists, date pickers, scrollbars) are drawn dark too, so options stay readable. */
+html.dark { color-scheme: dark; }
+html.dark select option { background-color: var(--dark-surface); color: var(--dark-text); }
+
 /* Page backgrounds, with the same grid drawn in faint white. */
 html.dark body,
 html.dark body.bg-white { background-color: var(--dark-page); color: var(--dark-text); }
