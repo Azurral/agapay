@@ -79,3 +79,37 @@ it('sends security headers on every page', function () {
         ->assertHeader('X-Content-Type-Options', 'nosniff')
         ->assertHeader('Referrer-Policy', 'same-origin');
 });
+
+it('reports the running version and the updater state so the waiting page knows when the update is really done', function () {
+    $home = sys_get_temp_dir().'/agapay-status-'.uniqid();
+    mkdir($home.'/data/updates', 0777, true);
+    $_SERVER['AGAPAY_HOME'] = $home;
+
+    $status = fn () => $this->actingAs($this->admin)->getJson(route('system.update.status'))->assertOk();
+
+    file_put_contents($home.'/data/updates/pending.json', '{}');
+    $status()->assertExactJson(['version' => '0.14.1', 'state' => 'running']);
+
+    unlink($home.'/data/updates/pending.json');
+    file_put_contents($home.'/data/updates/result.json', json_encode(['status' => 'failed', 'message' => 'Download failed (AGAPAY was kept at v0.14.1)']));
+    $status()->assertExactJson(['version' => '0.14.1', 'state' => 'failed', 'message' => 'Download failed (AGAPAY was kept at v0.14.1)']);
+
+    file_put_contents($home.'/data/updates/result.json', json_encode(['status' => 'done', 'message' => 'Updated to v0.15.0.']));
+    $status()->assertExactJson(['version' => '0.14.1', 'state' => 'done']);
+
+    unset($_SERVER['AGAPAY_HOME']);
+});
+
+it('keeps the update status for the administrator only', function () {
+    $this->actingAs(userWithRole(Role::ENCODER))->getJson(route('system.update.status'))->assertForbidden();
+});
+
+it('waits on the updating page for the new version number, not just for AGAPAY to answer', function () {
+    fakeRelease();
+    $this->mock(UpdateLauncher::class)->shouldReceive('launch')->once();
+
+    $this->actingAs($this->admin)->post(route('system.update'))->assertOk()
+        ->assertSee(str_replace('/', '\/', route('system.update.status')), false)
+        ->assertSee("'0.15.0'", false)
+        ->assertSee('The update did not finish');
+});

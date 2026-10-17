@@ -125,6 +125,7 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
     });
 
     Route::post('/system/update', [SystemUpdateController::class, 'store'])->middleware('can:users.manage')->name('system.update');
+    Route::get('/system/update/status', [SystemUpdateController::class, 'status'])->middleware('can:users.manage')->name('system.update.status');
     Route::middleware('can:programs.manage')->group(function () {
         Route::get('/programs', [ProgramController::class, 'index'])->name('programs.index');
         Route::post('/programs', [ProgramController::class, 'store'])->name('programs.store');
