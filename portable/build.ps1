@@ -1,17 +1,19 @@
-# Builds "AGAPAY for Windows" (the portable office copy) and the update package for a GitHub release.
+# Builds "AGAPAY for Windows": the installer for the office laptop and the update package for a GitHub release.
 #   powershell -ExecutionPolicy Bypass -File portable\build.ps1
 # Needs, in portable-build\downloads: php.zip (PHP 8.5 Win32 vs17 x64, thread safe), httpd.zip (Apache Lounge
-# Win64), mariadb.zip (MariaDB winx64), cacert.pem (curl.se). Produces in portable-build:
-#   AGAPAY\                              the folder to copy to the office laptop
-#   AGAPAY-for-Windows-v<version>.zip    the same, zipped
-#   AGAPAY-app-v<version>.zip            the program folder only: attach it to the GitHub release for in-app updates
+# Win64), mariadb.zip (MariaDB winx64), cacert.pem (curl.se); and Inno Setup 6 in portable-build\inno (ISCC.exe).
+# Produces in portable-build:
+#   AGAPAY\system\                       what the installer puts in C:\AGAPAY\system
+#   AGAPAY-Setup-v<version>.exe          the installer (send this to the office)
+#   AGAPAY-app-v<version>.zip           the program folder only: attach it to the GitHub release for in-app updates
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
 $repo = Split-Path -Parent $PSScriptRoot
 $build = Join-Path $repo 'portable-build'
 $downloads = Join-Path $build 'downloads'
-$out = Join-Path $build 'AGAPAY'
+$folder = Join-Path $build 'AGAPAY'
+$out = Join-Path $folder 'system'
 $staging = Join-Path $build 'staging'
 
 $config = Get-Content (Join-Path $repo 'config\agapay.php') -Raw
@@ -19,7 +21,7 @@ if ($config -notmatch "'version'\s*=>\s*'([0-9.]+)'") { throw 'Version not found
 $version = $Matches[1]
 Write-Host "Building AGAPAY for Windows v$version"
 
-foreach ($dir in $out, $staging) { if (Test-Path $dir) { Remove-Item $dir -Recurse -Force } }
+foreach ($dir in $folder, $staging) { if (Test-Path $dir) { Remove-Item $dir -Recurse -Force } }
 New-Item -ItemType Directory -Force -Path $out, $staging | Out-Null
 
 function Expand-Into([string] $ZipName, [string] $Inner, [string] $Target) {
@@ -66,18 +68,20 @@ Pop-Location
 Copy-Item (Join-Path $repo 'public\build') (Join-Path $app 'public\build') -Recurse -Force
 Remove-Item (Join-Path $app 'package.json'), (Join-Path $app 'package-lock.json') -ErrorAction SilentlyContinue
 
-Write-Host '  Tools and guide...'
+Write-Host '  Tools...'
 Copy-Item (Join-Path $PSScriptRoot 'template\*') $out -Recurse -Force
-$guide = Join-Path $repo 'handover\AGAPAY-User-Guide.pdf'
-if (Test-Path $guide) { Copy-Item $guide (Join-Path $out 'AGAPAY User Guide.pdf') }
 Set-Content (Join-Path $out 'VERSION.txt') "AGAPAY for Windows v$version"
 
-Write-Host '  Zipping...'
+Write-Host '  Update package...'
 $appZip = Join-Path $build "AGAPAY-app-v$version.zip"
-$fullZip = Join-Path $build "AGAPAY-for-Windows-v$version.zip"
-Remove-Item $appZip, $fullZip -ErrorAction SilentlyContinue
+Remove-Item $appZip -ErrorAction SilentlyContinue
 Compress-Archive -Path $app -DestinationPath $appZip
-Compress-Archive -Path $out -DestinationPath $fullZip
 Remove-Item $staging -Recurse -Force
 
-Write-Host ("Done: {0} ({1:N0} MB), {2} ({3:N0} MB)" -f (Split-Path $fullZip -Leaf), ((Get-Item $fullZip).Length / 1MB), (Split-Path $appZip -Leaf), ((Get-Item $appZip).Length / 1MB))
+Write-Host '  Installer...'
+if (-not (Test-Path (Join-Path $repo 'handover\AGAPAY-User-Guide.pdf'))) { Write-Warning 'handover\AGAPAY-User-Guide.pdf not found: the installer will have no user guide.' }
+& (Join-Path $build 'inno\ISCC.exe') /Q "/DAppVersion=$version" (Join-Path $PSScriptRoot 'installer\agapay.iss')
+if ($LASTEXITCODE -ne 0) { throw 'The installer could not be compiled.' }
+$setup = Join-Path $build "AGAPAY-Setup-v$version.exe"
+
+Write-Host ("Done: {0} ({1:N0} MB), {2} ({3:N0} MB)" -f (Split-Path $setup -Leaf), ((Get-Item $setup).Length / 1MB), (Split-Path $appZip -Leaf), ((Get-Item $appZip).Length / 1MB))

@@ -1,17 +1,20 @@
-# AGAPAY for Windows: makes a backup in AGAPAY\backups (database + crisis photos, reports and uploads) and keeps
-# the newest 30. Runs every day at noon, at start-up when the last backup is over a day old, and before updates.
+# AGAPAY for Windows: makes a backup in C:\AGAPAY\AGAPAY Backups (database + crisis photos, reports and uploads) and
+# keeps the newest 30. Runs every day at noon, at start-up when the last backup is over a day old, before updates,
+# and from the "Backup now" shortcut.
 param([string] $Reason = '', [switch] $Quiet)
 . (Join-Path $PSScriptRoot 'common.ps1')
 
+$busy = $null
 try {
     if (-not (Test-Installed)) { throw 'AGAPAY is not set up yet.' }
+    if (-not $Quiet) { $busy = Show-Busy 'Making a backup of AGAPAY...' }
     Write-Configs
     Start-Database
     New-Item -ItemType Directory -Force -Path $Backups | Out-Null
 
-    $stamp = Get-Date -Format 'yyyy-MM-dd_HHmm'
+    $stamp = Get-Date -Format 'yyyy-MM-dd_HHmmss'
     $suffix = if ($Reason) { "-$Reason" } else { '' }
-    $work = Join-Path $Backups "_making-$stamp"
+    $work = Join-Path $Data "backup-$stamp"
     New-Item -ItemType Directory -Force -Path $work | Out-Null
 
     # A consistent copy of the database while people keep working (--single-transaction).
@@ -31,10 +34,17 @@ try {
     # Keep the newest 30.
     Get-ChildItem $Backups -Filter 'AGAPAY-backup-*.zip' | Sort-Object LastWriteTime -Descending | Select-Object -Skip 30 | Remove-Item -Force
     Write-Log "Backup made: $(Split-Path $zip -Leaf)"
-    if (-not $Quiet) { Show-Message "Backup made:`n$zip" }
+    if ($busy) {
+        $busy.Close()
+        $answer = Show-Message "The backup was saved:`n$(Split-Path $zip -Leaf)`n`nOpen the AGAPAY Backups folder?" 'AGAPAY - Backup now' 'YesNo'
+        if ($answer -eq 'Yes') { Start-Process explorer.exe $Backups }
+    }
     return $zip
 } catch {
     Write-Log "Backup failed: $($_.Exception.Message)"
-    if (-not $Quiet) { Show-Message "The backup failed: $($_.Exception.Message)" }
+    if ($busy) { $busy.Close() }
+    if (-not $Quiet) { [void](Show-Message "The backup failed: $($_.Exception.Message)" 'AGAPAY - Backup now' 'OK' 'Error') }
     throw
+} finally {
+    if ($work -and (Test-Path $work)) { Remove-Item $work -Recurse -Force -ErrorAction SilentlyContinue }
 }

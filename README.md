@@ -256,18 +256,32 @@ The **"Use my location"** button on the damage form only works over `https://` o
 
 ## AGAPAY for Windows (the office copy)
 
-A single folder with its own PHP 8.5, Apache and MariaDB: nothing is installed into Windows, and it needs no internet for daily use.
+One installer, `AGAPAY-Setup-v<version>.exe`, with its own PHP 8.5, Apache and MariaDB. It needs no administrator rights and no internet for daily use.
 
 **Building it** (on the developer's PC):
 
-1. Put the official downloads in `portable-build\downloads\`: `php.zip` (PHP 8.5 Win32 vs17 x64, thread safe, windows.php.net), `httpd.zip` (Apache 2.4 Win64, apachelounge.com), `mariadb.zip` (MariaDB 11.8 winx64, mariadb.org) and `cacert.pem` (curl.se). Check their published checksums.
+1. Put the official downloads in `portable-build\downloads\`: `php.zip` (PHP 8.5 Win32 vs17 x64, thread safe, windows.php.net), `httpd.zip` (Apache 2.4 Win64, apachelounge.com), `mariadb.zip` (MariaDB 11.8 winx64, mariadb.org) and `cacert.pem` (curl.se). Check their published checksums. Put Inno Setup 6 in `portable-build\inno\` (`ISCC.exe`).
 2. Commit, then run `powershell -ExecutionPolicy Bypass -File portable\build.ps1`. It builds the committed version into `portable-build\`:
-   - `AGAPAY\` and `AGAPAY-for-Windows-v<version>.zip`: the folder for the office laptop;
+   - `AGAPAY-Setup-v<version>.exe`: the installer for the office laptop;
    - `AGAPAY-app-v<version>.zip`: the program only, for in-app updates.
 
-**Installing it at the office:** copy the `AGAPAY` folder to the laptop (for example `C:\AGAPAY`), double-click **Setup AGAPAY** and create the Administrator's account. Setup creates an empty database (no sample farmers), starts AGAPAY at `http://localhost:8742`, puts the **AGAPAY** icon and the backup tools on the desktop, makes AGAPAY start with Windows, and schedules a daily backup at noon. The office's records and files live in `AGAPAY\data`; backups (the newest 30) in `AGAPAY\backups`.
+The installer includes `handover\AGAPAY-User-Guide.pdf` when that file exists.
 
-**Publishing an update:** bump the version, commit, build, push, then create a GitHub release tagged `v<version>` with `AGAPAY-app-v<version>.zip` attached. The office copy's Administrator then sees **Update available** above Dark Mode. The update backs up first, keeps `data\`, applies database changes, and rolls back by itself if anything fails.
+**Installing it at the office:** run `AGAPAY-Setup-v<version>.exe`. Windows may say "Windows protected your PC" because the installer is not signed; choose **More info** → **Run anyway**. The wizard asks for the Administrator's account: last name, first name, M.I., suffix, username and password, with a live password checklist. It then sets up an empty database (no sample farmers) and starts AGAPAY at `http://localhost:8742`. AGAPAY also starts with Windows and makes a backup every day at noon. Everything goes into `C:\AGAPAY`:
+
+| In `C:\AGAPAY` | What it is |
+|---|---|
+| **AGAPAY** | Opens AGAPAY in the browser (also on the desktop) |
+| **Backup now** | Makes a backup right away |
+| **Restore a backup** | Lists the backups and puts the chosen one back, after saving the current records first |
+| **AGAPAY Backups** | The newest 30 backups |
+| **Uninstall AGAPAY** | Removes AGAPAY. It keeps the records and backups unless you choose to delete them. |
+| **AGAPAY User Guide.pdf** | The staff guide |
+| `system` (hidden) | PHP, Apache, MariaDB, the program, and the records in `system\data` |
+
+Running the installer again (a newer version, or after an uninstall that kept the records) backs up first and keeps the records.
+
+**Publishing an update:** bump the version, commit, build, push, then create a GitHub release tagged `v<version>` with `AGAPAY-app-v<version>.zip` attached. The office copy's Administrator then sees **Update available** above Dark Mode. The update backs up first, keeps `system\data`, applies database changes, and rolls back by itself if anything fails.
 
 ## Putting AGAPAY online (Railway)
 

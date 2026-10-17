@@ -3,9 +3,11 @@
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
+# C:\AGAPAY holds the shortcuts and the "AGAPAY Backups" folder; the program itself is in the hidden C:\AGAPAY\system.
 $AgapayHome = Split-Path -Parent $PSScriptRoot
+$AgapayFolder = Split-Path -Parent $AgapayHome
 $Data = Join-Path $AgapayHome 'data'
-$Backups = Join-Path $AgapayHome 'backups'
+$Backups = Join-Path $AgapayFolder 'AGAPAY Backups'
 $Logs = Join-Path $Data 'logs'
 $Conf = Join-Path $Data 'conf'
 $EnvFile = Join-Path $Data 'agapay.env'
@@ -107,7 +109,25 @@ function Invoke-Artisan([string[]] $Arguments) {
     if ($LASTEXITCODE -ne 0) { throw "AGAPAY command failed: artisan $($Arguments -join ' ')" }
 }
 
-function Show-Message([string] $Text, [string] $Title = 'AGAPAY') {
-    Add-Type -AssemblyName PresentationFramework
-    [void][Windows.MessageBox]::Show($Text, $Title)
+function Show-Message([string] $Text, [string] $Title = 'AGAPAY', [string] $Buttons = 'OK', [string] $Icon = 'Information') {
+    Add-Type -AssemblyName System.Windows.Forms
+    return [Windows.Forms.MessageBox]::Show($Text, $Title, $Buttons, $Icon)
+}
+
+# A small "please wait" window for the Backup and Restore shortcuts (they run without a console).
+function Show-Busy([string] $Text) {
+    Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+    [Windows.Forms.Application]::EnableVisualStyles()
+    $form = New-Object Windows.Forms.Form -Property @{
+        Text = 'AGAPAY'; Width = 380; Height = 140; FormBorderStyle = 'FixedDialog'; ControlBox = $false
+        StartPosition = 'CenterScreen'; TopMost = $true; Font = New-Object Drawing.Font('Segoe UI', 10)
+    }
+    $icon = Join-Path $PSScriptRoot 'agapay.ico'
+    if (Test-Path $icon) { $form.Icon = New-Object Drawing.Icon($icon) }
+    $label = New-Object Windows.Forms.Label -Property @{ Text = $Text; AutoSize = $false; Left = 20; Top = 18; Width = 330; Height = 26 }
+    $bar = New-Object Windows.Forms.ProgressBar -Property @{ Style = 'Marquee'; Left = 20; Top = 52; Width = 325; Height = 18; MarqueeAnimationSpeed = 30 }
+    $form.Controls.AddRange(@($label, $bar))
+    $form.Show()
+    [Windows.Forms.Application]::DoEvents()
+    return $form
 }
