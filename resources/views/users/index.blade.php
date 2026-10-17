@@ -39,14 +39,19 @@
 
     {{-- Add User --}}
     <x-ui.modal name="add-user" title="Add User" :open="$openAdd">
-        <form method="POST" action="{{ route('users.store') }}" class="grid grid-cols-[300px_1fr] gap-x-[16px] gap-y-[12px]">
+        <form method="POST" action="{{ route('users.store') }}" class="grid grid-cols-[300px_1fr] gap-x-[16px] gap-y-[12px]"
+              x-data="{ pw: '', pw2: '', get ready() { return this.pw.length >= 8 && this.pw === this.pw2 } }">
             @csrf
-            <x-ui.inline-field label="Full Name" name="name" :value="old('name')" placeholder="e.g. Rosa Mendez" :error="$errors->createUser->first('name')" required />
+            @include('users.partials.name-fields', [
+                'values' => ['last_name' => old('last_name'), 'first_name' => old('first_name'), 'middle_initial' => old('middle_initial'), 'suffix' => old('suffix')],
+                'errorsFor' => fn ($field) => $errors->createUser->first($field) ?: null,
+            ])
             <x-ui.inline-field label="Username" name="username" :value="old('username')" placeholder="e.g. Encoder_05" :error="$errors->createUser->first('username')" required />
-            <x-ui.inline-field label="Password" name="password" type="password" placeholder="At least 8 characters" :error="$errors->createUser->first('password')" required />
-            <x-ui.inline-field label="Confirm" name="password_confirmation" type="password" placeholder="Repeat password" required />
+            <x-ui.inline-field label="Password" name="password" type="password" placeholder="At least 8 characters" :error="$errors->createUser->first('password')" required x-model="pw" autocomplete="new-password" />
+            <x-ui.inline-field label="Confirm" name="password_confirmation" type="password" placeholder="Repeat password" required x-model="pw2" autocomplete="new-password" />
+            <x-ui.password-guide class="col-span-2 -mt-[2px]" />
             @include('users.partials.role-status-fields', ['bag' => 'createUser', 'roleId' => old('role_id'), 'status' => old('status', 'active')])
-            <x-ui.gradient-button class="col-span-2 mt-[20px]">Save User</x-ui.gradient-button>
+            <x-ui.gradient-button class="col-span-2 mt-[20px] disabled:cursor-not-allowed disabled:opacity-50" x-bind:disabled="!ready">Save User</x-ui.gradient-button>
         </form>
     </x-ui.modal>
 
@@ -54,20 +59,25 @@
     @foreach ($users as $user)
         @php($failed = $editBag->any() && (int) old('user_id') === $user->id)
         <x-ui.modal name="edit-user-{{ $user->id }}" title="Edit {{ $user->username }}" :open="$failed">
-            <form method="POST" action="{{ route('users.update', $user) }}" class="grid grid-cols-[300px_1fr] gap-x-[16px] gap-y-[12px]">
+            <form method="POST" action="{{ route('users.update', $user) }}" class="grid grid-cols-[300px_1fr] gap-x-[16px] gap-y-[12px]"
+                  x-data="{ pw: '', pw2: '', get ready() { return (this.pw === '' && this.pw2 === '') || (this.pw.length >= 8 && this.pw === this.pw2) } }">
                 @csrf @method('PUT')
                 <input type="hidden" name="user_id" value="{{ $user->id }}">
-                <x-ui.inline-field label="Full Name" name="name" :value="$failed ? old('name') : $user->name" :error="$failed ? $editBag->first('name') : null" required />
+                @include('users.partials.name-fields', [
+                    'values' => collect(['last_name', 'first_name', 'middle_initial', 'suffix'])->mapWithKeys(fn ($field) => [$field => $failed ? old($field) : $user->{$field}])->all(),
+                    'errorsFor' => fn ($field) => $failed ? ($editBag->first($field) ?: null) : null,
+                ])
                 <x-ui.inline-field label="Username" name="username" :value="$failed ? old('username') : $user->username" :error="$failed ? $editBag->first('username') : null" required />
-                <x-ui.inline-field label="New Password" name="password" type="password" placeholder="Leave blank to keep" :error="$failed ? $editBag->first('password') : null" />
-                <x-ui.inline-field label="Confirm" name="password_confirmation" type="password" placeholder="Repeat new password" />
+                <x-ui.inline-field label="New Password" name="password" type="password" placeholder="Leave blank to keep" :error="$failed ? $editBag->first('password') : null" x-model="pw" autocomplete="new-password" />
+                <x-ui.inline-field label="Confirm" name="password_confirmation" type="password" placeholder="Repeat new password" x-model="pw2" autocomplete="new-password" />
+                <x-ui.password-guide class="col-span-2 -mt-[2px]" x-show="pw !== '' || pw2 !== ''" x-cloak />
                 @include('users.partials.role-status-fields', [
                     'bag' => 'editUser',
                     'failed' => $failed,
                     'roleId' => $failed ? old('role_id') : $user->role_id,
                     'status' => $failed ? old('status') : $user->status,
                 ])
-                <x-ui.gradient-button class="col-span-2 mt-[20px]">Save Changes</x-ui.gradient-button>
+                <x-ui.gradient-button class="col-span-2 mt-[20px] disabled:cursor-not-allowed disabled:opacity-50" x-bind:disabled="!ready">Save Changes</x-ui.gradient-button>
             </form>
         </x-ui.modal>
     @endforeach

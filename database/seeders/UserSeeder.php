@@ -11,15 +11,18 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $accounts = [
-            ['Admin_01', 'Municipal Agriculturist', Role::ADMIN, User::STATUS_ACTIVE, 'admin'],
-            ['Agritech_02', 'Agricultural Technologist', Role::AGRITECH, User::STATUS_ACTIVE, 'agritech'],
-            ['Encoder_03', 'Data Encoder', Role::ENCODER, User::STATUS_ACTIVE, 'encoder'],
-            ['Encoder_04', 'Data Encoder (Unassigned)', null, User::STATUS_INACTIVE, 'encoder'],
+            ['Admin_01', ['Rosa', 'L', 'Mendez'], Role::ADMIN, User::STATUS_ACTIVE, 'admin'],
+            ['Agritech_02', ['Daniel', 'B', 'Fagyan'], Role::AGRITECH, User::STATUS_ACTIVE, 'agritech'],
+            ['Encoder_03', ['Liza', 'C', 'Ngalob'], Role::ENCODER, User::STATUS_ACTIVE, 'encoder'],
+            ['Encoder_04', ['Mark', null, 'Palangdan'], null, User::STATUS_INACTIVE, 'encoder'],
         ];
 
-        foreach ($accounts as [$username, $name, $role, $status, $avatar]) {
+        foreach ($accounts as [$username, [$first, $middle, $last], $role, $status, $avatar]) {
             User::updateOrCreate(['username' => $username], [
-                'name' => $name,
+                'name' => User::fullName($first, $middle, $last),   // seeders run without model events
+                'first_name' => $first,
+                'middle_initial' => $middle,
+                'last_name' => $last,
                 'password' => config('agapay.seed_password'),
                 'role_id' => $role ? Role::where('slug', $role)->value('id') : null,
                 'status' => $status,

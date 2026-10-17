@@ -42,7 +42,7 @@ it('opens the Add User modal from the quick action', function () {
 
 it('adds a user', function () {
     $this->actingAs($this->admin)->post('/users', [
-        'name' => 'Rosa Encoder',
+        'last_name' => 'Encoder', 'first_name' => 'Rosa',
         'username' => 'Encoder_05',
         'password' => 'strong-pass-1',
         'password_confirmation' => 'strong-pass-1',
@@ -57,7 +57,7 @@ it('adds a user', function () {
 
 it('rejects duplicate usernames regardless of case and weak passwords', function () {
     $this->actingAs($this->admin)->post('/users', [
-        'name' => 'Dup', 'username' => 'admin_01', 'password' => 'short', 'password_confirmation' => 'short',
+        'last_name' => 'Dup', 'first_name' => 'Dup', 'username' => 'admin_01', 'password' => 'short', 'password_confirmation' => 'short',
         'role_id' => null, 'status' => User::STATUS_ACTIVE,
     ])->assertSessionHasErrorsIn('createUser', ['username', 'password']);
 });
@@ -66,7 +66,7 @@ it('edits a user and keeps the password when left blank', function () {
     $user = userWithRole(Role::ENCODER, ['username' => 'Encoder_03', 'password' => 'keep-this-pass']);
 
     $this->actingAs($this->admin)->put("/users/{$user->id}", [
-        'name' => $user->name, 'username' => 'Encoder_03', 'password' => '', 'password_confirmation' => '',
+        'last_name' => 'Cruz', 'first_name' => 'Ana', 'username' => 'Encoder_03', 'password' => '', 'password_confirmation' => '',
         'role_id' => ($this->roleId)(Role::AGRITECH), 'status' => User::STATUS_INACTIVE,
     ])->assertRedirect(route('users.index'));
 
@@ -78,7 +78,7 @@ it('edits a user and keeps the password when left blank', function () {
 
 it('stops admins from locking themselves out', function (array $change) {
     $this->actingAs($this->admin)->put("/users/{$this->admin->id}", [
-        'name' => $this->admin->name, 'username' => 'Admin_01', 'password' => '', 'password_confirmation' => '',
+        'last_name' => 'Mendez', 'first_name' => 'Rosa', 'username' => 'Admin_01', 'password' => '', 'password_confirmation' => '',
         'role_id' => ($this->roleId)(Role::ADMIN), 'status' => User::STATUS_ACTIVE, ...$change,
     ])->assertSessionHasErrorsIn('editUser', ['role_id' => 'You cannot deactivate or change the role of your own account.']);
 

@@ -16,7 +16,10 @@ class StoreUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:100'],
+            'first_name' => ['required', 'string', 'max:100'],
+            'middle_initial' => ['nullable', 'string', 'regex:/^[A-Za-z]\.?$/'],
+            'suffix' => ['nullable', Rule::in(User::SUFFIXES)],
             'username' => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9_.-]+$/', $this->uniqueUsername()],
             'password' => ['required', 'confirmed', Password::min(8)],
             'role_id' => ['nullable', 'integer', Rule::exists('roles', 'id')],
@@ -26,7 +29,11 @@ class StoreUserRequest extends FormRequest
 
     public function messages(): array
     {
-        return ['username.regex' => 'Use letters, numbers, dots, dashes or underscores only.'];
+        return [
+            'username.regex' => 'Use letters, numbers, dots, dashes or underscores only.',
+            'middle_initial.regex' => 'Type one letter only, e.g. M.',
+            'suffix.in' => 'Choose Jr., Sr., II, III, IV or V, or leave it blank.',
+        ];
     }
 
     /** Usernames are unique regardless of letter case (login is case-insensitive). */

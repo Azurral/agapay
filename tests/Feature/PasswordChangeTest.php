@@ -47,7 +47,7 @@ it('refuses a wrong current password, a weak, reused or mistyped new one', funct
 
 it('makes a user the administrator added change the password at first sign-in', function () {
     $this->actingAs($this->admin)->post('/users', [
-        'name' => 'Nora Lang', 'username' => 'Encoder_09', 'password' => 'given-pass-1', 'password_confirmation' => 'given-pass-1',
+        'last_name' => 'Lang', 'first_name' => 'Nora', 'username' => 'Encoder_09', 'password' => 'given-pass-1', 'password_confirmation' => 'given-pass-1',
         'role_id' => Role::where('slug', Role::ENCODER)->value('id'), 'status' => User::STATUS_ACTIVE,
     ]);
     $nora = User::where('username', 'Encoder_09')->sole();
@@ -63,11 +63,11 @@ it('makes a user the administrator added change the password at first sign-in', 
 
 it('asks again after the administrator resets a password, but not after other edits', function () {
     $edit = fn (array $input) => $this->actingAs($this->admin)->put(route('users.update', $this->encoder), [
-        'name' => $this->encoder->name, 'username' => 'Encoder_03', 'role_id' => $this->encoder->role_id, 'status' => User::STATUS_ACTIVE,
+        'last_name' => 'Ngalob', 'first_name' => 'Liza', 'username' => 'Encoder_03', 'role_id' => $this->encoder->role_id, 'status' => User::STATUS_ACTIVE,
         'password' => '', 'password_confirmation' => '', ...$input,
     ]);
 
-    $edit(['name' => 'Renamed Encoder']);
+    $edit(['first_name' => 'Renamed']);
     expect($this->encoder->fresh()->must_change_password)->toBeFalse();
 
     $edit(['password' => 'reset-pass-1', 'password_confirmation' => 'reset-pass-1']);

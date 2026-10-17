@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 
-#[Fillable(['name', 'username', 'email', 'password', 'role_id', 'status', 'avatar', 'last_login_at'])]
+#[Fillable(['name', 'first_name', 'middle_initial', 'last_name', 'suffix', 'username', 'email', 'password', 'role_id', 'status', 'avatar', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -22,6 +22,8 @@ class User extends Authenticatable
     public const STATUS_ACTIVE = 'active';
 
     public const STATUS_INACTIVE = 'inactive';
+
+    public const SUFFIXES = ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V'];
 
     protected string $auditSubject = 'User';
 
@@ -34,6 +36,28 @@ class User extends Authenticatable
     }
 
     private ?Collection $permissionSlugCache = null;
+
+    /** The full name is joined from its parts ("First M. Last Suffix") whenever a part changes. */
+    protected static function booted(): void
+    {
+        static::saving(function (User $user) {
+            $initial = trim((string) $user->middle_initial, ' .');
+            $user->middle_initial = $initial === '' ? null : mb_strtoupper(mb_substr($initial, 0, 1));
+            $user->suffix = blank($user->suffix) ? null : $user->suffix;
+
+            if ($user->isDirty(['first_name', 'middle_initial', 'last_name', 'suffix']) && (filled($user->first_name) || filled($user->last_name))) {
+                $user->name = self::fullName($user->first_name, $user->middle_initial, $user->last_name, $user->suffix);
+            }
+        });
+    }
+
+    public static function fullName(?string $first, ?string $middleInitial, ?string $last, ?string $suffix = null): string
+    {
+        $initial = mb_strtoupper(mb_substr(trim((string) $middleInitial, ' .'), 0, 1));
+
+        return collect([$first, $initial === '' ? null : $initial.'.', $last, $suffix])
+            ->map(fn ($part) => trim((string) $part))->filter()->implode(' ');
+    }
 
     protected function casts(): array
     {
@@ -93,6 +117,9 @@ class User extends Authenticatable
     {
         $name = trim((string) $this->name);
         $words = $name === '' ? [(string) $this->username ?: '?'] : preg_split('/\s+/u', $name, -1, PREG_SPLIT_NO_EMPTY);
+        if (count($words) > 2 && in_array(end($words), self::SUFFIXES, true)) {
+            array_pop($words);   // "Juan Cruz Jr." → JC
+        }
         $initials = count($words) === 1
             ? mb_substr($words[0], 0, 2)
             : mb_substr($words[0], 0, 1).mb_substr(end($words), 0, 1);
