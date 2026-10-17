@@ -80,8 +80,14 @@ Remove-Item $staging -Recurse -Force
 
 Write-Host '  Installer...'
 if (-not (Test-Path (Join-Path $repo 'handover\AGAPAY-User-Guide.pdf'))) { Write-Warning 'handover\AGAPAY-User-Guide.pdf not found: the installer will have no user guide.' }
-& (Join-Path $build 'inno\ISCC.exe') /Q "/DAppVersion=$version" (Join-Path $PSScriptRoot 'installer\agapay.iss')
-if ($LASTEXITCODE -ne 0) { throw 'The installer could not be compiled.' }
+# Retried: right after the build, antivirus scanning can briefly lock the files Inno Setup reads or writes.
+for ($attempt = 1; $attempt -le 3; $attempt++) {
+    & (Join-Path $build 'inno\ISCC.exe') /Q "/DAppVersion=$version" (Join-Path $PSScriptRoot 'installer\agapay.iss')
+    if ($LASTEXITCODE -eq 0) { break }
+    if ($attempt -eq 3) { throw 'The installer could not be compiled.' }
+    Write-Host "  Installer compile failed; trying again ($attempt/3)..."
+    Start-Sleep -Seconds 10
+}
 $setup = Join-Path $build "AGAPAY-Setup-v$version.exe"
 
 Write-Host ("Done: {0} ({1:N0} MB), {2} ({3:N0} MB)" -f (Split-Path $setup -Leaf), ((Get-Item $setup).Length / 1MB), (Split-Path $appZip -Leaf), ((Get-Item $appZip).Length / 1MB))
