@@ -12,7 +12,7 @@ class DashboardController extends Controller
     public function __invoke(Request $request): View
     {
         // Data Encoders see their encoding queue; Admin and Agri Tech see all beneficiaries (Figma).
-        $showsEncodingQueue = $request->user()->role?->slug === Role::ENCODER;
+        $showsEncodingQueue = in_array($request->user()->role?->slug, [Role::ENCODER, Role::AGRITECH_ENCODER], true);
 
         return view('dashboard', [
             'showsEncodingQueue' => $showsEncodingQueue,

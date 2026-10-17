@@ -11,8 +11,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Role extends Model
 {
     public const ADMIN = 'administrator';
+
     public const AGRITECH = 'agricultural_technologist';
+
     public const ENCODER = 'data_encoder';
+
+    /** One person doing both jobs (e.g. a small office): both permission sets and both menus. */
+    public const AGRITECH_ENCODER = 'agritech_encoder';
 
     public function permissions(): BelongsToMany
     {

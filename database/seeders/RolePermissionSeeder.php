@@ -19,6 +19,7 @@ class RolePermissionSeeder extends Seeder
             Role::ADMIN => ['Administrator', 'Administrator', 'Admin'],
             Role::AGRITECH => ['Agricultural Technologist', 'Agricultural Tech', 'Agritech'],
             Role::ENCODER => ['Data Encoder', 'Data Encoder', 'Encoder'],
+            Role::AGRITECH_ENCODER => ['Agricultural Technologist & Data Encoder', 'AgriTech & Encoder', 'Agritech'],
         ];
 
         foreach ($roles as $slug => [$name, $short, $greeting]) {

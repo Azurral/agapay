@@ -107,6 +107,7 @@ class User extends Authenticatable
             Role::ADMIN => '#8037ff',
             Role::AGRITECH => '#4671ff',
             Role::ENCODER => '#0bcaff',
+            Role::AGRITECH_ENCODER => '#2f8fff',
             default => '#9ca3af',
         };
     }

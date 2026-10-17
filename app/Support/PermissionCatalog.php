@@ -40,22 +40,27 @@ final class PermissionCatalog
     /** Permissions the Administrator role can never lose (prevents lock-out). */
     public const LOCKED_FOR_ADMIN = ['users.manage', 'roles.configure'];
 
+    private const AGRITECH_DEFAULTS = [
+        'dashboard.view', 'beneficiaries.view',
+        'interventions.view', 'interventions.validate', 'interventions.claim',
+        'damage.view', 'damage.create', 'damage.validate', 'reports.generate', 'requests.create',
+    ];
+
+    private const ENCODER_DEFAULTS = [
+        'dashboard.view', 'beneficiaries.view', 'beneficiaries.manage', 'rsbsa.register',
+        'intervention_records.manage', 'interventions.claim',
+        'inventory.view', 'inventory.manage', 'import.run',
+        'damage.view', 'damage.create', 'reports.generate', 'requests.create',
+    ];
+
     /** @return array<string, list<string>> role slug => permission slugs */
     public static function defaults(): array
     {
         return [
             Role::ADMIN => array_keys(self::PERMISSIONS),
-            Role::AGRITECH => [
-                'dashboard.view', 'beneficiaries.view',
-                'interventions.view', 'interventions.validate', 'interventions.claim',
-                'damage.view', 'damage.create', 'damage.validate', 'reports.generate', 'requests.create',
-            ],
-            Role::ENCODER => [
-                'dashboard.view', 'beneficiaries.view', 'beneficiaries.manage', 'rsbsa.register',
-                'intervention_records.manage', 'interventions.claim',
-                'inventory.view', 'inventory.manage', 'import.run',
-                'damage.view', 'damage.create', 'reports.generate', 'requests.create',
-            ],
+            Role::AGRITECH => self::AGRITECH_DEFAULTS,
+            Role::ENCODER => self::ENCODER_DEFAULTS,
+            Role::AGRITECH_ENCODER => array_values(array_unique([...self::AGRITECH_DEFAULTS, ...self::ENCODER_DEFAULTS])),
         ];
     }
 }

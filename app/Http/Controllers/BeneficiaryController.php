@@ -72,7 +72,7 @@ class BeneficiaryController extends Controller
             // 430:1461 is the only Data Encoder profile frame, so encoders always edit;
             // Agri Techs view the profile; Administrators process claims (329:2822).
             'variant' => match (true) {
-                $user->role?->slug === Role::ENCODER && $user->can('beneficiaries.manage') => 'edit',
+                in_array($user->role?->slug, [Role::ENCODER, Role::AGRITECH_ENCODER], true) && $user->can('beneficiaries.manage') => 'edit',
                 $user->role?->slug === Role::AGRITECH => 'view',
                 default => 'claim',
             },

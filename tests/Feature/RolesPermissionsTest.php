@@ -8,16 +8,16 @@ use Database\Seeders\UserSeeder;
 
 beforeEach(fn () => seedRoles());
 
-it('seeds three roles and every catalog permission', function () {
+it('seeds the four roles and every catalog permission', function () {
     expect(Role::pluck('slug')->all())
-        ->toEqualCanonicalizing([Role::ADMIN, Role::AGRITECH, Role::ENCODER])
+        ->toEqualCanonicalizing([Role::ADMIN, Role::AGRITECH, Role::ENCODER, Role::AGRITECH_ENCODER])
         ->and(Permission::count())->toBe(count(PermissionCatalog::PERMISSIONS));
 });
 
 it('is idempotent', function () {
     seedRoles();
 
-    expect(Role::count())->toBe(3)
+    expect(Role::count())->toBe(4)
         ->and(Permission::count())->toBe(count(PermissionCatalog::PERMISSIONS));
 });
 

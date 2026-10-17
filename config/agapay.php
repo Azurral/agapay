@@ -4,7 +4,7 @@ use App\Models\Role;
 
 return [
     // The release shown on screen; bumped with every release (the commit is named after it, e.g. "v0.9.3").
-    'version' => '0.13.3',
+    'version' => '0.14.0',
 
     // Development/demo password for seeded accounts. Change in .env for any real deployment.
     'seed_password' => env('AGAPAY_SEED_PASSWORD', 'Agapay@2026'),
@@ -31,6 +31,17 @@ return [
             ['label' => 'Crisis Reports', 'route' => 'damage.index', 'icon' => 'disaster', 'permission' => 'damage.view'],
             ['label' => 'Download Reports', 'route' => 'reports.index', 'icon' => 'audit', 'permission' => 'reports.generate'],
         ],
+        // Both jobs in one account: the encoder's pages, then the technologist's.
+        Role::AGRITECH_ENCODER => [
+            ['label' => 'Home', 'route' => 'dashboard', 'icon' => 'home', 'permission' => 'dashboard.view'],
+            ['label' => 'Beneficiary Profiles', 'route' => 'beneficiaries.index', 'icon' => 'profile', 'permission' => 'beneficiaries.manage'],
+            ['label' => 'Intervention Records', 'route' => 'intervention-records.index', 'icon' => 'report', 'permission' => 'intervention_records.manage'],
+            ['label' => 'DA Intervention', 'route' => 'interventions.da', 'icon' => 'report', 'permission' => 'interventions.view'],
+            ['label' => 'LGU Intervention', 'route' => 'interventions.lgu', 'icon' => 'report', 'permission' => 'interventions.view'],
+            ['label' => 'Crisis Reports', 'route' => 'damage.index', 'icon' => 'disaster', 'permission' => 'damage.view'],
+            ['label' => 'Inventory', 'route' => 'inventory.index', 'icon' => 'inventory', 'permission' => 'inventory.view'],
+            ['label' => 'Download Reports', 'route' => 'reports.index', 'icon' => 'audit', 'permission' => 'reports.generate'],
+        ],
         Role::ENCODER => [
             ['label' => 'Home', 'route' => 'dashboard', 'icon' => 'home', 'permission' => 'dashboard.view'],
             ['label' => 'Beneficiary Profiles', 'route' => 'beneficiaries.index', 'icon' => 'profile', 'permission' => 'beneficiaries.manage'],
@@ -52,6 +63,12 @@ return [
         Role::AGRITECH => ['width' => 226, 'gap' => 17, 'items' => [
             ['label' => 'File Crisis Report', 'route' => 'damage.create', 'permission' => 'damage.create'],
             ['label' => 'Interventions', 'route' => 'interventions.index', 'permission' => 'interventions.view'],
+            ['label' => 'New Request', 'route' => 'assistance-requests.create', 'permission' => 'requests.create'],
+        ]],
+        Role::AGRITECH_ENCODER => ['width' => 222, 'gap' => 16, 'items' => [
+            ['label' => 'Upload Excel', 'route' => 'import.index', 'permission' => 'import.run'],
+            ['label' => 'Add Beneficiary', 'route' => 'beneficiaries.create', 'permission' => 'rsbsa.register'],
+            ['label' => 'File Crisis Report', 'route' => 'damage.create', 'permission' => 'damage.create'],
             ['label' => 'New Request', 'route' => 'assistance-requests.create', 'permission' => 'requests.create'],
         ]],
         Role::ENCODER => ['width' => 200, 'gap' => 22, 'items' => [
