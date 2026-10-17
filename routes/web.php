@@ -25,6 +25,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SidebarController;
+use App\Http\Controllers\SystemUpdateController;
 use App\Http\Controllers\UserController;
 use App\Models\Intervention;
 use Illuminate\Support\Facades\Route;
@@ -123,6 +124,7 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
         Route::post('/damage-reports/{report}/restore', [DamageReportActionController::class, 'restore'])->withTrashed()->name('damage.restore');
     });
 
+    Route::post('/system/update', [SystemUpdateController::class, 'store'])->middleware('can:users.manage')->name('system.update');
     Route::middleware('can:programs.manage')->group(function () {
         Route::get('/programs', [ProgramController::class, 'index'])->name('programs.index');
         Route::post('/programs', [ProgramController::class, 'store'])->name('programs.store');

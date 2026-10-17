@@ -4,7 +4,14 @@ use App\Models\Role;
 
 return [
     // The release shown on screen; bumped with every release (the commit is named after it, e.g. "v0.9.3").
-    'version' => '0.14.1',
+    'version' => '0.14.2',
+
+    // In-app updates of the office copy ("AGAPAY for Windows"): the Administrator sees "Update available" when GitHub
+    // has a newer release. Off on the online copy, which is updated by deployment.
+    'updates' => [
+        'enabled' => (bool) env('AGAPAY_UPDATES', false),
+        'repository' => env('AGAPAY_UPDATE_REPOSITORY', 'Azurral/agapay'),
+    ],
 
     // Development/demo password for seeded accounts. Change in .env for any real deployment.
     'seed_password' => env('AGAPAY_SEED_PASSWORD', 'Agapay@2026'),

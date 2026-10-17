@@ -21,6 +21,7 @@
     </nav>
 
     <div class="mt-auto flex shrink-0 flex-col gap-[8px] pt-[16px] pl-[24px]">
+        <x-app.update-card />
         <x-app.theme-card />
         <x-app.return-card />
         <p class="text-center text-[11px] font-medium text-muted">AGAPAY v{{ config('agapay.version') }}</p>
