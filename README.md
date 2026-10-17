@@ -254,6 +254,21 @@ Then copy the backup's `files` folder back into `storage\app\private`.
 
 The **"Use my location"** button on the damage form only works over `https://` or on the PC itself (`localhost`). Over plain `http://` on the office network, type the coordinates in.
 
+## AGAPAY for Windows (the office copy)
+
+A single folder with its own PHP 8.5, Apache and MariaDB: nothing is installed into Windows, and it needs no internet for daily use.
+
+**Building it** (on the developer's PC):
+
+1. Put the official downloads in `portable-build\downloads\`: `php.zip` (PHP 8.5 Win32 vs17 x64, thread safe, windows.php.net), `httpd.zip` (Apache 2.4 Win64, apachelounge.com), `mariadb.zip` (MariaDB 11.8 winx64, mariadb.org) and `cacert.pem` (curl.se). Check their published checksums.
+2. Commit, then run `powershell -ExecutionPolicy Bypass -File portable\build.ps1`. It builds the committed version into `portable-build\`:
+   - `AGAPAY\` and `AGAPAY-for-Windows-v<version>.zip`: the folder for the office laptop;
+   - `AGAPAY-app-v<version>.zip`: the program only, for in-app updates.
+
+**Installing it at the office:** copy the `AGAPAY` folder to the laptop (for example `C:\AGAPAY`), double-click **Setup AGAPAY** and create the Administrator's account. Setup creates an empty database (no sample farmers), starts AGAPAY at `http://localhost:8742`, puts the **AGAPAY** icon and the backup tools on the desktop, makes AGAPAY start with Windows, and schedules a daily backup at noon. The office's records and files live in `AGAPAY\data`; backups (the newest 30) in `AGAPAY\backups`.
+
+**Publishing an update:** bump the version, commit, build, push, then create a GitHub release tagged `v<version>` with `AGAPAY-app-v<version>.zip` attached. The office copy's Administrator then sees **Update available** above Dark Mode. The update backs up first, keeps `data\`, applies database changes, and rolls back by itself if anything fails.
+
 ## Putting AGAPAY online (Railway)
 
 This gives AGAPAY a public `https://` link while the office setup above keeps working as before. [Railway](https://railway.com) runs Laravel and MySQL directly. The free trial gives $5 of credit; after that the Hobby plan costs about $5 a month. **When the credit runs out, the site stops**, so check that it covers the dates you need.

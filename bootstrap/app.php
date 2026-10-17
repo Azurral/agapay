@@ -10,7 +10,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
 
-return Application::configure(basePath: dirname(__DIR__))
+$app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
@@ -42,3 +42,11 @@ return Application::configure(basePath: dirname(__DIR__))
             default => null,
         });
     })->create();
+
+// The office copy ("AGAPAY for Windows") keeps its settings and files in its data folder, outside the program
+// folder, so an update can replace the program without touching them (storage: LARAVEL_STORAGE_PATH, set there too).
+if (($home = $_SERVER['AGAPAY_HOME'] ?? getenv('AGAPAY_HOME')) && is_file($home.'/data/agapay.env')) {
+    $app->useEnvironmentPath($home.'/data')->loadEnvironmentFrom('agapay.env');
+}
+
+return $app;
