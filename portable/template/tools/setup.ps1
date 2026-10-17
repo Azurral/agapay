@@ -70,7 +70,7 @@ Start-Web
 if (-not $NoShortcuts) {
     Write-Host '  4/4  Adding the desktop shortcuts and starting AGAPAY with Windows...'
     $shell = New-Object -ComObject WScript.Shell
-    $icon = Join-Path $AgapayHome 'app\public\favicon.ico'
+    $icon = Join-Path $PSScriptRoot 'agapay.ico'
     $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
     function New-Shortcut([string] $Path, [string] $Script, [string] $Description, [switch] $Hidden) {
         $link = $shell.CreateShortcut($Path)
