@@ -20,6 +20,7 @@ use App\Http\Controllers\InterventionRecordActionController;
 use App\Http\Controllers\InterventionRecordController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PasswordController;
+use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SearchController;
@@ -122,6 +123,11 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
         Route::post('/damage-reports/{report}/restore', [DamageReportActionController::class, 'restore'])->withTrashed()->name('damage.restore');
     });
 
+    Route::middleware('can:programs.manage')->group(function () {
+        Route::get('/programs', [ProgramController::class, 'index'])->name('programs.index');
+        Route::post('/programs', [ProgramController::class, 'store'])->name('programs.store');
+        Route::put('/programs/{program}', [ProgramController::class, 'update'])->name('programs.update');
+    });
     Route::middleware('can:cycles.manage')->group(function () {
         Route::get('/distribution-cycles', [DistributionCycleController::class, 'index'])->name('cycles.index');
         Route::post('/distribution-cycles', [DistributionCycleController::class, 'store'])->name('cycles.store');

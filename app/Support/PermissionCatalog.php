@@ -21,6 +21,7 @@ final class PermissionCatalog
         'interventions.archive' => ['Archive and restore intervention records', 'Interventions'],
         'intervention_records.manage' => ['Encode intervention records', 'Interventions'],
         'cycles.manage' => ['Manage distribution cycles', 'Interventions'],
+        'programs.manage' => ['Manage DA and LGU programs', 'Interventions'],
         'requests.create' => ['File assistance requests', 'Interventions'],
         'requests.decide' => ['Approve or deny assistance requests', 'Interventions'],
         'inventory.view' => ['View inventory', 'Inventory'],

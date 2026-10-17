@@ -16,11 +16,15 @@
         @endforeach
     </div>
 
-    @can('cycles.manage')
-        {{-- Not in Figma: kept below the mirrored cards (spec §2). --}}
-        <div class="mt-[8px]">
+    {{-- Not in Figma: kept below the mirrored cards (spec §2). --}}
+    <div class="mt-[8px] flex gap-[14px]">
+        @can('cycles.manage')
             <a href="{{ route('cycles.index') }}"
                class="border-gradient pill-button inline-flex h-[39px] w-[262px] items-center justify-center rounded-[50px] text-[18px] font-bold leading-[24px]">Distribution Cycles</a>
-        </div>
-    @endcan
+        @endcan
+        @can('programs.manage')
+            <a href="{{ route('programs.index') }}"
+               class="border-gradient pill-button inline-flex h-[39px] w-[262px] items-center justify-center rounded-[50px] text-[18px] font-bold leading-[24px]">Programs</a>
+        @endcan
+    </div>
 </x-layouts.app>

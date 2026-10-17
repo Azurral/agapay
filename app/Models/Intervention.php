@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['source', 'name', 'unit', 'inventory_item_id', 'one_per_household', 'allow_repeat', 'is_active'])]
 class Intervention extends Model
 {
+    use Auditable;
+
+    protected string $auditSubject = 'Program';
+
     public const SOURCE_DA = 'da';
 
     public const SOURCE_LGU = 'lgu';
@@ -53,6 +58,11 @@ class Intervention extends Model
     }
 
     /** "DA - Complete Fertilizer". */
+    public function auditRecordLabel(): string
+    {
+        return $this->sourcedName();
+    }
+
     public function sourcedName(): string
     {
         return "{$this->sourceLabel()} - {$this->name}";

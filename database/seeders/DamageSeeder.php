@@ -13,13 +13,15 @@ use Illuminate\Database\Seeder;
 /** Crop reference values, two disasters and the six Figma 329:2978 sample reports (no photos). */
 class DamageSeeder extends Seeder
 {
+    /** name => [yield MT/ha, farmgate price per MT]; also the starting values of a real installation. */
+    public const CROPS = [
+        'Rice' => [4.00, 20000], 'Corn' => [3.50, 15000], 'Cabbage' => [20.00, 15000], 'Carrots' => [18.00, 25000],
+        'Potato' => [15.00, 30000], 'Beans' => [2.00, 60000], 'Sweet Potato' => [10.00, 20000],
+    ];
+
     public function run(): void
     {
-        $crops = [
-            'Rice' => [4.00, 20000], 'Corn' => [3.50, 15000], 'Cabbage' => [20.00, 15000], 'Carrots' => [18.00, 25000],
-            'Potato' => [15.00, 30000], 'Beans' => [2.00, 60000], 'Sweet Potato' => [10.00, 20000],
-        ];
-        foreach ($crops as $name => [$yield, $price]) {
+        foreach (self::CROPS as $name => [$yield, $price]) {
             Crop::updateOrCreate(['name' => $name], ['yield_mt_per_ha' => $yield, 'price_per_mt' => $price, 'partial_loss_factor' => 0.50]);
         }
 
