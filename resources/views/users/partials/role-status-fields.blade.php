@@ -6,7 +6,7 @@
         <select name="role_id" class="ml-[6px] h-full flex-1 cursor-pointer bg-transparent font-bold outline-none">
             <option value="">No Role</option>
             @foreach ($roles as $role)
-                <option value="{{ $role->id }}" @selected((string) $roleId === (string) $role->id)>{{ $role->name }}</option>
+                <option value="{{ $role->id }}" title="{{ $role->name }}" @selected((string) $roleId === (string) $role->id)>{{ $role->short_name }}</option>
             @endforeach
         </select>
     </label>

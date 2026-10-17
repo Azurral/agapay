@@ -63,3 +63,9 @@ it('shows the password guide on Change Password too', function () {
     $this->actingAs($this->admin)->get(route('password.edit'))->assertOk()
         ->assertSee('At least 8 characters')->assertSee('The two passwords match');
 });
+
+it('lists roles by their short names so the combined role fits the box', function () {
+    $this->actingAs($this->admin)->get('/users?add=1')->assertOk()
+        ->assertSee('>AgriTech &amp; Encoder</option>', false)
+        ->assertDontSee('>Agricultural Technologist &amp; Data Encoder</option>', false);
+});
