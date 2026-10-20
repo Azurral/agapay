@@ -9,10 +9,14 @@ AGAPAY replaces OMAG's separate Excel workbooks with one web system for:
 - inventory, with automatic stock deduction;
 - Excel import and export;
 - crisis (agricultural damage) reports;
+- assistance requests;
 - distribution reports;
-- a full audit trail.
+- a full audit trail;
+- the farmer's consent under the Data Privacy Act (RA 10173), with a privacy notice.
 
-It has three roles: **Administrator** (Municipal Agriculturist), **Agricultural Technologist** and **Data Encoder**.
+It has three roles: **Administrator** (Municipal Agriculturist), **Agricultural Technologist** and **Data Encoder**, plus **AgriTech & Encoder** for one person who does both jobs.
+
+At OMAG it runs on one office laptop, installed with a single Windows installer (see **AGAPAY for Windows**). The setup below is for developing AGAPAY on your own PC.
 
 Built with Laravel 13 (PHP 8.5), MariaDB, Blade, Tailwind CSS 4 and Alpine.js. Its screens follow the "Agapay - Wireframes" Figma file.
 
@@ -20,7 +24,7 @@ Built with Laravel 13 (PHP 8.5), MariaDB, Blade, Tailwind CSS 4 and Alpine.js. I
 
 ## Requirements
 
-Install these once on the PC that will run AGAPAY:
+Install these once on the PC used to develop AGAPAY (the office laptop needs none of them; it uses the installer):
 
 | Program | Version | What it is for |
 |---|---|---|
@@ -175,84 +179,23 @@ The seeder creates these accounts. Their password is the value of `AGAPAY_SEED_P
 | `Encoder_03` | Data Encoder | Add beneficiaries, edit profiles, encode intervention records, inventory, Excel import, file crisis reports, download reports |
 | `Encoder_04` | (no role, inactive) | Shows how blocked accounts behave |
 
+The seeder has no **AgriTech & Encoder** account; add one under **User Management → Add User** if you need it. Staff names are entered in parts (last name, first name, M.I., suffix), and new passwords are checked as they are typed (at least 8 characters, both boxes match).
+
 The Administrator can change what each role may do under **User Management → Configure Roles**.
 
 ## Everyday use
 
 - **Distribution cycles:** go to Interventions → Distribution Cycles (Administrator) to add the next cycle, e.g. `2026-Q4`. Only one cycle is "ongoing" at a time. Cycles are kept in date order.
-- **Adding beneficiaries:** use Add Beneficiary. Enter the address in parts (House/Lot No., Street, Sitio/Purok, Barangay); the town is always Bontoc, Mountain Province. The RSBSA No. is optional and shows as **N/A** when blank. Such farmers can get LGU programs but not DA programs.
+- **Programs:** the Administrator adds and edits the DA and LGU programs under Interventions → Programs (unit, one per household per cycle or not, active or not).
+- **Adding beneficiaries:** use Add Beneficiary. Enter the address in parts (House/Lot No., Street, Sitio/Purok, Barangay); the town is always Bontoc, Mountain Province. The RSBSA No. is optional and shows as **N/A** when blank. Such farmers can get LGU programs but not DA programs. The farmer's **consent** checkbox is required; who confirmed it and when shows on the profile.
 - **Programs:** new program records are ready to release at once. Change a record's status only for special cases: Deceased (released to a proxy), or Duplicate, Relocated or Inactive (not claimable).
 - **Assistance requests:** use **New Request** (Encoder, Agricultural Technologist) to record a farmer asking for a program, optionally after a crisis. The Administrator approves (this adds the program record for the current cycle) or denies with a reason on the LGU page's **Requests** tab, which also counts requests by barangay, sitio/purok, crisis and crop and downloads them as Excel.
 - **LGU page:** lists every farmer with address, farm area and number of crisis reports; the LGU program records are on its **Program Records** tab.
-- **Excel import:** use Upload Excel. The sheet needs Name (or First Name + Last Name), Birthdate and Barangay columns; RSBSA No., Address, Farm Area, Contact and an Intervention column are optional. Check the Processing Feedback and preview, then press **Confirm & Import**.
+- **Excel import:** use Upload Excel. The sheet needs Name (or First Name + Last Name), Birthdate and Barangay columns; RSBSA No., Address, Farm Area, Contact and an Intervention column are optional. Check the Processing Feedback and preview, tick the consent box for the file, then press **Confirm & Import**.
 - **Export List:** one row per program given, with claim status, amount and the farmer's crises. Birthdates and contact numbers are left out.
+- **Privacy notice:** the landing page links to `/privacy`, the full notice (what is kept, why, who sees it, the farmer's rights).
 - **Download Reports:** choose a cycle, a program, the dates and PDF or Excel. Every generated file stays under Generated Reports so it can be downloaded again.
-- **Crisis reports:** go to Crisis Reports → + New Damage Report. Loss and cost are computed from the crop values, which the Administrator edits under "Crises & Crop Values" (also where new crises, e.g. a typhoon, are added).
-
-## Installing at the office
-
-For everyday use at OMAG, one office PC runs AGAPAY for everyone. Do these three things once, after the Setup above. The steps assume XAMPP is in `C:\xampp` and PHP 8.5 in `C:\php`; change the paths if yours differ.
-
-### 1. Give MySQL a password
-
-A fresh XAMPP lets anyone on the PC open the database as `root` with no password.
-
-1. XAMPP Control Panel → MySQL **Admin** (phpMyAdmin) → **User accounts**.
-2. For every `root` row (`localhost`, `127.0.0.1`, `::1`): **Edit privileges** → **Change password** → type a strong password → **Go**.
-3. Put the same password in AGAPAY's `.env`: `DB_PASSWORD=your-password`.
-4. phpMyAdmin will now ask for it: in `C:\xampp\phpMyAdmin\config.inc.php`, change `'auth_type'` from `'config'` to `'cookie'`.
-
-### 2. Run AGAPAY with Apache
-
-`php artisan serve` stops when its window closes. Apache (part of XAMPP) runs in the background and serves many users at once. XAMPP's own PHP is too old, so Apache is pointed at PHP 8.5:
-
-1. Open `C:\xampp\apache\conf\httpd.conf` in Notepad. Put `#` in front of the line that starts with `Include "conf/extra/httpd-xampp.conf"` (XAMPP's old PHP).
-2. At the end of the same file, add (fix the AGAPAY path):
-
-```apache
-LoadModule php_module "C:/php/php8apache2_4.dll"
-PHPIniDir "C:/php"
-AddHandler application/x-httpd-php .php
-DirectoryIndex index.php
-
-<VirtualHost *:80>
-    DocumentRoot "C:/AGAPAY/public"
-    <Directory "C:/AGAPAY/public">
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-```
-
-3. Check that `LoadModule rewrite_module modules/mod_rewrite.so` has no `#` in front.
-4. XAMPP Control Panel → **Start** Apache. Tick **Svc** beside Apache and MySQL so both start with Windows.
-5. In `.env`, set `APP_URL=http://<this PC's IP address>` and `APP_ENV=production`, `APP_DEBUG=false`. Then, in the AGAPAY folder:
-
-```bash
-php artisan optimize
-```
-
-6. Allow port 80 in Windows Firewall. Other PCs open `http://<this PC's IP address>`.
-
-After any later change to `.env`, run `php artisan optimize` again.
-
-### 3. Back up every night
-
-`backup.bat` (in the AGAPAY folder) copies the database and the photos/reports folder into a dated folder, and deletes backups older than 30 days.
-
-1. Open `backup.bat` in Notepad and set, at the top: `XAMPP`, `DB_PASS` (the MySQL password from step 1) and `BACKUP_DIR` (a USB drive or another disk, e.g. `D:\AGAPAY-Backups`).
-2. Double-click it once. It should say **Backup saved to …**.
-3. Start → **Task Scheduler** → **Create Basic Task** → name it "AGAPAY backup" → **Daily**, e.g. 6:00 PM → **Start a program** → choose `backup.bat` → **Finish**.
-
-**To restore** a backup (e.g. on a new PC after Setup):
-
-```bash
-C:\xampp\mysql\bin\mysql -u root -p agapay < D:\AGAPAY-Backups\<date>\agapay.sql
-```
-
-Then copy the backup's `files` folder back into `storage\app\private`.
-
-The **"Use my location"** button on the damage form only works over `https://` or on the PC itself (`localhost`). Over plain `http://` on the office network, type the coordinates in.
+- **Crisis reports:** go to Crisis Reports → + New Damage Report. Loss and cost are computed from the crop values, which the Administrator edits under **Crop Values**; new crises (e.g. a typhoon) are added with **+ Add Crisis**.
 
 ## AGAPAY for Windows (the office copy)
 
@@ -331,7 +274,9 @@ If uploading a damage photo fails with a "permission denied" message, add the va
 
 ## Backups
 
-At the office, `backup.bat` copies the database and the `storage/app/private` folder (damage photos, generated reports) every night; see **Installing at the office**, step 3. On a laptop you can also double-click it any time. For the online (Railway) copy, use the **Backups** tab on the Railway MySQL service and volume (available on paid plans).
+- **Office laptop (AGAPAY for Windows):** automatic. A backup is made every day at noon (or as soon as the laptop is on), when AGAPAY starts if the last one is over a day old, and before every update, restore and reinstall. The newest 30 are kept in `C:\AGAPAY\AGAPAY Backups`. **Backup now** and **Restore a backup** are in `C:\AGAPAY`.
+- **Development PC:** export the `agapay` database in phpMyAdmin and copy `storage\app\private` (damage photos and generated reports).
+- **Online (Railway):** use the **Backups** tab on the Railway MySQL service and volume (paid plans). The online copy holds sample data only.
 
 ## Tests
 
@@ -348,3 +293,6 @@ At the office, `backup.bat` copies the database and the `storage/app/private` fo
 - The distribution report PDF lists up to 1,000 beneficiary rows, and the damage report PDF up to 1,000 reports. The summaries count everything; choose Excel for the full lists.
 - Damage photos are JPG/PNG, at least 1 and up to 10 per report (photographic documentation is mandatory, per OMAG), each up to 5 MB (or less if `upload_max_filesize` is lower).
 - Excel imports are limited to 25 MB and 20,000 rows per file.
+- The office copy (AGAPAY for Windows) is used on the laptop it is installed on; other computers on the network cannot open it.
+- Damage photos are stored as uploaded, so many large phone photos make each backup bigger.
+- The **"Use my location"** button on the damage form only works over `https://` or on the computer itself (`localhost`). Otherwise type the coordinates in.

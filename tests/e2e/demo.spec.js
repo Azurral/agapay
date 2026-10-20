@@ -79,6 +79,7 @@ test('5.2 adding a farmer: age, duplicate, address parts, N/A', async ({ page })
     await expect(page.locator('#field-municipality')).toHaveValue('Bontoc');
     await page.getByRole('button', { name: /Add Beneficiary/ }).last().click();
     await expect(page.getByText('Rosita Fagyao was added.')).toBeVisible();
+    await expect(page.getByText(/^Consent confirmed by .+ on /)).toBeVisible();
     // Encoders land on the profile in edit mode: the parts are separate fields there.
     await expect(page.locator('input[name=house_no]')).toHaveValue('8');
     await expect(page.locator('input[name=sitio]')).toHaveValue('Purok 4');
