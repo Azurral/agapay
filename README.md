@@ -16,159 +16,41 @@ AGAPAY replaces OMAG's separate Excel workbooks with one web system for:
 
 It has three roles: **Administrator** (Municipal Agriculturist), **Agricultural Technologist** and **Data Encoder**, plus **AgriTech & Encoder** for one person who does both jobs.
 
-At OMAG it runs on one office laptop, installed with a single Windows installer (see **AGAPAY for Windows**). The setup below is for developing AGAPAY on your own PC.
-
 Built with Laravel 13 (PHP 8.5), MariaDB, Blade, Tailwind CSS 4 and Alpine.js. Its screens follow the "Agapay - Wireframes" Figma file.
 
 ---
 
-## Requirements
+## Using AGAPAY at the office
 
-Install these once on the PC used to develop AGAPAY (the office laptop needs none of them; it uses the installer):
+The developers provide one installer, `AGAPAY-Setup-v<version>.exe`. It brings its own web server (Apache and PHP 8.5) and database (MariaDB), and needs no administrator rights and no internet for daily use.
 
-| Program | Version | What it is for |
-|---|---|---|
-| [PHP](https://windows.php.net/download/) | **8.5** (Thread Safe, x64 zip) | Runs AGAPAY |
-| [XAMPP](https://www.apachefriends.org/) | any recent | Only for its **MySQL/MariaDB** database and **phpMyAdmin**. XAMPP's own PHP is older and is not used. |
-| [Composer](https://getcomposer.org/download/) | 2.x | Downloads AGAPAY's PHP libraries |
-| [Node.js](https://nodejs.org/) | 20 or newer (LTS) | Builds the CSS and JavaScript |
+1. Run it on the office laptop. If Windows says "Windows protected your PC" (the installer is not signed), choose **More info** → **Run anyway**.
+2. Create the Administrator's account: last name, first name, M.I., suffix, username and password, with a live password checklist.
+3. AGAPAY sets up an empty database (no sample farmers) and opens at `http://localhost:8742`. From then on it starts with Windows and makes a backup every day at noon.
 
-## Setup (first time)
+Everything goes into `C:\AGAPAY`:
 
-Follow the steps in order. Each command goes in a terminal **opened in the AGAPAY folder** (step 4). Type one command, press Enter, and wait for it to finish before typing the next.
-
-### 1. Install PHP 8.5
-
-1. Download the PHP 8.5 **x64 Thread Safe** zip and unzip it to a folder, e.g. `C:\php`.
-2. Add that folder to the Windows **Path**: Start → type *environment variables* → **Edit the system environment variables** → **Environment Variables…** → under *System variables* select **Path** → **Edit** → **New** → `C:\php` → OK on every window.
-3. In `C:\php`, copy `php.ini-development` and rename the copy to `php.ini`.
-4. Open `php.ini` in Notepad. Remove the `;` at the start of these lines so they are switched on:
-
-```ini
-extension_dir = "ext"
-extension=curl
-extension=fileinfo
-extension=gd
-extension=intl
-extension=mbstring
-extension=openssl
-extension=pdo_mysql
-extension=zip
-```
-
-5. In the same file, find and change these three lines (they allow Excel uploads, damage photos and large PDFs):
-
-```ini
-upload_max_filesize = 25M
-post_max_size = 60M
-memory_limit = 512M
-```
-
-6. Save. Open a **new** terminal and check that it worked. It should print `PHP 8.5...`:
-
-```bash
-php -v
-```
-
-### 2. Install Composer and Node.js
-
-Run both installers with the default options. When Composer asks for PHP, choose `C:\php\php.exe`. Open a **new** terminal and check both:
-
-```bash
-composer -V
-```
-
-```bash
-node -v
-```
-
-### 3. Start the database and create `agapay`
-
-1. Open the **XAMPP Control Panel** and press **Start** beside **MySQL**. It turns green. (Apache is not needed.)
-2. Press **Admin** beside MySQL. phpMyAdmin opens in the browser.
-3. Click **New** in the left panel, type `agapay` as the database name, and press **Create**. Leave it empty.
-
-### 4. Open a terminal in the AGAPAY folder
-
-Open the AGAPAY folder in File Explorer, click the address bar, type `cmd` and press Enter. A Command Prompt opens already inside the folder. Use this window for every command below.
-
-### 5. Download the libraries
-
-```bash
-composer install
-```
-
-```bash
-npm install
-```
-
-These take a few minutes the first time. Warnings are normal; only a red **error** means something went wrong.
-
-### 6. Create the settings file
-
-```bash
-copy .env.example .env
-```
-
-```bash
-php artisan key:generate
-```
-
-Open the new `.env` file in Notepad and check these lines. They already match a standard XAMPP install (user `root`, no password). Change `APP_URL` to the address used in step 8:
-
-```ini
-APP_URL=http://127.0.0.1:8765
-DB_DATABASE=agapay
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-### 7. Create the tables and the starting data
-
-```bash
-php artisan migrate --seed
-```
-
-This creates every table and fills in the 16 barangays, the roles and accounts, and sample beneficiaries, interventions, inventory and damage records.
-
-### 8. Build the screens and start AGAPAY
-
-```bash
-npm run build
-```
-
-```bash
-php artisan serve --port=8765
-```
-
-Open **http://127.0.0.1:8765** in the browser and sign in with an account from the table below. **Keep this terminal open** while AGAPAY is in use; closing it stops the system.
-
-## Starting AGAPAY again (every day)
-
-1. XAMPP Control Panel → **Start** MySQL.
-2. Open a terminal in the AGAPAY folder (step 4) and run:
-
-```bash
-php artisan serve --port=8765
-```
-
-3. Open http://127.0.0.1:8765.
-
-`npm run build` is needed again only after the CSS or JavaScript files change.
-
-## If something goes wrong
-
-| What you see | What to do |
+| In `C:\AGAPAY` | What it is |
 |---|---|
-| `'php' is not recognized` | PHP is not on the Path. Redo step 1.2, then open a **new** terminal. |
-| `could not find driver` or `SQLSTATE[HY000] [2002]` | `extension=pdo_mysql` is still switched off (step 1.4), or MySQL is not started in XAMPP. |
-| `Unknown database 'agapay'` | Create the database (step 3). |
-| `Failed to listen on 127.0.0.1:8765` | AGAPAY is already running in another terminal, or another program uses the port. Close the other terminal, or use `--port=8766` and open that address. |
-| `Vite manifest not found` | Run `npm run build`. |
-| "Page Expired" or you are signed out | Sessions end after 30 minutes without activity. Sign in again. |
-| A download manager (e.g. IDM) grabs report downloads | Turn off its browser integration for `127.0.0.1`, or save the file it offers. |
+| **AGAPAY** | Opens AGAPAY in the browser (also on the desktop) |
+| **Backup now** | Makes a backup right away |
+| **Restore a backup** | Lists the backups and puts the chosen one back, after saving the current records first |
+| **AGAPAY Backups** | The newest 30 backups |
+| **Uninstall AGAPAY** | Removes AGAPAY. It keeps the records and backups unless you choose to delete them. |
+| **AGAPAY User Guide.pdf** | The staff guide |
+| `system` (hidden) | PHP, Apache, MariaDB, the program, and the records in `system\data` |
+
+Running the installer again (a newer version, or after an uninstall that kept the records) backs up first and keeps the records.
+
+**Updates:** when a new version is released, the Administrator sees **Update available** above Dark Mode in the side panel (the laptop needs internet for this). The update backs up first, keeps the records, and goes back to the previous version by itself if anything fails.
+
+## Online demo
+
+`https://agapay.up.railway.app` runs the same system with **sample data only**, for testing and the capstone defense. Real farmer records are kept only on the office laptop.
 
 ## Accounts
+
+These sample accounts exist in a development copy and in the online demo; the office installation has none (its installer creates the Administrator, who adds the staff).
 
 The seeder creates these accounts. Their password is the value of `AGAPAY_SEED_PASSWORD` in `.env`; the default is in `.env.example`. **Change it, and each user's password, before real use.**
 
@@ -188,7 +70,7 @@ The Administrator can change what each role may do under **User Management → C
 - **Distribution cycles:** go to Interventions → Distribution Cycles (Administrator) to add the next cycle, e.g. `2026-Q4`. Only one cycle is "ongoing" at a time. Cycles are kept in date order.
 - **Programs:** the Administrator adds and edits the DA and LGU programs under Interventions → Programs (unit, one per household per cycle or not, active or not).
 - **Adding beneficiaries:** use Add Beneficiary. Enter the address in parts (House/Lot No., Street, Sitio/Purok, Barangay); the town is always Bontoc, Mountain Province. The RSBSA No. is optional and shows as **N/A** when blank. Such farmers can get LGU programs but not DA programs. The farmer's **consent** checkbox is required; who confirmed it and when shows on the profile.
-- **Programs:** new program records are ready to release at once. Change a record's status only for special cases: Deceased (released to a proxy), or Duplicate, Relocated or Inactive (not claimable).
+- **Program records:** new program records are ready to release at once. Change a record's status only for special cases: Deceased (released to a proxy), or Duplicate, Relocated or Inactive (not claimable).
 - **Assistance requests:** use **New Request** (Encoder, Agricultural Technologist) to record a farmer asking for a program, optionally after a crisis. The Administrator approves (this adds the program record for the current cycle) or denies with a reason on the LGU page's **Requests** tab, which also counts requests by barangay, sitio/purok, crisis and crop and downloads them as Excel.
 - **LGU page:** lists every farmer with address, farm area and number of crisis reports; the LGU program records are on its **Program Records** tab.
 - **Excel import:** use Upload Excel. The sheet needs Name (or First Name + Last Name), Birthdate and Barangay columns; RSBSA No., Address, Farm Area, Contact and an Intervention column are optional. Check the Processing Feedback and preview, tick the consent box for the file, then press **Confirm & Import**.
@@ -197,96 +79,10 @@ The Administrator can change what each role may do under **User Management → C
 - **Download Reports:** choose a cycle, a program, the dates and PDF or Excel. Every generated file stays under Generated Reports so it can be downloaded again.
 - **Crisis reports:** go to Crisis Reports → + New Damage Report. Loss and cost are computed from the crop values, which the Administrator edits under **Crop Values**; new crises (e.g. a typhoon) are added with **+ Add Crisis**.
 
-## AGAPAY for Windows (the office copy)
-
-One installer, `AGAPAY-Setup-v<version>.exe`, with its own PHP 8.5, Apache and MariaDB. It needs no administrator rights and no internet for daily use.
-
-**Building it** (on the developer's PC):
-
-1. Put the official downloads in `portable-build\downloads\`: `php.zip` (PHP 8.5 Win32 vs17 x64, thread safe, windows.php.net), `httpd.zip` (Apache 2.4 Win64, apachelounge.com), `mariadb.zip` (MariaDB 11.8 winx64, mariadb.org) and `cacert.pem` (curl.se). Check their published checksums. Put Inno Setup 6 in `portable-build\inno\` (`ISCC.exe`).
-2. Commit, then run `powershell -ExecutionPolicy Bypass -File portable\build.ps1`. It builds the committed version into `portable-build\`:
-   - `AGAPAY-Setup-v<version>.exe`: the installer for the office laptop;
-   - `AGAPAY-app-v<version>.zip`: the program only, for in-app updates.
-
-The installer includes `handover\AGAPAY-User-Guide.pdf` when that file exists.
-
-**Installing it at the office:** run `AGAPAY-Setup-v<version>.exe`. Windows may say "Windows protected your PC" because the installer is not signed; choose **More info** → **Run anyway**. The wizard asks for the Administrator's account: last name, first name, M.I., suffix, username and password, with a live password checklist. It then sets up an empty database (no sample farmers) and starts AGAPAY at `http://localhost:8742`. AGAPAY also starts with Windows and makes a backup every day at noon. Everything goes into `C:\AGAPAY`:
-
-| In `C:\AGAPAY` | What it is |
-|---|---|
-| **AGAPAY** | Opens AGAPAY in the browser (also on the desktop) |
-| **Backup now** | Makes a backup right away |
-| **Restore a backup** | Lists the backups and puts the chosen one back, after saving the current records first |
-| **AGAPAY Backups** | The newest 30 backups |
-| **Uninstall AGAPAY** | Removes AGAPAY. It keeps the records and backups unless you choose to delete them. |
-| **AGAPAY User Guide.pdf** | The staff guide |
-| `system` (hidden) | PHP, Apache, MariaDB, the program, and the records in `system\data` |
-
-Running the installer again (a newer version, or after an uninstall that kept the records) backs up first and keeps the records.
-
-**Publishing an update:** bump the version, commit, build, push, then create a GitHub release tagged `v<version>` with `AGAPAY-app-v<version>.zip` attached. The office copy's Administrator then sees **Update available** above Dark Mode. The update backs up first, keeps `system\data`, applies database changes, and rolls back by itself if anything fails.
-
-## Putting AGAPAY online (Railway)
-
-This gives AGAPAY a public `https://` link while the office setup above keeps working as before. [Railway](https://railway.com) runs Laravel and MySQL directly. The free trial gives $5 of credit; after that the Hobby plan costs about $5 a month. **When the credit runs out, the site stops**, so check that it covers the dates you need.
-
-1. Make sure the latest code is on GitHub.
-2. Go to railway.com → **Login** → **Login with GitHub**.
-3. **New Project** → **Deploy from GitHub repo** → choose `agapay`. The first build may fail because the settings are not in yet; that is fine.
-4. In the same project, press **+ Create** → **Database** → **MySQL**.
-5. Click the AGAPAY service → **Settings** → **Networking** → **Generate Domain**. If it asks for a port, enter `8765`. Copy the address it shows, e.g. `agapay-production.up.railway.app`.
-6. Make an app key on your own PC (in the AGAPAY folder). Copy the line it prints, which starts with `base64:`:
-
-```bash
-php artisan key:generate --show
-```
-
-7. Click the AGAPAY service → **Variables** → **Raw Editor**, paste the following, fill in the three `<...>` parts, and press **Update Variables**:
-
-```ini
-APP_NAME=Agapay
-APP_ENV=production
-APP_DEBUG=false
-APP_KEY=<the base64:... line from step 6>
-APP_URL=https://<the domain from step 5>
-APP_TIMEZONE=Asia/Manila
-DB_CONNECTION=mysql
-DB_URL=${{MySQL.MYSQL_URL}}
-SESSION_DRIVER=database
-SESSION_LIFETIME=30
-SESSION_SECURE_COOKIE=true
-CACHE_STORE=database
-TRUSTED_PROXIES=*
-LOG_CHANNEL=stderr
-AGAPAY_SEED_PASSWORD=<a new strong password>
-PORT=8765
-```
-
-   **Do not use the default password from `.env.example`.** This repository is public, so anyone could read it.
-
-8. Keep photos and reports between updates: right-click the AGAPAY service → **Attach Volume** → mount path `/app/storage/app/private`.
-9. Create the tables and fill in the starting data **once**: AGAPAY service → **Settings** → **Deploy** → **Pre-deploy Command** → type `php artisan migrate --force && php artisan db:seed --force` → press **Deploy**. When the deployment shows **Success**, change the command to just `php artisan migrate --force`, so later updates add new tables but never load the sample data again.
-10. Open `https://<your domain>` and sign in as `Admin_01` with the password from step 7. Change it under User Management.
-
-Every push to GitHub's `master` branch updates the online copy automatically. The database changes (migrations) run by themselves.
-
-If uploading a damage photo fails with a "permission denied" message, add the variable `RAILWAY_RUN_UID=0` and redeploy.
-
 ## Backups
 
-- **Office laptop (AGAPAY for Windows):** automatic. A backup is made every day at noon (or as soon as the laptop is on), when AGAPAY starts if the last one is over a day old, and before every update, restore and reinstall. The newest 30 are kept in `C:\AGAPAY\AGAPAY Backups`. **Backup now** and **Restore a backup** are in `C:\AGAPAY`.
-- **Development PC:** export the `agapay` database in phpMyAdmin and copy `storage\app\private` (damage photos and generated reports).
-- **Online (Railway):** use the **Backups** tab on the Railway MySQL service and volume (paid plans). The online copy holds sample data only.
-
-## Tests
-
-| What | Command |
-|---|---|
-| Feature tests (Pest, in-memory SQLite) | `php artisan test --compact` |
-| Visual comparison with all 46 Figma frames | `npm run visual` |
-| End-to-end flows for each role | `npm run e2e` |
-
-`npm run visual` and `npm run e2e` use Microsoft Edge and their own database, `agapay_visual`. Create it once in phpMyAdmin. They never touch the `agapay` database. Run them one at a time.
+- **Office laptop:** automatic. A backup is made every day at noon (or as soon as the laptop is on), when AGAPAY starts if the last one is over a day old, and before every update, restore and reinstall. The newest 30 are kept in `C:\AGAPAY\AGAPAY Backups`. **Backup now** and **Restore a backup** are in `C:\AGAPAY`.
+- **Online demo:** use the **Backups** tab on the Railway MySQL service and volume (paid plans). It holds sample data only.
 
 ## Known limits
 
@@ -296,3 +92,7 @@ If uploading a damage photo fails with a "permission denied" message, add the va
 - The office copy (AGAPAY for Windows) is used on the laptop it is installed on; other computers on the network cannot open it.
 - Damage photos are stored as uploaded, so many large phone photos make each backup bigger.
 - The **"Use my location"** button on the damage form only works over `https://` or on the computer itself (`localhost`). Otherwise type the coordinates in.
+
+## For developers
+
+Setting up AGAPAY from the source code, building the installer, publishing updates, putting it online and running the tests: see [DEVELOPMENT.md](DEVELOPMENT.md).
