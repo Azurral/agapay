@@ -68,6 +68,7 @@
         <form method="POST" action="{{ route('import.confirm', $batch) }}" class="mt-[7px]"
               x-data="{ busy: false }" @submit="busy = true">
             @csrf
+            <x-beneficiary.consent-check class="mb-[7px]" :text="config('agapay.import_consent_text')" :error="$errors->first('consent')" />
             <button type="submit" :disabled="busy"
                     class="bg-brand-bar gradient-button flex h-[59px] w-full items-center justify-center gap-[4px] rounded-[50px] text-[20px] font-bold leading-[24px] text-white">
                 <img src="{{ asset('images/figma/icons/plus.svg') }}" alt="" class="size-[21px] brightness-0 invert"> Confirm &amp; Import

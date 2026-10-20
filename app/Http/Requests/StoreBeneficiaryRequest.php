@@ -26,12 +26,13 @@ class StoreBeneficiaryRequest extends FormRequest
             ...$this->beneficiaryRules(),
             // Optional: farmers outside the RSBSA can still receive LGU programs.
             'rsbsa_number' => ['nullable', 'string', 'max:50'],
+            'consent' => ['accepted'],
         ];
     }
 
     public function messages(): array
     {
-        return $this->beneficiaryMessages();
+        return [...$this->beneficiaryMessages(), 'consent.accepted' => 'Confirm that the farmer gave consent before saving.'];
     }
 
     public function after(): array

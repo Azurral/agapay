@@ -61,6 +61,7 @@ test('5.2 adding a farmer: age, duplicate, address parts, N/A', async ({ page })
         await page.fill('[name=birthdate]', birthdate);
         await page.fill('[name=sitio]', sitio);
         await page.selectOption('[name=barangay_id]', { label: barangay });
+        await page.check('[name=consent]');
     };
 
     await fill('Rosita', 'Fagyao', yearsAgo(16), 'Purok 4', 'Samoki');
@@ -157,6 +158,7 @@ test('5.7 Excel import and the export list', async ({ page }) => {
     await expect(page.getByText("Unknown barangay 'Atlantis'")).toBeVisible();
     await expect(page.getByText('Missing birthdate')).toBeVisible();
     await expect(page.getByText(/no RSBSA No\. \(DA programs need one/).first()).toBeVisible();
+    await page.check('[name=consent]');
     await page.getByRole('button', { name: /Confirm & Import/ }).click();
     await expect(page.getByText(/Imported 2 new profiles/)).toBeVisible();
 

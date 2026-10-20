@@ -56,6 +56,8 @@
             </div>
         </x-ui.card>
 
+        <x-beneficiary.consent-check :text="config('agapay.consent_text')" :error="$errors->first('consent')" />
+
         <button type="submit" :disabled="busy" class="bg-brand-bar gradient-button disabled:cursor-wait disabled:opacity-70 flex h-[59px] w-full items-center justify-center gap-[6px] rounded-[50px] text-[20px] font-bold leading-[24px] text-white">
             <span class="text-[24px] leading-none">+</span> Add Beneficiary
         </button>

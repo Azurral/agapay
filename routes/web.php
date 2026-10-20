@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
 
 // The public landing page, for everyone; its Log in button takes signed-in users straight to their dashboard.
 Route::view('/', 'welcome')->name('home');
+Route::view('/privacy', 'privacy')->name('privacy');
 
 Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
     Route::get('/account/password', [PasswordController::class, 'edit'])->name('password.edit');

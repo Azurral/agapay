@@ -85,7 +85,7 @@ it('reads separate house number, street and purok columns', function () {
     ]), $this->encoder);
 
     expect($batch->rows()->sole()->data)->toMatchArray(['house_no' => '12', 'street' => 'Rizal St.', 'sitio' => 'Purok 2']);
-    $this->actingAs($this->encoder)->post(route('import.confirm', $batch));
+    $this->actingAs($this->encoder)->post(route('import.confirm', $batch), ['consent' => '1']);
     expect(Beneficiary::where('first_name', 'Pablo')->sole()->address)->toBe('12, Rizal St., Purok 2');
 });
 

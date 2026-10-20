@@ -35,7 +35,7 @@ it('imports new rows, with or without an RSBSA number, and updates RSBSA numbers
     ]);
     $before = Beneficiary::count();
 
-    $this->post(route('import.confirm', $batch))->assertRedirect(route('import.index'))
+    $this->post(route('import.confirm', $batch), ['consent' => '1'])->assertRedirect(route('import.index'))
         ->assertSessionHas('status', 'Imported 2 new profiles, updated 1, added 0 intervention records.');
 
     $pablo = Beneficiary::where('rsbsa_number', 'RSBSA-0901')->sole();
@@ -56,7 +56,7 @@ it('groups imported people into households', function () {
         ['Gloria Ramos', '1982-02-17', 'Poblacion', 'RSBSA-0902', 'purok 2, Poblacion'],
     ]);
 
-    $this->post(route('import.confirm', $batch));
+    $this->post(route('import.confirm', $batch), ['consent' => '1']);
 
     $pablo = Beneficiary::where('rsbsa_number', 'RSBSA-0901')->sole();
     expect($pablo->household_id)->not->toBeNull()
@@ -72,7 +72,7 @@ it('creates intervention records and deducts stock for distributed rows', functi
         ['Ben Talawec', '1975-01-03', 'Samoki', 'RSBSA-0902', 'DA - Certified Rice Seeds', null, null],
     ]);
 
-    $this->post(route('import.confirm', $batch))
+    $this->post(route('import.confirm', $batch), ['consent' => '1'])
         ->assertSessionHas('status', 'Imported 2 new profiles, updated 0, added 2 intervention records.');
 
     $claimed = InterventionRecord::whereHas('beneficiary', fn ($q) => $q->where('rsbsa_number', 'RSBSA-0901'))->sole();
@@ -90,7 +90,7 @@ it('rolls everything back when a row breaks a distribution rule', function () {
         ['Ben Talawec', '1975-01-03', 'Samoki', 'RSBSA-0902', 'DA - Certified Rice Seeds', 9999, '2026-07-20'],
     ]);
 
-    $this->followingRedirects()->post(route('import.confirm', $batch))
+    $this->followingRedirects()->post(route('import.confirm', $batch), ['consent' => '1'])
         ->assertSee('Row 3: Not enough stock')->assertSee('Confirm &amp; Import', false);
 
     expect([Beneficiary::count(), InterventionRecord::count()])->toBe($before)
@@ -100,9 +100,9 @@ it('rolls everything back when a row breaks a distribution rule', function () {
 it('imports a batch only once', function () {
     $batch = uploadRows([['Name', 'Birthdate', 'Barangay', 'RSBSA No.'], ['Pablo Ramos', '1980-05-10', 'Poblacion', 'RSBSA-0901']]);
 
-    $this->post(route('import.confirm', $batch));
+    $this->post(route('import.confirm', $batch), ['consent' => '1']);
     $count = Beneficiary::count();
-    $this->post(route('import.confirm', $batch))->assertSessionHasErrors(['confirm' => 'This import was already confirmed.']);
+    $this->post(route('import.confirm', $batch), ['consent' => '1'])->assertSessionHasErrors(['confirm' => 'This import was already confirmed.']);
 
     expect(Beneficiary::count())->toBe($count);
 });
@@ -112,7 +112,7 @@ it('skips rows that were registered after staging', function () {
     Beneficiary::factory()->create(['first_name' => 'Pablo', 'last_name' => 'Ramos', 'birthdate' => '1980-05-10', 'barangay_id' => $batch->rows()->value('data')['barangay_id']]);
     $count = Beneficiary::count();
 
-    $this->post(route('import.confirm', $batch))->assertSessionHas('status', 'Imported 0 new profiles, updated 0, added 0 intervention records.');
+    $this->post(route('import.confirm', $batch), ['consent' => '1'])->assertSessionHas('status', 'Imported 0 new profiles, updated 0, added 0 intervention records.');
 
     expect(Beneficiary::count())->toBe($count)->and($batch->rows()->value('status'))->toBe('duplicate');
 });
@@ -121,14 +121,14 @@ it('refuses an RSBSA No. that was taken after staging', function () {
     $batch = uploadRows([['Name', 'Birthdate', 'Barangay', 'RSBSA No.'], ['Pablo Ramos', '1980-05-10', 'Poblacion', 'RSBSA-0901']]);
     Beneficiary::factory()->create(['first_name' => 'Rosa', 'middle_name' => null, 'last_name' => 'Kiat', 'rsbsa_number' => 'RSBSA-0901']);
 
-    $this->post(route('import.confirm', $batch))->assertSessionHasErrors(['confirm' => 'Row 2: RSBSA No. RSBSA-0901 is already used by Rosa Kiat.']);
+    $this->post(route('import.confirm', $batch), ['consent' => '1'])->assertSessionHasErrors(['confirm' => 'Row 2: RSBSA No. RSBSA-0901 is already used by Rosa Kiat.']);
     expect($batch->fresh()->status)->toBe(ImportBatch::STAGED);
 });
 
 it('writes the import to the audit trail', function () {
     $batch = uploadRows([['Name', 'Birthdate', 'Barangay', 'RSBSA No.'], ['Pablo Ramos', '1980-05-10', 'Poblacion', 'RSBSA-0901']]);
 
-    $this->post(route('import.confirm', $batch));
+    $this->post(route('import.confirm', $batch), ['consent' => '1']);
 
     $log = AuditLog::where('action', 'Imported Excel File')->sole();
     expect($log)->record_label->toBe('masterlist.xlsx')->user_id->toBe($this->encoder->id)
@@ -139,6 +139,6 @@ it('writes the import to the audit trail', function () {
 it('keeps confirming to the uploader', function () {
     $batch = uploadRows([['Name', 'Birthdate', 'Barangay', 'RSBSA No.'], ['Pablo Ramos', '1980-05-10', 'Poblacion', 'RSBSA-0901']]);
 
-    $this->actingAs($this->admin)->post(route('import.confirm', $batch))->assertNotFound();
+    $this->actingAs($this->admin)->post(route('import.confirm', $batch), ['consent' => '1'])->assertNotFound();
     expect($batch->fresh()->status)->toBe(ImportBatch::STAGED);
 });

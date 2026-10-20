@@ -62,6 +62,8 @@ class BeneficiarySeeder extends Seeder
                 'rsbsa_status' => Beneficiary::RSBSA_REGISTERED,
                 'source' => Beneficiary::SOURCE_MANUAL,
                 'created_by' => ($extra['source'] ?? null) === Beneficiary::SOURCE_IMPORT ? $encoder : $admin,
+                'consent_confirmed_by' => ($extra['source'] ?? null) === Beneficiary::SOURCE_IMPORT ? $encoder : $admin,
+                'consent_confirmed_at' => $beneficiary->consent_confirmed_at ?? Carbon::parse($createdAt ?? 'now'),
                 ...$extra,
             ]);
 

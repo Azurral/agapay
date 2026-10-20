@@ -61,6 +61,7 @@ test('an encoder adds a farmer without an RSBSA number, who shows as N/A on the 
     await page.fill('[name=sitio]', 'Purok 4');
     await page.selectOption('[name=barangay_id]', { label: 'Samoki' });
     await page.fill('[name=farm_area_ha]', '1.25');
+    await page.check('[name=consent]');
     await page.getByRole('button', { name: /Add Beneficiary/ }).last().click();
 
     await expect(page.getByText('Lito Bayang was added.')).toBeVisible();
@@ -103,6 +104,7 @@ test('an encoder imports a masterlist', async ({ page }) => {
     await page.goto('/import');
     await page.setInputFiles('input[name=file]', file);
     await expect(page.getByText('1 row matched automatically')).toBeVisible();
+    await page.check('[name=consent]');
     await page.getByRole('button', { name: /Confirm & Import/ }).click();
 
     await expect(page.getByText('Imported 1 new profile, updated 0, added 0 intervention records.')).toBeVisible();

@@ -48,6 +48,8 @@ class BeneficiaryRegistrationController extends Controller
                 'rsbsa_number' => ($data['rsbsa_number'] ?? null) ?: null,
                 'rsbsa_status' => Beneficiary::RSBSA_REGISTERED,
                 'source' => Beneficiary::SOURCE_MANUAL,
+                'consent_confirmed_at' => now(),
+                'consent_confirmed_by' => $request->user()->id,
                 'created_by' => $request->user()->id,
             ]);
         } catch (UniqueConstraintViolationException $e) {

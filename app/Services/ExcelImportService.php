@@ -258,6 +258,9 @@ final class ExcelImportService
             // A row without a number is imported as is: the farmer shows "N/A" and can still get LGU programs.
             'rsbsa_status' => Beneficiary::RSBSA_REGISTERED,
             'source' => Beneficiary::SOURCE_IMPORT,
+            // Confirm & Import only runs after the person confirmed consent for the whole file.
+            'consent_confirmed_at' => now(),
+            'consent_confirmed_by' => $actor->id,
             'created_by' => $actor->id,
         ]);
     }

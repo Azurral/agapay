@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 #[Fillable([
     'first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'house_no', 'street', 'sitio', 'barangay_id', 'contact_number',
     'farm_area_ha', 'crop_type', 'rsbsa_number', 'rsbsa_status', 'rsbsa_status_reason', 'life_status',
-    'encoding_issue', 'source', 'created_by', 'updated_by',
+    'encoding_issue', 'source', 'consent_confirmed_at', 'consent_confirmed_by', 'created_by', 'updated_by',
 ])]
 class Beneficiary extends Model
 {
@@ -159,7 +159,7 @@ class Beneficiary extends Model
 
     protected function casts(): array
     {
-        return ['birthdate' => 'date'];
+        return ['birthdate' => 'date', 'consent_confirmed_at' => 'datetime'];
     }
 
     public function barangay(): BelongsTo
@@ -187,6 +187,22 @@ class Beneficiary extends Model
     public function latestRecord(): HasOne
     {
         return $this->hasOne(InterventionRecord::class)->ofMany(['distribution_cycle_id' => 'max', 'id' => 'max']);
+    }
+
+    public function consentConfirmer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'consent_confirmed_by');
+    }
+
+    /** "Consent confirmed by Liza C. Ngalob on Oct 20, 2026", or "Consent not recorded" for profiles added before AGAPAY asked. */
+    public function consentDisplay(): string
+    {
+        if ($this->consent_confirmed_at === null) {
+            return 'Consent not recorded';
+        }
+        $by = $this->consentConfirmer?->name;
+
+        return 'Consent confirmed'.($by ? " by {$by}" : '').' on '.$this->consent_confirmed_at->format('M j, Y');
     }
 
     public function creator(): BelongsTo

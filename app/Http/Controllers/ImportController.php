@@ -73,6 +73,10 @@ class ImportController extends Controller
     public function confirm(Request $request, ImportBatch $batch): RedirectResponse
     {
         abort_unless($batch->user_id === $request->user()->id, 404);
+        if (! $request->boolean('consent')) {
+            return redirect()->route('import.index', ['batch' => $batch])
+                ->withErrors(['consent' => 'Confirm that the farmers in this file gave consent before importing.']);
+        }
         set_time_limit(self::TIME_LIMIT_SECONDS);
 
         try {

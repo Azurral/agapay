@@ -4,7 +4,12 @@ use App\Models\Role;
 
 return [
     // The release shown on screen; bumped with every release (the commit is named after it, e.g. "v0.9.3").
-    'version' => '0.14.9',
+    // Data Privacy Act (RA 10173) wording, shown on the landing page, the privacy notice and the consent checkboxes.
+    'privacy_notice' => 'AGAPAY keeps the personal information of farmers registered with the Office of the Municipal Agriculturist, Bontoc, only to manage agricultural programs and assistance, in line with the Data Privacy Act of 2012 (RA 10173). Only authorized OMAG staff can access it, and every change is recorded.',
+    'consent_text' => 'The farmer has given consent for OMAG to record and use their personal information for agricultural programs and assistance, as stated in the privacy notice.',
+    'import_consent_text' => 'The farmers in this file gave consent for OMAG to record and use their personal information for agricultural programs and assistance (for example on their RSBSA forms), as stated in the privacy notice.',
+
+    'version' => '0.15.0',
 
     // In-app updates of the office copy ("AGAPAY for Windows"): the Administrator sees "Update available" when GitHub
     // has a newer release. Off on the online copy, which is updated by deployment.

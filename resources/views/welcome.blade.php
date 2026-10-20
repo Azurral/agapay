@@ -42,6 +42,10 @@
         </section>
     </main>
 
+    <section class="mx-auto mb-[28px] max-w-[760px] px-[24px] text-center text-[13px] leading-[20px] text-arrow" aria-label="Privacy notice">
+        <p>{{ config('agapay.privacy_notice') }} <a href="{{ route('privacy') }}" class="font-bold text-brand underline">Read the privacy notice</a></p>
+    </section>
+
     <footer class="pb-[28px] text-center text-[12px] text-arrow">
         Office of the Municipal Agriculturist · Bontoc, Mountain Province · AGAPAY v{{ config('agapay.version') }}
     </footer>

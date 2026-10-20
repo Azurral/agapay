@@ -109,6 +109,7 @@ function validRegistration(array $overrides = []): array
         'contact_number' => '0917-123-4567',
         'farm_area_ha' => '1.5',
         'crop_type' => 'Cabbage',
+        'consent' => '1',
         ...$overrides,
     ];
 }

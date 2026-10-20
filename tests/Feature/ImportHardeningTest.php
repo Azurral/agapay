@@ -73,7 +73,7 @@ it('tells the user how to recover from a confirm error', function () {
     $batch = stageHardening([['Name', 'Birthdate', 'Barangay', 'RSBSA No.'], ['Pablo Ramos', '1980-05-10', 'Poblacion', 'RSBSA-0901']]);
     Beneficiary::factory()->create(['rsbsa_number' => 'RSBSA-0901']);
 
-    $this->actingAs($this->encoder)->followingRedirects()->post(route('import.confirm', $batch))
+    $this->actingAs($this->encoder)->followingRedirects()->post(route('import.confirm', $batch), ['consent' => '1'])
         ->assertSee('Row 2: RSBSA No. RSBSA-0901 is already used by')
         ->assertSee('Discard this upload, fix the file and upload it again.');
 });

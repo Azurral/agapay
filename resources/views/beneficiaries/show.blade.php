@@ -90,6 +90,11 @@
                     @endforeach
                 </dl>
             @endif
+            {{-- Read-only in both views: consent is confirmed once, when the farmer is added. --}}
+            <div class="mt-[12px] text-[14px] leading-[18px]">
+                <p class="font-medium text-muted">Data Privacy Consent</p>
+                <p @class(['font-bold', 'text-danger' => ! $beneficiary->consent_confirmed_at])>{{ $beneficiary->consentDisplay() }}</p>
+            </div>
         </x-ui.card>
 
         <x-ui.card title="Intervention History" class="self-stretch">
