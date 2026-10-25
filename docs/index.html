@@ -33,7 +33,8 @@
     .button:hover::after { translate: 120% 0; transition: translate 700ms ease; }
     .button:active { transform: none; }
     .button:focus-visible { outline: 2px solid #7e80ff; outline-offset: 2px; }
-    .button.small { height: 38px; padding: 0 24px; font-size: 14px; }
+    /* On a short button the gradient's pale end looked like a cut edge: show only its deeper part. */
+    .button.small { height: 38px; padding: 0 24px; font-size: 14px; background-size: 170% 100%; background-position: 0 0; }
     .button.big { height: 46px; padding: 0 34px; font-size: 16px; margin-top: 14px; }
     .button svg { width: 18px; height: 18px; }
 
