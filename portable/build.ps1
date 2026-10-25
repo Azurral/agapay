@@ -58,7 +58,7 @@ $archive = Join-Path $staging 'app.zip'
 git -C $repo archive --format=zip -o $archive HEAD
 if ($LASTEXITCODE -ne 0) { throw 'git archive failed' }
 Expand-Archive $archive $app
-foreach ($path in 'tests', 'portable', '.github', 'phpunit.xml', '.env.example', 'README.md') {
+foreach ($path in 'tests', 'portable', 'docs', '.github', 'phpunit.xml', '.env.example', 'README.md', 'DEVELOPMENT.md') {
     Remove-Item (Join-Path $app $path) -Recurse -Force -ErrorAction SilentlyContinue
 }
 Push-Location $app

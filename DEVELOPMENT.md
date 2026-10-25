@@ -163,7 +163,14 @@ The installer includes `handover\AGAPAY-User-Guide.pdf` when that file exists.
 
 ## Publishing an update
 
-Bump the version, commit, build, push, then create a GitHub release tagged `v<version>` with `AGAPAY-app-v<version>.zip` attached. The office copy's Administrator then sees **Update available** above Dark Mode. The update backs up first, keeps `system\data`, applies database changes, and rolls back by itself if anything fails.
+Bump the version, commit, build, push, then create a GitHub release tagged `v<version>` with these attached:
+
+- `AGAPAY-app-v<version>.zip`: the in-app update. The office copy's Administrator then sees **Update available** above Dark Mode. The update backs up first, keeps `system\data`, applies database changes, and rolls back by itself if anything fails.
+- `AGAPAY-Setup.exe` (a copy of `AGAPAY-Setup-v<version>.exe`) and `AGAPAY-User-Guide.pdf`: what the download page links to, under these exact names.
+
+## The download page
+
+`https://azurral.github.io/agapay/` is a one-page site in the `docs/` folder, published by GitHub Pages from `master` (repo **Settings → Pages → Deploy from a branch → master, /docs**). Its **Download for Windows** button links to `releases/latest/download/AGAPAY-Setup.exe`, so it always serves the newest release's installer and needs no change per release. To change the page, edit `docs/index.html` and push.
 
 ## Putting AGAPAY online (Railway)
 
