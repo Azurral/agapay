@@ -9,7 +9,7 @@ return [
     'consent_text' => 'The farmer has given consent for OMAG to record and use their personal information for agricultural programs and assistance, as stated in the privacy notice.',
     'import_consent_text' => 'The farmers in this file gave consent for OMAG to record and use their personal information for agricultural programs and assistance (for example on their RSBSA forms), as stated in the privacy notice.',
 
-    'version' => '0.15.3',
+    'version' => '0.15.4',
 
     // In-app updates of the office copy ("AGAPAY for Windows"): the Administrator sees "Update available" when GitHub
     // has a newer release. Off on the online copy, which is updated by deployment.

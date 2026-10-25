@@ -70,6 +70,19 @@ it('morphs the dark mode sun into a moon instead of swapping them', function () 
     expect($card)->toContain('theme-sun')->toContain('theme-moon')->not->toContain('x-show');
 });
 
+it('fades the page between light and dark instead of flipping it at once', function () {
+    $html = $this->actingAs($this->admin)->get('/dashboard')->getContent();
+    $card = Str::betweenFirst($html, 'DARK MODE', '</button>');
+    $css = file_get_contents(resource_path('css/app.css'));
+
+    // The theme changes inside a view transition (skipped for reduced motion); the switch is kept out of the
+    // cross-fade so its knob and icons still animate.
+    expect($card)->toContain('document.startViewTransition')->toContain('prefers-reduced-motion')
+        ->toContain('view-transition-name: theme-switch')
+        ->and($css)->toMatch('/::view-transition-old\(root\),\s*::view-transition-new\(root\)\s*\{[^}]*animation-duration:\s*700ms/')
+        ->toContain('::view-transition-old(theme-switch) { display: none; }');
+});
+
 it('slides messages in and lets only success messages fade away', function () {
     $this->actingAs($this->admin)->post(route('assistance-requests.deny', AssistanceRequest::where('status', AssistanceRequest::PENDING)->first()), ['decision_note' => '']);
     $error = $this->get('/interventions/lgu?tab=requests')->getContent();

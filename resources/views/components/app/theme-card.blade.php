@@ -1,4 +1,6 @@
-{{-- Dark mode switch (styled like Return to Login): remembers the choice and flips the page's colours (app.css, html.dark). --}}
+{{-- Dark mode switch (styled like Return to Login): remembers the choice and flips the page's colours (app.css, html.dark).
+     The page cross-fades into the other theme (a view transition, skipped for reduced motion); the switch has its own
+     transition name so it stays out of the fade and its knob and icons still animate. --}}
 <div x-data="{ night: (() => { try { return localStorage.getItem('agapay-theme') === 'dark'; } catch (e) { return false; } })() }"
      {{ $attributes->class('bg-brand-card relative flex h-[60px] w-[211px] items-center justify-between rounded-[15px] pr-[12px] pl-[14px]') }}>
     <div class="text-white">
@@ -6,7 +8,9 @@
         <p class="text-[12px] leading-[16px]" x-text="night ? 'On' : 'Off'">Off</p>
     </div>
     <button type="button" role="switch" :aria-checked="night.toString()" aria-checked="false" aria-label="Dark mode"
-            @click="night = ! night; document.documentElement.classList.toggle('dark', night); try { localStorage.setItem('agapay-theme', night ? 'dark' : 'light'); } catch (e) {}"
+            @click="const flip = async () => { night = ! night; document.documentElement.classList.toggle('dark', night); try { localStorage.setItem('agapay-theme', night ? 'dark' : 'light'); } catch (e) {} await $nextTick(); };
+                    if (document.startViewTransition && ! matchMedia('(prefers-reduced-motion: reduce)').matches) { document.startViewTransition(flip); } else { flip(); }"
+            style="view-transition-name: theme-switch"
             class="relative h-[28px] w-[54px] shrink-0 rounded-full transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             :class="night ? 'bg-[#2b2d6e]' : 'bg-white/35'">
         {{-- Stars fade in on the night track. --}}
