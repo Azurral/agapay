@@ -3,94 +3,202 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Download AGAPAY</title>
-<meta name="description" content="Download AGAPAY for Windows, the beneficiary and intervention management system of the Office of the Municipal Agriculturist, Bontoc, Mountain Province.">
-<link rel="icon" href="logo.svg" type="image/svg+xml">
+<title>Download Agapay · OMAG Bontoc</title>
+<meta name="description" content="Download Agapay for Windows, the beneficiary and intervention management system of the Office of the Municipal Agriculturist, Bontoc, Mountain Province.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    :root { --ink: #2f2f2f; --muted: #6b6b76; --brand: #5a5de3; --line: #e2e2ea; --card: #ffffff; --soft: #f3f0ff;
-            --bg: linear-gradient(160deg, #f3eeff 0%, #e4e9ff 55%, #dff6ff 100%); }
+    /* Same look as Agapay's own landing page (resources/views/welcome.blade.php). */
+    :root { --ink: #2f2f2f; --arrow: #868686; --muted: #b4b4b4; --brand: #5a5de3; --canvas: #f9f6ff; --card: #ffffff; --soft: #f3f0ff; --grid: url('images/grid-bg.svg'); }
     @media (prefers-color-scheme: dark) {
-        :root { --ink: #ececf1; --muted: #a3a3b2; --brand: #8f91ff; --line: #34344a; --card: #1d1d2b; --soft: #26263a;
-                --bg: linear-gradient(160deg, #1a1530 0%, #141a33 55%, #10222c 100%); }
+        :root { --ink: #e8e9f3; --arrow: #8b8fa8; --muted: #2c2f45; --brand: #a5a7ff; --canvas: #0f1020; --card: #1c1e2e; --soft: #23253a; --grid: url('images/grid-bg-dark.svg'); color-scheme: dark; }
     }
     * { box-sizing: border-box; }
-    html { min-height: 100%; background: var(--bg); }
-    body { margin: 0; font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif; color: var(--ink); line-height: 1.55; }
-    main { max-width: 720px; margin: 0 auto; padding: 56px 16px 32px; }
-    .hero { text-align: center; }
-    .hero img { width: 84px; height: 84px; }
-    h1 { font-size: 44px; line-height: 1.1; margin: 14px 0 6px; letter-spacing: .5px; }
-    .sub { color: var(--muted); font-size: 17px; margin: 0 auto; max-width: 520px; }
-    .download { display: inline-flex; align-items: center; gap: 10px; margin-top: 28px; padding: 15px 34px; border-radius: 999px; color: #fff; text-decoration: none;
-                font-weight: 700; font-size: 19px; background: linear-gradient(90deg, #8037ff, #4671ff 55%, #0bcaff); box-shadow: 0 12px 30px rgba(90, 93, 227, .3); }
-    .download:hover { filter: brightness(1.07); }
-    .download svg { width: 22px; height: 22px; }
-    .meta { margin-top: 12px; color: var(--muted); font-size: 14px; }
-    .links { margin-top: 8px; font-size: 15px; }
-    .links a, footer a { color: var(--brand); font-weight: 600; text-decoration: none; }
-    .links a:hover, footer a:hover { text-decoration: underline; }
-    .links span { color: var(--muted); margin: 0 8px; }
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; margin-top: 28px; }
-    h2 { font-size: 18px; margin: 0 0 10px; color: var(--brand); }
-    ol { margin: 0; padding-left: 22px; }
-    li { margin-bottom: 8px; }
-    li:last-child { margin-bottom: 0; }
-    .note { margin-top: 14px; padding: 12px 14px; background: var(--soft); border-radius: 10px; font-size: 14px; }
-    dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 0; font-size: 15px; }
-    dt { color: var(--muted); }
-    dd { margin: 0; }
-    footer { text-align: center; color: var(--muted); font-size: 13px; padding: 8px 16px 36px; }
-    @media (max-width: 520px) { h1 { font-size: 36px; } .download { padding: 14px 24px; font-size: 17px; } dl { grid-template-columns: 1fr; gap: 2px; } dd { margin-bottom: 8px; } }
+    html { background-color: var(--canvas); }
+    body { margin: 0; min-height: 100vh; font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased;
+           background: var(--canvas) var(--grid) no-repeat -344px -419px / 2135.5px 1529px; }
+    a { color: inherit; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    header { height: 84px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 700; text-decoration: none; }
+    .brand svg { width: 40px; height: 40px; }
+
+    .button { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 10px; border-radius: 100px; color: #fff;
+              font-weight: 700; text-decoration: none; background: url('images/login.svg') 0 0 / 100% 100% no-repeat; box-shadow: 0 4px 12px rgb(75 50 195 / .38);
+              transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease; }
+    .button::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / .38) 50%, transparent 70%); translate: -120% 0; }
+    .button:hover { filter: brightness(1.07) saturate(1.1); transform: translateY(-1px); box-shadow: 0 8px 20px rgb(75 50 195 / .5); }
+    .button:hover::after { translate: 120% 0; transition: translate 700ms ease; }
+    .button:active { transform: none; }
+    .button:focus-visible { outline: 2px solid #7e80ff; outline-offset: 2px; }
+    .button.small { height: 42px; padding: 0 26px; font-size: 14px; }
+    .button.big { height: 52px; padding: 0 40px; font-size: 17px; margin-top: 30px; }
+    .button svg { width: 20px; height: 20px; }
+
+    main.wrap { padding-top: 56px; padding-bottom: 48px; }
+    .steps .card { align-self: start; }
+    .hero { display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .hero > svg { width: 96px; height: 96px; }
+    h1 { margin: 18px 0 0; font-size: 56px; line-height: 64px; font-weight: 700; }
+    .lead { margin: 12px 0 0; max-width: 640px; font-size: 18px; line-height: 28px; }
+    .meta { margin: 12px 0 0; font-size: 13px; color: var(--arrow); }
+    .links { margin: 10px 0 0; font-size: 14px; font-weight: 700; }
+    .links a { color: var(--brand); text-decoration: underline; }
+    .links span { color: var(--arrow); margin: 0 8px; }
+
+    .features { margin-top: 64px; display: grid; gap: 18px; grid-template-columns: repeat(4, 1fr); }
+    .card { background: var(--card); border: 1px solid var(--muted); border-radius: 24px; padding: 22px 22px 26px; }
+    .card h2 { margin: 0; font-size: 16px; line-height: 22px; color: var(--brand); }
+    .card p { margin: 8px 0 0; font-size: 14px; line-height: 21px; }
+
+    .steps { margin-top: 18px; display: grid; gap: 18px; grid-template-columns: 3fr 2fr; }
+    .card ol { margin: 10px 0 0; padding-left: 20px; font-size: 14px; line-height: 21px; }
+    .card li { margin-bottom: 8px; }
+    .card li:last-child { margin-bottom: 0; }
+    .note { margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: var(--soft); font-size: 13px; line-height: 20px; }
+
+    footer { padding: 0 24px 28px; text-align: center; font-size: 12px; color: var(--arrow); }
+    footer a { color: var(--brand); font-weight: 700; }
+
+    /* Entrance, as on the landing page: the logo grows, the text rises, the cards follow and the button settles last. */
+    @keyframes logo-grow { from { transform: scaleY(0); } }
+    @keyframes logo-leaf { from { transform: scale(0) rotate(-40deg); opacity: 0; } }
+    @keyframes logo-ride { from { transform: translateY(62px); } }
+    @keyframes logo-bounce { 35% { transform: scaleY(1.14); } 65% { transform: scaleY(.94); } 100% { transform: scaleY(1); } }
+    @keyframes logo-ride-bounce { 35% { transform: translateY(-8.68px); } 65% { transform: translateY(3.72px); } 100% { transform: none; } }
+    .logo .bar, .logo .leaf { transform-box: fill-box; }
+    .logo .bar { transform-origin: 50% 100%; animation: logo-grow 650ms cubic-bezier(.3, 1.35, .5, 1) calc(var(--i) * 120ms) both; }
+    .logo .leaf { transform-origin: 0% 100%; animation: logo-leaf 450ms cubic-bezier(.3, 1.4, .5, 1) 420ms both; }
+    .logo .ride { animation: logo-ride 650ms cubic-bezier(.3, 1.35, .5, 1) 240ms both; }
+    .logo:hover .bar { animation-name: logo-grow, logo-bounce; animation-duration: 650ms, 500ms; animation-delay: calc(var(--i) * 120ms), calc(var(--i) * 70ms); animation-timing-function: cubic-bezier(.3, 1.35, .5, 1), ease; animation-fill-mode: both, none; }
+    .logo:hover .ride { animation-name: logo-ride, logo-ride-bounce; animation-duration: 650ms, 500ms; animation-delay: 240ms, 140ms; animation-timing-function: cubic-bezier(.3, 1.35, .5, 1), ease; animation-fill-mode: both, none; }
+    @keyframes enter-rise { from { opacity: 0; transform: translateY(16px); } }
+    @keyframes enter-settle { 0% { opacity: 0; transform: translateY(12px) scale(.92); } 70% { opacity: 1; transform: translateY(0) scale(1.04); } 100% { transform: none; } }
+    .rise { animation: enter-rise 600ms cubic-bezier(.2, .8, .2, 1) var(--d, 0ms) both; }
+    .settle { animation: enter-settle 650ms cubic-bezier(.2, .8, .2, 1) var(--d, 0ms) both; }
+    @media (prefers-reduced-motion: reduce) { .logo .bar, .logo .leaf, .logo .ride, .rise, .settle { animation: none !important; } .button:hover::after { transition: none; translate: -120% 0; } }
+
+    /* Same rule as the system (x-desktop-only): on phones and tablets the page is blurred and cannot be used. */
+    .desktop-only-notice { display: none; }
+    @media (hover: none) and (pointer: coarse) {
+        .desktop-only-notice { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: rgb(249 246 255 / .55); }
+        body > :not(.desktop-only-notice):not(script) { filter: blur(6px); pointer-events: none; user-select: none; }
+        body { overflow: hidden; }
+    }
+    @media (hover: none) and (pointer: coarse) and (prefers-color-scheme: dark) { .desktop-only-notice { background: rgb(15 16 32 / .6); } }
+    .desktop-only-notice > div { margin: 0 20px; max-width: 420px; display: flex; flex-direction: column; align-items: center; text-align: center;
+                                 background: var(--card); border: 1px solid var(--muted); border-radius: 24px; padding: 28px 28px 30px; box-shadow: 0 20px 50px rgba(90, 93, 227, .25); }
+    .desktop-only-notice svg { width: 64px; height: 64px; }
+    .desktop-only-notice h2 { margin: 14px 0 0; font-size: 22px; line-height: 28px; }
+    .desktop-only-notice p { margin: 10px 0 0; font-size: 15px; line-height: 22px; }
+    .desktop-only-notice b { color: var(--brand); word-break: break-all; }
+    .desktop-only-notice small { margin-top: 12px; font-size: 12px; color: var(--arrow); }
+
+    @media (max-width: 960px) { .features { grid-template-columns: repeat(2, 1fr); } .steps { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) {
+        .wrap, main { padding-left: 16px; padding-right: 16px; }
+        .features { grid-template-columns: 1fr; margin-top: 44px; }
+        h1 { font-size: 44px; line-height: 52px; }
+        .lead { font-size: 16px; line-height: 25px; }
+        .button.small { padding: 0 18px; }
+        .button.big { padding: 0 28px; font-size: 16px; }
+    }
 </style>
 </head>
 <body>
-<main>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs><linearGradient id="plot" x1="8" y1="92" x2="92" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#8037FF"/><stop offset=".55" stop-color="#4671FF"/><stop offset="1" stop-color="#0BCAFF"/></linearGradient></defs>
+</svg>
+
+<div class="desktop-only-notice" role="alertdialog" aria-modal="true" aria-labelledby="desktop-only-title" aria-describedby="desktop-only-text">
+    <div>
+        <svg viewBox="0 0 100 100" fill="none" role="img" aria-label="Agapay logo">
+            <rect x="8" y="62" width="24" height="30" rx="6.24" fill="url(#plot)"/><rect x="38" y="42" width="24" height="50" rx="6.24" fill="url(#plot)"/>
+            <rect x="68" y="30" width="24" height="62" rx="6.24" fill="url(#plot)"/><path d="M69.26 27C69.26 13.11 78.11 4.26 92 4.26C92 18.16 83.16 27 69.26 27Z" fill="#22D3FF"/>
+        </svg>
+        <h2 id="desktop-only-title">Please use a desktop or laptop</h2>
+        <p id="desktop-only-text">Agapay for Windows is installed on the office laptop. Open <b>azurral.github.io/agapay</b> on a Windows computer to download it.</p>
+        <small>Office of the Municipal Agriculturist · Bontoc</small>
+    </div>
+</div>
+
+<header class="wrap">
+    <a class="brand" href="./">
+        <svg viewBox="0 0 100 100" fill="none" aria-hidden="true">
+            <rect x="8" y="62" width="24" height="30" rx="6.24" fill="url(#plot)"/><rect x="38" y="42" width="24" height="50" rx="6.24" fill="url(#plot)"/>
+            <rect x="68" y="30" width="24" height="62" rx="6.24" fill="url(#plot)"/><path d="M69.26 27C69.26 13.11 78.11 4.26 92 4.26C92 18.16 83.16 27 69.26 27Z" fill="#22D3FF"/>
+        </svg>
+        Agapay
+    </a>
+    <a class="button small" href="https://github.com/Azurral/agapay/releases/latest/download/AGAPAY-Setup.exe">Download</a>
+</header>
+
+<main class="wrap">
     <section class="hero">
-        <img src="logo.svg" alt="">
-        <h1>AGAPAY</h1>
-        <p class="sub">Beneficiary and intervention management for the Office of the Municipal Agriculturist, Bontoc, Mountain Province.</p>
-        <a class="download" href="https://github.com/Azurral/agapay/releases/latest/download/AGAPAY-Setup.exe">
+        <svg class="logo" viewBox="0 0 100 100" fill="none" overflow="visible" aria-hidden="true">
+            <rect class="bar" style="--i:0" x="8" y="62" width="24" height="30" rx="6.24" fill="url(#plot)"/>
+            <rect class="bar" style="--i:1" x="38" y="42" width="24" height="50" rx="6.24" fill="url(#plot)"/>
+            <rect class="bar" style="--i:2" x="68" y="30" width="24" height="62" rx="6.24" fill="url(#plot)"/>
+            <g class="ride"><path class="leaf" d="M69.26 27C69.26 13.11 78.11 4.26 92 4.26C92 18.16 83.16 27 69.26 27Z" fill="#22D3FF"/></g>
+        </svg>
+        <h1 class="rise" style="--d:300ms">Agapay</h1>
+        <p class="lead rise" style="--d:420ms">Centralized agricultural beneficiary and intervention management for the
+            Office of the Municipal Agriculturist, Bontoc, Mountain Province.</p>
+        <a class="button big settle" style="--d:1100ms" href="https://github.com/Azurral/agapay/releases/latest/download/AGAPAY-Setup.exe">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16"/></svg>
             Download for Windows
         </a>
-        <p class="meta"><span id="version">Latest version</span> · Windows 10 or 11 (64-bit) · about 75 MB</p>
-        <p class="links">
-            <a href="https://github.com/Azurral/agapay/releases/latest/download/AGAPAY-User-Guide.pdf">User Guide (PDF)</a><span>·</span>
-            <a href="https://github.com/Azurral/agapay/releases">All versions</a>
+        <p class="meta rise" style="--d:1050ms"><span data-version>Latest version</span> · Windows 10 or 11 (64-bit) · about 75 MB</p>
+        <p class="links rise" style="--d:1150ms">
+            <a href="https://github.com/Azurral/agapay/releases/latest/download/AGAPAY-User-Guide.pdf">User Guide (PDF)</a><span>·</span><a href="https://github.com/Azurral/agapay/releases">All versions</a>
         </p>
     </section>
 
-    <section class="card">
-        <h2>Installing</h2>
-        <ol>
-            <li>Open the downloaded <b>AGAPAY-Setup.exe</b>.</li>
-            <li>If Windows shows <b>"Windows protected your PC"</b>, click <b>More info</b>, then <b>Run anyway</b>. This appears because the installer is new to Windows.</li>
-            <li>Create the <b>Administrator</b> account (the Municipal Agriculturist), then click <b>Install</b>.</li>
-            <li>AGAPAY opens in the browser. Do the <b>first setup</b> in chapter 9 of the User Guide before the staff start encoding.</li>
-        </ol>
-        <p class="note">AGAPAY runs on the office laptop itself and needs no internet for daily use. The installer holds <b>no farmer records</b>; the records stay on the laptop, with a backup every day.</p>
+    <section class="features" aria-label="What Agapay does">
+        <article class="card rise" style="--d:560ms"><h2>Beneficiary Records</h2><p>One list of Bontoc's farmers, their households, farm areas and RSBSA numbers, with duplicate checks.</p></article>
+        <article class="card rise" style="--d:670ms"><h2>DA &amp; LGU Programs</h2><p>Programs per distribution cycle, the one-per-household rule, and stock deducted as items are released.</p></article>
+        <article class="card rise" style="--d:780ms"><h2>Crisis &amp; Damage Reports</h2><p>Crop damage after typhoons and floods, with photos, location and computed loss and cost.</p></article>
+        <article class="card rise" style="--d:890ms"><h2>Reports &amp; Audit Trail</h2><p>PDF and Excel reports in one click, and a record of who changed what and when.</p></article>
     </section>
 
-    <section class="card">
-        <h2>Already installed?</h2>
-        <dl>
-            <dt>Updating</dt><dd>No need to download again. The Administrator sees <b>Update available</b> in AGAPAY's side panel when a new version is out.</dd>
-            <dt>Reinstalling</dt><dd>Running a newer installer keeps the records; it makes a backup first.</dd>
-        </dl>
+    <section class="steps">
+        <article class="card rise" style="--d:1000ms">
+            <h2>Installing</h2>
+            <ol>
+                <li>Open the downloaded <b>AGAPAY-Setup.exe</b>.</li>
+                <li>If Windows shows <b>"Windows protected your PC"</b>, click <b>More info</b>, then <b>Run anyway</b>. This appears because the installer is new to Windows.</li>
+                <li>Create the <b>Administrator</b> account (the Municipal Agriculturist), then click <b>Install</b>.</li>
+                <li>Agapay opens in the browser. Do the <b>first setup</b> in chapter 9 of the User Guide before the staff start encoding.</li>
+            </ol>
+            <p class="note">Agapay runs on the office laptop itself and needs no internet for daily use. The installer holds <b>no farmer records</b>; the records stay on the laptop, with a backup every day.</p>
+        </article>
+        <article class="card rise" style="--d:1100ms">
+            <h2>Already installed?</h2>
+            <ol>
+                <li><b>Updating:</b> no need to download again. The Administrator sees <b>Update available</b> in Agapay's side panel when a new version is out.</li>
+                <li><b>Reinstalling:</b> running a newer installer keeps the records; it makes a backup first.</li>
+            </ol>
+        </article>
     </section>
 </main>
+
 <footer>
-    AGAPAY · Office of the Municipal Agriculturist, Bontoc, Mountain Province · <a href="https://github.com/Azurral/agapay">Source code</a>
+    Office of the Municipal Agriculturist · Bontoc, Mountain Province · <span data-version>Agapay</span> · <a href="https://github.com/Azurral/agapay">Source code</a>
 </footer>
+
 <script>
+    // The version always follows the newest GitHub release, so the page never needs editing for an update.
     fetch('https://api.github.com/repos/Azurral/agapay/releases/latest')
         .then(r => r.ok ? r.json() : null)
         .then(release => {
             if (!release || !release.tag_name) return;
+            const version = 'Version ' + release.tag_name.replace(/^v/, '');
             const date = new Date(release.published_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
-            document.getElementById('version').textContent = 'Version ' + release.tag_name.replace(/^v/, '') + ' · ' + date;
+            const [meta, foot] = document.querySelectorAll('[data-version]');
+            meta.textContent = version + ' · ' + date;
+            foot.textContent = 'Agapay ' + release.tag_name;
         })
         .catch(() => {});
 </script>
