@@ -18,6 +18,6 @@ export default defineConfig({
         url: 'http://127.0.0.1:8124/login',
         reuseExistingServer: false,
         env: { DB_DATABASE: 'agapay_visual', APP_ENV: 'local' },
-        timeout: 120_000,
+        timeout: 300_000,   // migrate:fresh --seed alone can take about 100 s
     },
 });

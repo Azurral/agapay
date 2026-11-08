@@ -81,11 +81,15 @@ final class ClaimService
             $deceased = $record->validation_status === InterventionRecord::VALIDATION_DECEASED;
             $proxy = trim((string) ($input['proxy_claimant'] ?? ''));
             $proof = trim((string) ($input['proof_note'] ?? ''));
-            if ($deceased && ($proxy === '' || $proof === '')) {
-                // Only the Administrator's Process Claim has the proxy fields.
-                throw new InterventionRuleViolation($actor->role?->slug === Role::ADMIN
-                    ? 'A deceased beneficiary can only be claimed by a proxy with a proof note.'
-                    : 'Only the Administrator can record a proxy claim for a deceased beneficiary.');
+            if ($deceased) {
+                // Only the Administrator's Process Claim has the proxy fields; other roles are refused even when a
+                // request carries them.
+                if ($actor->role?->slug !== Role::ADMIN) {
+                    throw new InterventionRuleViolation('Only the Administrator can record a proxy claim for a deceased beneficiary.');
+                }
+                if ($proxy === '' || $proof === '') {
+                    throw new InterventionRuleViolation('A deceased beneficiary can only be claimed by a proxy with a proof note.');
+                }
             }
 
             $override = trim((string) ($input['override_reason'] ?? ''));
