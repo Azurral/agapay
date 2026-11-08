@@ -23,9 +23,6 @@ $app = Application::configure(basePath: dirname(__DIR__))
             'password.changed' => EnsurePasswordChanged::class,
             'can.any' => EnsureCanAny::class,
         ]);
-        // Behind a hosting proxy (e.g. Railway) set TRUSTED_PROXIES=* so links and redirects use https.
-        // Unset on the office PC, so forwarded headers cannot fake the client's address there.
-        $middleware->trustProxies(at: env('TRUSTED_PROXIES'));
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(fn () => route('dashboard'));
     })

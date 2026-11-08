@@ -3,6 +3,7 @@ import { defineConfig } from '@playwright/test';
 // End-to-end flows on a freshly migrated and seeded database (the visual harness's database; the two never run together).
 export default defineConfig({
     testDir: '.',
+    testIgnore: '**/install-demo/**',   // the defense rehearsal needs a freshly installed copy: npm run e2e:demo
     timeout: 90_000,
     workers: 1,
     use: {

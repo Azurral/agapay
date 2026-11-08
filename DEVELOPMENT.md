@@ -1,6 +1,6 @@
 # Developing AGAPAY
 
-How to run AGAPAY from the source code, build the Windows installer, publish updates, put it online and run the tests. To use AGAPAY at the office, see the [README](README.md) instead.
+How to run AGAPAY from the source code, build the Windows installer, publish updates and run the tests. To use AGAPAY at the office, see the [README](README.md) instead.
 
 ## Requirements
 
@@ -172,58 +172,13 @@ Bump the version, commit, build, push, then create a GitHub release tagged `v<ve
 
 `https://azurral.github.io/agapay/` is a one-page site in the `docs/` folder, published by GitHub Pages from `master` (repo **Settings → Pages → Deploy from a branch → master, /docs**). Its **Download for Windows** button links to `releases/latest/download/AGAPAY-Setup.exe`, so it always serves the newest release's installer and needs no change per release. To change the page, edit `docs/index.html` and push.
 
-## Putting AGAPAY online (Railway)
-
-This gives AGAPAY a public `https://` link for the demo; the office installation is separate and unaffected. [Railway](https://railway.com) runs Laravel and MySQL directly. The free trial gives $5 of credit; after that the Hobby plan costs about $5 a month. **When the credit runs out, the site stops**, so check that it covers the dates you need.
-
-1. Make sure the latest code is on GitHub.
-2. Go to railway.com → **Login** → **Login with GitHub**.
-3. **New Project** → **Deploy from GitHub repo** → choose `agapay`. The first build may fail because the settings are not in yet; that is fine.
-4. In the same project, press **+ Create** → **Database** → **MySQL**.
-5. Click the AGAPAY service → **Settings** → **Networking** → **Generate Domain**. If it asks for a port, enter `8765`. Copy the address it shows, e.g. `agapay-production.up.railway.app`.
-6. Make an app key on your own PC (in the AGAPAY folder). Copy the line it prints, which starts with `base64:`:
-
-```bash
-php artisan key:generate --show
-```
-
-7. Click the AGAPAY service → **Variables** → **Raw Editor**, paste the following, fill in the three `<...>` parts, and press **Update Variables**:
-
-```ini
-APP_NAME=Agapay
-APP_ENV=production
-APP_DEBUG=false
-APP_KEY=<the base64:... line from step 6>
-APP_URL=https://<the domain from step 5>
-APP_TIMEZONE=Asia/Manila
-DB_CONNECTION=mysql
-DB_URL=${{MySQL.MYSQL_URL}}
-SESSION_DRIVER=database
-SESSION_LIFETIME=30
-SESSION_SECURE_COOKIE=true
-CACHE_STORE=database
-TRUSTED_PROXIES=*
-LOG_CHANNEL=stderr
-AGAPAY_SEED_PASSWORD=<a new strong password>
-PORT=8765
-```
-
-   **Do not use the default password from `.env.example`.** This repository is public, so anyone could read it.
-
-8. Keep photos and reports between updates: right-click the AGAPAY service → **Attach Volume** → mount path `/app/storage/app/private`.
-9. Create the tables and fill in the starting data **once**: AGAPAY service → **Settings** → **Deploy** → **Pre-deploy Command** → type `php artisan migrate --force && php artisan db:seed --force` → press **Deploy**. When the deployment shows **Success**, change the command to just `php artisan migrate --force`, so later updates add new tables but never load the sample data again.
-10. Open `https://<your domain>` and sign in as `Admin_01` with the password from step 7. Change it under User Management.
-
-Every push to GitHub's `master` branch updates the online copy automatically. The database changes (migrations) run by themselves.
-
-If uploading a damage photo fails with a "permission denied" message, add the variable `RAILWAY_RUN_UID=0` and redeploy.
-
 ## Tests
 
 | What | Command |
 |---|---|
 | Feature tests (Pest, in-memory SQLite) | `php artisan test --compact` |
 | Visual comparison with all 46 Figma frames | `npm run visual` |
-| End-to-end flows for each role | `npm run e2e` |
+| End-to-end flows for each role, and the black-box test cases | `npm run e2e` |
+| Rehearsal of the defense demo on a freshly installed copy | `npm run e2e:demo` |
 
 `npm run visual` and `npm run e2e` use Microsoft Edge and their own database, `agapay_visual`. Create it once in phpMyAdmin. They never touch the `agapay` database. Run them one at a time.

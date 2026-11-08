@@ -44,13 +44,9 @@ Running the installer again (a newer version, or after an uninstall that kept th
 
 **Updates:** when a new version is released, the Administrator sees **Update available** above Dark Mode in the side panel (the laptop needs internet for this). The update backs up first, keeps the records, and goes back to the previous version by itself if anything fails.
 
-## Online demo
+## Sample accounts (development copy only)
 
-`https://agapay.up.railway.app` runs the same system with **sample data only**, for testing and the capstone defense. Real farmer records are kept only on the office laptop.
-
-## Accounts
-
-These sample accounts exist in a development copy and in the online demo; the office installation has none (its installer creates the Administrator, who adds the staff).
+These sample accounts exist only in a development copy (see [DEVELOPMENT.md](DEVELOPMENT.md)). The office installation has none: its installer creates the Administrator, who adds the staff. Real farmer records are kept only on the office laptop.
 
 The seeder creates these accounts. Their password is the value of `AGAPAY_SEED_PASSWORD` in `.env`; the default is in `.env.example`. **Change it, and each user's password, before real use.**
 
@@ -81,8 +77,7 @@ The Administrator can change what each role may do under **User Management → C
 
 ## Backups
 
-- **Office laptop:** automatic. A backup is made every day at noon (or as soon as the laptop is on), when AGAPAY starts if the last one is over a day old, and before every update, restore and reinstall. The newest 30 are kept in `C:\AGAPAY\AGAPAY Backups`. **Backup now** and **Restore a backup** are in `C:\AGAPAY`.
-- **Online demo:** use the **Backups** tab on the Railway MySQL service and volume (paid plans). It holds sample data only.
+Backups are automatic. A backup is made every day at noon (or as soon as the laptop is on), when AGAPAY starts if the last one is over a day old, and before every update, restore and reinstall. The newest 30 are kept in `C:\AGAPAY\AGAPAY Backups`. **Backup now** and **Restore a backup** are in `C:\AGAPAY`.
 
 ## Known limits
 
@@ -95,4 +90,4 @@ The Administrator can change what each role may do under **User Management → C
 
 ## For developers
 
-Setting up AGAPAY from the source code, building the installer, publishing updates, putting it online and running the tests: see [DEVELOPMENT.md](DEVELOPMENT.md).
+Setting up AGAPAY from the source code, building the installer, publishing updates and running the tests: see [DEVELOPMENT.md](DEVELOPMENT.md).

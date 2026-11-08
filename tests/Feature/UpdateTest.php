@@ -42,7 +42,7 @@ it('shows no card to other roles, for the same version, without a package, when 
     'no app package' => [fn () => fakeRelease('v0.15.0', ['notes.txt']), null],
     'github down' => [fn () => fakeRelease(status: 500), null],
     'offline' => [fn () => Http::fake(fn () => throw new ConnectionException('offline')), null],
-    'updates off (online copy)' => [function () {
+    'updates off (development copy)' => [function () {
         fakeRelease();
         config(['agapay.updates.enabled' => false]);
     }, null],

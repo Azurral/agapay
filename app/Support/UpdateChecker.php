@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Throwable;
 
 /**
- * Asks GitHub for the latest AGAPAY release (the office copy only; the online copy is updated by deployment).
+ * Asks GitHub for the latest AGAPAY release (the office copy only; a development copy is updated from the source code).
  * The answer is cached for hours, and a failed check (offline laptop) is cached too, so pages never wait on it.
  */
 final class UpdateChecker

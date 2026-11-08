@@ -98,7 +98,8 @@ test('recording a distribution lowers the stock', async ({ page }) => {
 
 test('an encoder imports a masterlist', async ({ page }) => {
     const file = join(scratch, 'masterlist.csv');
-    writeFileSync(file, 'Name,Birthdate,Barangay,RSBSA No.\nRamil Kinaw,1980-05-10,Samoki,RSBSA-7001\n');
+    // A farmer no other spec imports, so the run order of the spec files does not matter.
+    writeFileSync(file, 'Name,Birthdate,Barangay,RSBSA No.\nRomeo Kinaw,1981-06-11,Samoki,RSBSA-7101\n');
 
     await login(page, 'Encoder_03');
     await page.goto('/import');
@@ -139,7 +140,8 @@ test('the administrator downloads a distribution report', async ({ page }) => {
     const download = page.waitForEvent('download');
     await page.getByRole('button', { name: /Generate Report/ }).click();
 
-    expect((await download).suggestedFilename()).toMatch(/^agapay-report-2026-q3-all-\d{4}-\d{2}-\d{2}\.pdf$/);
+    // The current cycle: other specs may have started a newer one than the sample 2026-Q3.
+    expect((await download).suggestedFilename()).toMatch(/^agapay-report-\d{4}-q\d-all-\d{4}-\d{2}-\d{2}\.pdf$/);
     await page.goto('/reports');
     await expect(page.getByText('Generated Reports')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Download' }).first()).toBeVisible();

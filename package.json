@@ -6,7 +6,8 @@
         "build": "vite build",
         "dev": "vite",
         "visual": "playwright test --config tests/visual/playwright.config.js",
-        "e2e": "playwright test --config tests/e2e/playwright.config.js"
+        "e2e": "playwright test --config tests/e2e/playwright.config.js",
+        "e2e:demo": "playwright test --config tests/e2e/install-demo/playwright.config.js"
     },
     "devDependencies": {
         "@fontsource/ibm-plex-sans": "^5.3.0",
