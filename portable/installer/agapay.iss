@@ -9,16 +9,28 @@
   #define AppVersion "0.0.0"
 #endif
 #define Tools "{app}\system\tools"
+; /DEvaluation=1 (build.ps1 -Evaluation): the copy for the panel, built as AGAPAY-Setup-Evaluation-v<version>.exe
+; (sent as AGAPAY-Setup.exe). Same names and folder as the office copy, but it loads the sample records and test
+; accounts instead of asking for an Administrator, and does not start with Windows or back up by itself. Its own
+; AppId keeps its uninstall entry apart from a real copy's.
+#define AppTitle "AGAPAY"
 #define Runner "{sys}\wscript.exe"
 
 [Setup]
+#ifdef Evaluation
+AppId={{D1278788-EDC2-41CC-A605-53E84A323636}
+DefaultDirName=C:\AGAPAY
+OutputBaseFilename=AGAPAY-Setup-Evaluation-v{#AppVersion}
+#else
 AppId={{B9E3849C-EB7E-4493-8F34-F391689B2F7F}
-AppName=AGAPAY
+DefaultDirName=C:\AGAPAY
+OutputBaseFilename=AGAPAY-Setup-v{#AppVersion}
+#endif
+AppName={#AppTitle}
 AppVersion={#AppVersion}
-AppVerName=AGAPAY {#AppVersion}
+AppVerName={#AppTitle} {#AppVersion}
 AppPublisher=AGAPAY capstone team
 VersionInfoVersion={#AppVersion}
-DefaultDirName=C:\AGAPAY
 DisableDirPage=yes
 DisableProgramGroupPage=yes
 DisableWelcomePage=no
@@ -32,18 +44,23 @@ WizardImageFile=wizard-image-1x.bmp,wizard-image-2x.bmp
 WizardSmallImageFile=wizard-small-58.bmp,wizard-small-116.bmp
 SetupIconFile=..\template\tools\agapay.ico
 UninstallDisplayIcon={app}\system\tools\agapay.ico
-UninstallDisplayName=AGAPAY
+UninstallDisplayName={#AppTitle}
 UninstallFilesDir={app}\system\uninstall
 OutputDir=..\..\portable-build
-OutputBaseFilename=AGAPAY-Setup-v{#AppVersion}
 Compression=lzma2/max
 SolidCompression=yes
 CloseApplications=no
 
 [Messages]
+#ifdef Evaluation
+WelcomeLabel1=Welcome to AGAPAY
+WelcomeLabel2=This installs AGAPAY {#AppVersion}, the beneficiary and intervention system of the Office of the Municipal Agriculturist, Bontoc, with SAMPLE records (made-up farmers, programs, stock and crisis reports) and test accounts for every role.%n%nEverything goes into one folder, C:\AGAPAY, with an AGAPAY icon on the desktop. It works without the internet.
+FinishedLabel=AGAPAY is installed.%n%nOpen it any time with the AGAPAY icon on the desktop. The sign-in page lists the test accounts. To remove it, open C:\AGAPAY and run Uninstall AGAPAY.
+#else
 WelcomeLabel1=Welcome to AGAPAY
 WelcomeLabel2=This installs AGAPAY {#AppVersion}, the beneficiary and intervention system of the Office of the Municipal Agriculturist, Bontoc, on this laptop.%n%nEverything goes into one folder, C:\AGAPAY, with an AGAPAY icon on the desktop. AGAPAY starts by itself with Windows and makes a backup every day.%n%nIt works without the internet; it only goes online when the Administrator installs an update.
 FinishedLabel=AGAPAY is installed.%n%nOpen it any time with the AGAPAY icon on the desktop or in the C:\AGAPAY folder. Sign in with the Administrator account you just made, then add the other staff in User Management.
+#endif
 
 [Dirs]
 Name: "{app}\system"; Attribs: hidden
@@ -63,8 +80,10 @@ Name: "{app}\AGAPAY"; Filename: "{#Runner}"; Parameters: """{#Tools}\run.vbs"" o
 Name: "{app}\Backup now"; Filename: "{#Runner}"; Parameters: """{#Tools}\run.vbs"" backup.ps1 -Reason manual"; IconFilename: "{#Tools}\backup.ico"; Comment: "Save a backup of AGAPAY now"
 Name: "{app}\Restore a backup"; Filename: "{#Runner}"; Parameters: """{#Tools}\run.vbs"" restore.ps1"; IconFilename: "{#Tools}\restore.ico"; Comment: "Put back an AGAPAY backup"
 Name: "{app}\Uninstall AGAPAY"; Filename: "{uninstallexe}"; Comment: "Remove AGAPAY from this laptop"
-Name: "{autodesktop}\AGAPAY"; Filename: "{#Runner}"; Parameters: """{#Tools}\run.vbs"" open.ps1"; IconFilename: "{#Tools}\agapay.ico"; Comment: "Open AGAPAY"
+Name: "{autodesktop}\{#AppTitle}"; Filename: "{#Runner}"; Parameters: """{#Tools}\run.vbs"" open.ps1"; IconFilename: "{#Tools}\agapay.ico"; Comment: "Open AGAPAY"
+#ifndef Evaluation
 Name: "{userstartup}\AGAPAY"; Filename: "{#Runner}"; Parameters: """{#Tools}\run.vbs"" start.ps1"; IconFilename: "{#Tools}\agapay.ico"; Comment: "Start AGAPAY with Windows"
+#endif
 
 [Run]
 Filename: "{#Runner}"; Parameters: """{#Tools}\run.vbs"" open.ps1"; Description: "Open AGAPAY now"; Flags: postinstall nowait skipifsilent; Check: SetupSucceeded
@@ -235,7 +254,11 @@ end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
+#ifdef Evaluation
+  Result := PageID = AccountPage.ID;   { the test accounts come with the sample records }
+#else
   Result := (PageID = AccountPage.ID) and (IsReinstall or (AccountParam <> ''));
+#endif
 end;
 
 procedure CurPageChanged(CurPageID: Integer);
@@ -314,10 +337,15 @@ begin
     Arguments := '';
     if IsReinstall then
       Arguments := ''
+#ifdef Evaluation
+    else
+      Arguments := '-SampleData -NoWindowsChanges';
+#else
     else if AccountParam <> '' then
       Arguments := '-AccountFile "' + AccountParam + '"'
     else
       Arguments := '-AccountFile "' + WriteAccountFile + '"';
+#endif
     Succeeded := RunTool('setup.ps1', Arguments) = 0;
     WizardForm.ProgressGauge.Style := npbstNormal;
     if not Succeeded and not WizardSilent then

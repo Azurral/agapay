@@ -78,3 +78,24 @@ it('reads the administrator from a file and deletes the file right away', functi
     expect(User::sole()->name)->toBe('Catherine M. Santos Jr.')
         ->and(file_exists($file))->toBeFalse();
 });
+
+it('sets up an evaluation copy with the sample records the black-box test cases use', function () {
+    $this->artisan('agapay:install', ['--sample-data' => true])
+        ->expectsOutputToContain('Evaluation copy is ready')
+        ->assertSuccessful();
+
+    expect(User::where('username', 'Admin_01')->value('status'))->toBe(User::STATUS_ACTIVE)
+        ->and(User::where('username', 'Encoder_04')->value('status'))->toBe(User::STATUS_INACTIVE)
+        ->and(Hash::check(config('agapay.seed_password'), User::where('username', 'Admin_01')->value('password')))->toBeTrue()
+        ->and(Beneficiary::where('rsbsa_number', 'RSBSA-0231')->exists())->toBeTrue()
+        ->and(DistributionCycle::count())->toBeGreaterThan(0)
+        ->and(Disaster::count())->toBeGreaterThan(0);
+});
+
+it('never loads sample records into a copy that is already set up', function () {
+    $this->artisan('agapay:install', ['--first-name' => 'Catherine', '--last-name' => 'Santos', '--username' => 'catherine', '--password' => 'office-pass-1'])->assertSuccessful();
+
+    $this->artisan('agapay:install', ['--sample-data' => true])->assertFailed();
+
+    expect(User::sole()->username)->toBe('catherine')->and(Beneficiary::count())->toBe(0);
+});

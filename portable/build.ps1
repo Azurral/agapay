@@ -6,6 +6,9 @@
 #   AGAPAY\system\                       what the installer puts in C:\AGAPAY\system
 #   AGAPAY-Setup-v<version>.exe          the installer (send this to the office)
 #   AGAPAY-app-v<version>.zip           the program folder only: attach it to the GitHub release for in-app updates
+# With -Evaluation: AGAPAY-Setup-Evaluation-v<version>.exe instead, the panel's copy with the sample records and test
+# accounts (no update package).
+param([switch] $Evaluation)
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
@@ -72,22 +75,29 @@ Write-Host '  Tools...'
 Copy-Item (Join-Path $PSScriptRoot 'template\*') $out -Recurse -Force
 Set-Content (Join-Path $out 'VERSION.txt') "AGAPAY for Windows v$version"
 
-Write-Host '  Update package...'
 $appZip = Join-Path $build "AGAPAY-app-v$version.zip"
-Remove-Item $appZip -ErrorAction SilentlyContinue
-Compress-Archive -Path $app -DestinationPath $appZip
+if (-not $Evaluation) {
+    Write-Host '  Update package...'
+    Remove-Item $appZip -ErrorAction SilentlyContinue
+    Compress-Archive -Path $app -DestinationPath $appZip
+}
 Remove-Item $staging -Recurse -Force
 
 Write-Host '  Installer...'
 if (-not (Test-Path (Join-Path $repo 'handover\AGAPAY-User-Guide.pdf'))) { Write-Warning 'handover\AGAPAY-User-Guide.pdf not found: the installer will have no user guide.' }
 # Retried: right after the build, antivirus scanning can briefly lock the files Inno Setup reads or writes.
 for ($attempt = 1; $attempt -le 3; $attempt++) {
-    & (Join-Path $build 'inno\ISCC.exe') /Q "/DAppVersion=$version" (Join-Path $PSScriptRoot 'installer\agapay.iss')
+    $defines = @("/DAppVersion=$version") + $(if ($Evaluation) { @('/DEvaluation=1') } else { @() })
+    & (Join-Path $build 'inno\ISCC.exe') /Q @defines (Join-Path $PSScriptRoot 'installer\agapay.iss')
     if ($LASTEXITCODE -eq 0) { break }
     if ($attempt -eq 3) { throw 'The installer could not be compiled.' }
     Write-Host "  Installer compile failed; trying again ($attempt/3)..."
     Start-Sleep -Seconds 10
 }
-$setup = Join-Path $build "AGAPAY-Setup-v$version.exe"
-
-Write-Host ("Done: {0} ({1:N0} MB), {2} ({3:N0} MB)" -f (Split-Path $setup -Leaf), ((Get-Item $setup).Length / 1MB), (Split-Path $appZip -Leaf), ((Get-Item $appZip).Length / 1MB))
+if ($Evaluation) {
+    $setup = Join-Path $build "AGAPAY-Setup-Evaluation-v$version.exe"
+    Write-Host ("Done: {0} ({1:N0} MB)" -f (Split-Path $setup -Leaf), ((Get-Item $setup).Length / 1MB))
+} else {
+    $setup = Join-Path $build "AGAPAY-Setup-v$version.exe"
+    Write-Host ("Done: {0} ({1:N0} MB), {2} ({3:N0} MB)" -f (Split-Path $setup -Leaf), ((Get-Item $setup).Length / 1MB), (Split-Path $appZip -Leaf), ((Get-Item $appZip).Length / 1MB))
+}

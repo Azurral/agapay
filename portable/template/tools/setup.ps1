@@ -1,10 +1,13 @@
 # AGAPAY for Windows: run by AGAPAY-Setup.exe after it copies the files (no window).
 #   First install:  creates the database and settings, then the Administrator's account from -AccountFile (a JSON
 #                   file the installer writes; agapay:install deletes it as soon as it is read).
+#   Evaluation:     -SampleData (the panel's copy, build.ps1 -Evaluation): loads the sample records and test
+#                   accounts instead of an Administrator, turns updates off and marks every page "Sample records only".
 #   Reinstall:      the records are kept; only database changes for the new version are applied.
 # Both then register the daily noon backup and the updater, and start AGAPAY.
 param(
     [string] $AccountFile,
+    [switch] $SampleData,
     [switch] $NoWindowsChanges   # tests: leave the scheduled tasks alone
 )
 . (Join-Path $PSScriptRoot 'common.ps1')
@@ -31,7 +34,7 @@ try {
         Invoke-Artisan @('migrate', '--force')
         Invoke-Artisan @('optimize:clear')
     } else {
-        if (-not $AccountFile -or -not (Test-Path $AccountFile)) { throw 'The Administrator account details are missing.' }
+        if (-not $SampleData -and (-not $AccountFile -or -not (Test-Path $AccountFile))) { throw 'The Administrator account details are missing.' }
         Write-Log "First setup of v$(Get-Version)."
 
         $rootPassword = New-Secret 24
@@ -45,12 +48,14 @@ try {
             -replace '\{\{APP_KEY\}\}', ('base64:' + [Convert]::ToBase64String($keyBytes)) `
             -replace '\{\{DB_PASSWORD\}\}', $appPassword `
             -replace '\{\{DB_ROOT_PASSWORD\}\}', $rootPassword
+        if ($SampleData) { $envText = ($envText -replace 'AGAPAY_UPDATES=true', 'AGAPAY_UPDATES=false') + "`r`n# Panel evaluation copy: sample records only.`r`nAGAPAY_EVALUATION=true`r`n" }
         [IO.File]::WriteAllText($EnvFile, $envText)
 
         try {
             Start-Database
             Invoke-Root @('-e', "CREATE DATABASE IF NOT EXISTS agapay CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE USER IF NOT EXISTS 'agapay'@'127.0.0.1' IDENTIFIED BY '$appPassword'; CREATE USER IF NOT EXISTS 'agapay'@'localhost' IDENTIFIED BY '$appPassword'; GRANT ALL ON agapay.* TO 'agapay'@'127.0.0.1'; GRANT ALL ON agapay.* TO 'agapay'@'localhost'; FLUSH PRIVILEGES;")
-            Invoke-Artisan @('agapay:install', "--from-file=$AccountFile", '--no-interaction')
+            if ($SampleData) { Invoke-Artisan @('agapay:install', '--sample-data', '--no-interaction') }
+            else { Invoke-Artisan @('agapay:install', "--from-file=$AccountFile", '--no-interaction') }
         } catch {
             # Leave no half-made copy: running the installer again starts over.
             try { Stop-Database } catch { }

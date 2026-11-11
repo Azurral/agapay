@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\ReferenceDataSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
@@ -25,6 +26,7 @@ class InstallCommand extends Command
         {--username= : The Administrator\'s username}
         {--password= : The Administrator\'s password (at least 8 characters)}
         {--from-file= : Read the account from a JSON file (the Windows installer uses this), then delete the file}
+        {--sample-data : Evaluation copy for the panel: load the sample records and test accounts instead of an Administrator}
         {--status : Only say whether AGAPAY is already set up}';
 
     protected $description = 'Set up a clean AGAPAY: tables, reference data and the Administrator account (no sample records)';
@@ -44,6 +46,16 @@ class InstallCommand extends Command
             $this->error('AGAPAY is already set up; nothing was changed.');
 
             return self::FAILURE;
+        }
+
+        // Evaluation copy (AGAPAY-Setup-Evaluation.exe): the sample farmers and the test accounts of the black-box test
+        // cases (Admin_01, Encoder_04, ...). Fake people only; never used for OMAG's own copy.
+        if ($this->option('sample-data')) {
+            $this->call('migrate', ['--force' => true]);
+            $this->call('db:seed', ['--class' => DatabaseSeeder::class, '--force' => true]);
+            $this->info('Evaluation copy is ready. Sign in as Admin_01.');
+
+            return self::SUCCESS;
         }
 
         $account = $this->option('from-file') ? $this->readAccountFile($this->option('from-file')) : $this->askForAccount();

@@ -9,7 +9,7 @@ return [
     'consent_text' => 'The farmer has given consent for OMAG to record and use their personal information for agricultural programs and assistance, as stated in the privacy notice.',
     'import_consent_text' => 'The farmers in this file gave consent for OMAG to record and use their personal information for agricultural programs and assistance (for example on their RSBSA forms), as stated in the privacy notice.',
 
-    'version' => '0.15.6',
+    'version' => '0.16.0',
 
     // In-app updates of the office copy ("AGAPAY for Windows"): the Administrator sees "Update available" when GitHub
     // has a newer release. Off in a development copy, which is updated from the source code.
@@ -17,6 +17,10 @@ return [
         'enabled' => (bool) env('AGAPAY_UPDATES', false),
         'repository' => env('AGAPAY_UPDATE_REPOSITORY', 'Azurral/agapay'),
     ],
+
+    // Evaluation copy for the panel (AGAPAY-Setup-Evaluation.exe or the Mac copy): sample records only. Every page says
+    // so, and the sign-in page lists the test accounts.
+    'evaluation' => (bool) env('AGAPAY_EVALUATION', false),
 
     // Development/demo password for seeded accounts. Change in .env for any real deployment.
     'seed_password' => env('AGAPAY_SEED_PASSWORD', 'Agapay@2026'),

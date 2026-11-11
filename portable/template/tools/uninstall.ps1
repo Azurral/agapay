@@ -8,8 +8,12 @@ if (Test-Installed) {
     try { Stop-Web } catch { }
     try { Stop-Database } catch { }
 }
-foreach ($task in 'AGAPAY Backup', 'AGAPAY Update') {
-    Unregister-ScheduledTask -TaskName $task -Confirm:$false -ErrorAction SilentlyContinue
+# An evaluation copy registered no tasks: the ones there belong to a real copy on the same computer.
+$evaluation = (Test-Installed) -and ((Get-AgapayEnv)['AGAPAY_EVALUATION'] -eq 'true')
+if (-not $evaluation) {
+    foreach ($task in 'AGAPAY Backup', 'AGAPAY Update') {
+        Unregister-ScheduledTask -TaskName $task -Confirm:$false -ErrorAction SilentlyContinue
+    }
 }
 Write-Log 'Removed from Windows (uninstall).'
 exit 0

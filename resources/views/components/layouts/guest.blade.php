@@ -14,5 +14,6 @@
 <body class="bg-grid-login min-h-[var(--app-vh,100vh)] font-sans text-ink antialiased">
     <x-desktop-only />
     {{ $slot }}
+    <x-evaluation-badge accounts />
 </body>
 </html>

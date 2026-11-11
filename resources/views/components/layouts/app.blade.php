@@ -27,6 +27,7 @@
     <x-app.header :title="$title" />
 
     <x-app.sidebar />
+    <x-evaluation-badge />
 
     {{-- Clipped, never scrolled sideways, while the container moves during the panel's slide. --}}
     <div class="flex overflow-x-clip">
