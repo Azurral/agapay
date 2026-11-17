@@ -3,6 +3,7 @@
 use App\Http\Controllers\AssistanceRequestController;
 use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BeneficiaryController;
 use App\Http\Controllers\BeneficiaryLookupController;
 use App\Http\Controllers\BeneficiaryRegistrationController;
@@ -168,4 +169,11 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
     });
     Route::put('/roles/permissions', [RolePermissionController::class, 'update'])
         ->middleware('can:roles.configure')->name('roles.permissions.update');
+
+    // Cloud copy only (BackupController answers 404 on the office copy, which has its own Backup now tool).
+    Route::middleware('can:backups.manage')->group(function () {
+        Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
+        Route::post('/backups', [BackupController::class, 'store'])->name('backups.store');
+        Route::get('/backups/{disk}/{file}', [BackupController::class, 'download'])->name('backups.download');
+    });
 });

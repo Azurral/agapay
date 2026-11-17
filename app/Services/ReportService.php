@@ -108,7 +108,7 @@ final class ReportService
 
         $path = 'reports/'.Str::uuid().'.'.$criteria->format;
         // The local disk does not throw on failure: a full disk or a permission problem must not leave a history row without a file.
-        if (! Storage::disk(GeneratedReport::DISK)->put($path, $contents)) {
+        if (! Storage::disk(GeneratedReport::disk())->put($path, $contents)) {
             throw new ReportFileException('The report file could not be saved. Check that the storage folder is writable, then try again.');
         }
 
@@ -135,7 +135,7 @@ final class ReportService
                 return $report;
             });
         } catch (Throwable $e) {
-            Storage::disk(GeneratedReport::DISK)->delete($path);
+            Storage::disk(GeneratedReport::disk())->delete($path);
 
             throw $e;
         }

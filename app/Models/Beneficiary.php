@@ -159,7 +159,8 @@ class Beneficiary extends Model
 
     protected function casts(): array
     {
-        return ['birthdate' => 'date', 'consent_confirmed_at' => 'datetime'];
+        // The contact number is encrypted in the database with the server's APP_KEY (privacy on the cloud copy).
+        return ['birthdate' => 'date', 'consent_confirmed_at' => 'datetime', 'contact_number' => 'encrypted'];
     }
 
     public function barangay(): BelongsTo

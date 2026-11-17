@@ -9,7 +9,7 @@ return [
     'consent_text' => 'The farmer has given consent for OMAG to record and use their personal information for agricultural programs and assistance, as stated in the privacy notice.',
     'import_consent_text' => 'The farmers in this file gave consent for OMAG to record and use their personal information for agricultural programs and assistance (for example on their RSBSA forms), as stated in the privacy notice.',
 
-    'version' => '0.16.0',
+    'version' => '0.17.0',
 
     // In-app updates of the office copy ("AGAPAY for Windows"): the Administrator sees "Update available" when GitHub
     // has a newer release. Off in a development copy, which is updated from the source code.
@@ -17,6 +17,14 @@ return [
         'enabled' => (bool) env('AGAPAY_UPDATES', false),
         'repository' => env('AGAPAY_UPDATE_REPOSITORY', 'Azurral/agapay'),
     ],
+
+    // 'office' = AGAPAY for Windows on one laptop (installer, tools\backup.ps1, in-app updates);
+    // 'cloud' = one online server shared by every staff laptop (Backups page with 3-2-1 encrypted backups).
+    'edition' => env('AGAPAY_EDITION', 'office'),
+
+    // Where damage photos and generated reports are kept: 'local' (storage/app/private; on the cloud server a persistent
+    // volume) or 's3' (any S3-compatible object storage, set with the AWS_* variables).
+    'files_disk' => env('AGAPAY_FILES_DISK', 'local'),
 
     // Evaluation copy for the panel (AGAPAY-Setup-Evaluation.exe or the Mac copy): sample records only. Every page says
     // so, and the sign-in page lists the test accounts.
@@ -39,6 +47,7 @@ return [
             ['label' => 'User Management', 'route' => 'users.index', 'icon' => 'user-mgmt', 'permission' => 'users.manage'],
             ['label' => 'Audit Trail', 'route' => 'audit.index', 'icon' => 'audit', 'permission' => 'audit.view'],
             ['label' => 'Download Reports', 'route' => 'reports.index', 'icon' => 'audit', 'permission' => 'reports.generate'],
+            ['label' => 'Backups', 'route' => 'backups.index', 'icon' => 'inventory', 'permission' => 'backups.manage', 'edition' => 'cloud'],
         ],
         Role::AGRITECH => [
             ['label' => 'Home', 'route' => 'dashboard', 'icon' => 'home', 'permission' => 'dashboard.view'],

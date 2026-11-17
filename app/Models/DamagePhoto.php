@@ -13,7 +13,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['damage_report_id', 'path', 'original_name', 'size'])]
 class DamagePhoto extends Model
 {
-    public const DISK = 'local';
+    /** The private disk the photos are kept on (agapay.files_disk): local, or object storage on the cloud copy. */
+    public static function disk(): string
+    {
+        return (string) config('agapay.files_disk', 'local');
+    }
 
     public function report(): BelongsTo
     {

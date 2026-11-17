@@ -128,9 +128,9 @@ class DamageReportController extends Controller
     public function stagedPhoto(string $token): StreamedResponse
     {
         $photo = StagedPhotos::all()[$token] ?? null;
-        abort_unless($photo && Storage::disk(DamagePhoto::DISK)->exists($photo['path']), 404);
+        abort_unless($photo && Storage::disk(DamagePhoto::disk())->exists($photo['path']), 404);
 
-        return Storage::disk(DamagePhoto::DISK)->response($photo['path'], $photo['name'], ['Cache-Control' => 'private, no-store'], 'inline');
+        return Storage::disk(DamagePhoto::disk())->response($photo['path'], $photo['name'], ['Cache-Control' => 'private, no-store'], 'inline');
     }
 
     /** A deadlock that outlived the service's retries (QueryException, or DeadlockException from a nested transaction). */

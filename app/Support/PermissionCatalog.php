@@ -12,6 +12,7 @@ final class PermissionCatalog
         'users.manage' => ['Manage user accounts', 'Administration'],
         'roles.configure' => ['Configure role permissions', 'Administration'],
         'audit.view' => ['View audit trail', 'Administration'],
+        'backups.manage' => ['Back up and download records', 'Administration'],
         'beneficiaries.view' => ['View beneficiary profiles', 'Beneficiaries'],
         'beneficiaries.manage' => ['Add and edit beneficiary profiles', 'Beneficiaries'],
         'rsbsa.register' => ['Add beneficiaries', 'Beneficiaries'],

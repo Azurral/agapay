@@ -168,6 +168,32 @@ Bump the version, commit, build, push, then create a GitHub release tagged `v<ve
 - `AGAPAY-app-v<version>.zip`: the in-app update. The office copy's Administrator then sees **Update available** above Dark Mode. The update backs up first, keeps `system\data`, applies database changes, and rolls back by itself if anything fails.
 - `AGAPAY-Setup.exe` (a copy of `AGAPAY-Setup-v<version>.exe`) and `AGAPAY-User-Guide.pdf`: what the download page links to, under these exact names.
 
+## Cloud server (one AGAPAY for every staff laptop)
+
+The cloud copy is the same program in one Docker image (`Dockerfile`), so it runs on any host that runs containers (Railway, Render, Fly.io, a VPS). Each staff member opens its web address on their own laptop; everyone works on the same database, so a farmer added on one laptop is on the others at once.
+
+**On the host:**
+
+1. A **MySQL 8 or MariaDB** database.
+2. A service built from this repository's `Dockerfile`, with a **persistent volume mounted on `/var/www/html/storage`** (photos, reports and the on-server backups live there).
+3. These variables (the image already sets `AGAPAY_EDITION=cloud`, `TRUSTED_PROXIES=*`, `SESSION_LIFETIME=30`, `SESSION_SECURE_COOKIE=true`):
+
+   | Variable | Value |
+   |---|---|
+   | `APP_KEY` | `php artisan key:generate --show` (keep a copy outside the host: it decrypts the contact numbers) |
+   | `APP_URL` | the https address, e.g. `https://agapay.up.railway.app` |
+   | `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | from the database service |
+   | `BACKUP_ARCHIVE_PASSWORD` | a long password for the backup zips (keep a copy outside the host) |
+   | `BACKUP_OFFSITE_*` | the off-site bucket (Backblaze B2, Cloudflare R2 or any S3-compatible store): key, secret, region, bucket, endpoint |
+   | `AGAPAY_SAMPLE_DATA` | `true` only for a demo copy: the sample records and test accounts are loaded on the first start |
+
+4. Deploy. On start the container applies the database changes (`migrate`), then runs Apache and the scheduler (daily backup at noon).
+5. A real copy (not a demo): open the host's shell once and run `php artisan agapay:install` to create the Administrator.
+
+**Backups (3-2-1):** copy 1 is the live database; every day at noon an AES-256 encrypted zip of the database, photos and reports goes to the server's volume (copy 2) and the off-site bucket (copy 3); 30 days are kept. The Administrator sees them under **Backups**, can press **Back up now** and download a copy. To restore: download the zip, open it with the backup password (7-Zip), and import `db-dumps/mysql-*.sql` into the database (`mysql ... < file.sql`); copy `private/` back to `storage/app/private`.
+
+**Privacy:** HTTPS only (with HSTS), contact numbers encrypted in the database with `APP_KEY` (and shown only as "(hidden)" in the audit trail), staff signed out after 30 minutes idle, encrypted backups, roles, lockout and the audit trail as on the office copy.
+
 ## The download page
 
 `https://azurral.github.io/agapay/` is a one-page site in the `docs/` folder, published by GitHub Pages from `master` (repo **Settings → Pages → Deploy from a branch → master, /docs**). Its **Download for Windows** button links to `releases/latest/download/AGAPAY-Setup.exe`, so it always serves the newest release's installer and needs no change per release. To change the page, edit `docs/index.html` and push.

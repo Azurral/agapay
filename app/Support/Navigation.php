@@ -12,6 +12,8 @@ final class Navigation
     {
         return collect(config('agapay.nav.'.$user->role?->slug, []))
             ->filter(fn (array $item) => $user->hasPermission($item['permission']))
+            // Items for one edition only (e.g. Backups on the cloud copy).
+            ->filter(fn (array $item) => ! isset($item['edition']) || $item['edition'] === config('agapay.edition'))
             ->map(fn (array $item) => [
                 'label' => $item['label'],
                 'url' => self::url($item),

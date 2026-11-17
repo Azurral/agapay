@@ -14,9 +14,9 @@ class DamagePhotoController extends Controller
     {
         $report = $photo->report;
         abort_if($report === null || ($report->trashed() && ! $request->user()->can('damage.configure')), 404);
-        abort_unless(Storage::disk(DamagePhoto::DISK)->exists($photo->path), 404);
+        abort_unless(Storage::disk(DamagePhoto::disk())->exists($photo->path), 404);
 
-        return Storage::disk(DamagePhoto::DISK)->response($photo->path, $photo->original_name, [
+        return Storage::disk(DamagePhoto::disk())->response($photo->path, $photo->original_name, [
             'Cache-Control' => 'private, max-age=86400',
         ], 'inline');
     }

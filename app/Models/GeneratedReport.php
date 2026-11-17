@@ -11,7 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['user_id', 'distribution_cycle_id', 'program', 'start_date', 'end_date', 'format', 'file_name', 'path', 'rows'])]
 class GeneratedReport extends Model
 {
-    public const DISK = 'local';
+    /** Where report files are kept: the private local disk, or object storage on the cloud copy (agapay.files_disk). */
+    public static function disk(): string
+    {
+        return (string) config('agapay.files_disk', 'local');
+    }
 
     protected function casts(): array
     {

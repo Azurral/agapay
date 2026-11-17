@@ -16,7 +16,7 @@ trait Auditable
     public static function bootAuditable(): void
     {
         static::created(function (Model $model) {
-            AuditLogger::record('Added '.$model->auditSubject(), $model, null, [], $model->attributesToArray());
+            AuditLogger::record('Added '.$model->auditSubject(), $model, null, [], $model->hideEncrypted($model->attributesToArray()));
         });
 
         static::updated(function (Model $model) {
@@ -30,8 +30,8 @@ trait Auditable
                 'Updated '.$model->auditSubject(),
                 $model,
                 null,
-                Arr::only($model->getOriginal(), array_keys($changes)),
-                $changes,
+                $model->hideEncrypted(Arr::only($model->getOriginal(), array_keys($changes))),
+                $model->hideEncrypted($changes),
             );
         });
 
@@ -49,6 +49,24 @@ trait Auditable
     public function auditSubject(): string
     {
         return $this->auditSubject ?? class_basename($this);
+    }
+
+    /**
+     * Encrypted fields (e.g. a farmer's contact number) are logged only as "(hidden)", so the audit trail never holds
+     * them in plain text.
+     *
+     * @param  array<string, mixed>  $values
+     * @return array<string, mixed>
+     */
+    public function hideEncrypted(array $values): array
+    {
+        foreach ($this->getCasts() as $key => $cast) {
+            if (array_key_exists($key, $values) && $values[$key] !== null && str_starts_with((string) $cast, 'encrypted')) {
+                $values[$key] = '(hidden)';
+            }
+        }
+
+        return $values;
     }
 
     /** @return list<string> */

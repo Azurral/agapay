@@ -33,7 +33,7 @@ final class DamageReportService
         try {
             return DB::transaction(function () use ($data, $photos, $actor, &$stored) {
                 // A deadlock retry starts over: the photos of the failed attempt go first.
-                Storage::disk(DamagePhoto::DISK)->delete($stored);
+                Storage::disk(DamagePhoto::disk())->delete($stored);
                 $stored = [];
 
                 // One filing per farmer at a time, so a double-clicked Submit cannot create the same report twice.
@@ -50,7 +50,7 @@ final class DamageReportService
                 return $report;
             }, attempts: 3);
         } catch (Throwable $e) {
-            Storage::disk(DamagePhoto::DISK)->delete($stored);
+            Storage::disk(DamagePhoto::disk())->delete($stored);
 
             throw $e;
         }
@@ -70,7 +70,7 @@ final class DamageReportService
         try {
             [$report, $removed] = DB::transaction(function () use ($report, $data, $newPhotos, $removePhotoIds, &$stored) {
                 // A deadlock retry starts over: the photos of the failed attempt go first.
-                Storage::disk(DamagePhoto::DISK)->delete($stored);
+                Storage::disk(DamagePhoto::disk())->delete($stored);
                 $stored = [];
 
                 Beneficiary::whereKey($data['beneficiary_id'])->lockForUpdate()->firstOrFail();
@@ -96,12 +96,12 @@ final class DamageReportService
                 return [$report, $removed];
             }, attempts: 3);
         } catch (Throwable $e) {
-            Storage::disk(DamagePhoto::DISK)->delete($stored);
+            Storage::disk(DamagePhoto::disk())->delete($stored);
 
             throw $e;
         }
 
-        Storage::disk(DamagePhoto::DISK)->delete($removed->pluck('path')->all());
+        Storage::disk(DamagePhoto::disk())->delete($removed->pluck('path')->all());
 
         return $report;
     }
@@ -220,7 +220,7 @@ final class DamageReportService
     private function storePhotos(DamageReport $report, array $photos, array &$stored): void
     {
         foreach ($photos as $photo) {
-            $path = $photo->store("damage/{$report->id}", DamagePhoto::DISK);
+            $path = $photo->store("damage/{$report->id}", DamagePhoto::disk());
             $stored[] = $path;
 
             $report->photos()->create([

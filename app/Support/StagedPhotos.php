@@ -43,7 +43,7 @@ final class StagedPhotos
      */
     public static function files(array $tokens): array
     {
-        $disk = Storage::disk(DamagePhoto::DISK);
+        $disk = Storage::disk(DamagePhoto::disk());
 
         return collect(self::all())->only($tokens)
             ->filter(fn (array $photo) => $disk->exists($photo['path']))
@@ -68,27 +68,27 @@ final class StagedPhotos
 
             $token = Str::random(40);
             $kept[$token] = [
-                'path' => $file->storeAs(self::DIR, $token.'.'.($file->guessExtension() ?: 'jpg'), DamagePhoto::DISK),
+                'path' => $file->storeAs(self::DIR, $token.'.'.($file->guessExtension() ?: 'jpg'), DamagePhoto::disk()),
                 'name' => Str::limit($file->getClientOriginalName(), 250, ''),
                 'size' => (int) $file->getSize(),
             ];
         }
 
-        Storage::disk(DamagePhoto::DISK)->delete(array_column(array_diff_key($staged, $kept), 'path'));
+        Storage::disk(DamagePhoto::disk())->delete(array_column(array_diff_key($staged, $kept), 'path'));
         session()->put(self::SESSION, $kept);
     }
 
     /** Forgets the kept photos and deletes their files (after filing, or when the form is opened fresh). */
     public static function clear(): void
     {
-        Storage::disk(DamagePhoto::DISK)->delete(array_column(self::all(), 'path'));
+        Storage::disk(DamagePhoto::disk())->delete(array_column(self::all(), 'path'));
         session()->forget(self::SESSION);
     }
 
     /** Files of abandoned forms (another session, a closed browser) are removed after a day. */
     private static function prune(): void
     {
-        $disk = Storage::disk(DamagePhoto::DISK);
+        $disk = Storage::disk(DamagePhoto::disk());
         $old = array_filter($disk->files(self::DIR), fn (string $path) => $disk->lastModified($path) < now()->subDay()->getTimestamp());
         $disk->delete($old);
     }

@@ -64,18 +64,18 @@ class ReportController extends Controller
             return back()->withInput()->withErrors(['report' => $e->getMessage()]);
         }
 
-        return Storage::disk(GeneratedReport::DISK)->download($report->path, $report->file_name);
+        return Storage::disk(GeneratedReport::disk())->download($report->path, $report->file_name);
     }
 
     public function download(Request $request, GeneratedReport $report): StreamedResponse|RedirectResponse
     {
         abort_unless($this->history($request->user())->whereKey($report->id)->exists(), 404);
 
-        if (! Storage::disk(GeneratedReport::DISK)->exists($report->path)) {
+        if (! Storage::disk(GeneratedReport::disk())->exists($report->path)) {
             return redirect()->route('reports.index')->withErrors(['report' => 'This report file is no longer available — generate it again.']);
         }
 
-        return Storage::disk(GeneratedReport::DISK)->download($report->path, $report->file_name);
+        return Storage::disk(GeneratedReport::disk())->download($report->path, $report->file_name);
     }
 
     /** The Administrator sees every generated report; other roles see their own. */

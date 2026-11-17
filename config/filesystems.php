@@ -60,6 +60,27 @@ return [
             'report' => false,
         ],
 
+        // Copy 2 of the 3-2-1 backups: encrypted backup zips on the server's own volume (config/backup.php).
+        'backups' => [
+            'driver' => 'local',
+            'root' => storage_path('app/backups'),
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // Copy 3: the same zips on S3-compatible object storage at another provider (e.g. Backblaze B2, Cloudflare R2).
+        'offsite' => [
+            'driver' => 's3',
+            'key' => env('BACKUP_OFFSITE_KEY'),
+            'secret' => env('BACKUP_OFFSITE_SECRET'),
+            'region' => env('BACKUP_OFFSITE_REGION', 'auto'),
+            'bucket' => env('BACKUP_OFFSITE_BUCKET'),
+            'endpoint' => env('BACKUP_OFFSITE_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'report' => true,
+        ],
+
     ],
 
     /*
