@@ -190,7 +190,7 @@ The cloud copy is the same program in one Docker image (`Dockerfile`), so it run
 4. Deploy. On start the container applies the database changes (`migrate`), then runs Apache and the scheduler (daily backup at noon).
 5. A real copy (not a demo): open the host's shell once and run `php artisan agapay:install` to create the Administrator.
 
-**Backups (3-2-1):** copy 1 is the live database; every day at noon an AES-256 encrypted zip of the database, photos and reports goes to the server's volume (copy 2) and the off-site bucket (copy 3); 30 days are kept. The Administrator sees them under **Backups**, can press **Back up now** and download a copy. To restore: download the zip, open it with the backup password (7-Zip), and import `db-dumps/mysql-*.sql` into the database (`mysql ... < file.sql`); copy `private/` back to `storage/app/private`.
+**Backups (3-2-1):** copy 1 is the live database; every day at noon an AES-256 encrypted zip of the database, photos and reports goes to the server's volume (copy 2) and the off-site bucket (copy 3); 30 days are kept. The Administrator sees them under **Backups**, can press **Back up now** and download a copy. To restore: download the zip, open it with the backup password (7-Zip), and import `db-dumps/mysql-*.sql` into the database (`mysql ... < file.sql`; with MySQL's own client, first delete the dump's first line, `/*M!999999\- enable the sandbox mode */`, which only MariaDB understands); copy `private/` back to `storage/app/private`.
 
 **Privacy:** HTTPS only (with HSTS), contact numbers encrypted in the database with `APP_KEY` (and shown only as "(hidden)" in the audit trail), staff signed out after 30 minutes idle, encrypted backups, roles, lockout and the audit trail as on the office copy.
 

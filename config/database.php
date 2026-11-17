@@ -65,6 +65,13 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            // Cloud backups (spatie/laravel-backup): a consistent snapshot while staff keep working; the host's MySQL
+            // has a self-signed certificate (the connection stays encrypted, over the host's private network) and its
+            // user may lack the PROCESS right needed to list tablespaces.
+            'dump' => [
+                'use_single_transaction',
+                'add_extra_option' => '--skip-ssl-verify-server-cert --no-tablespaces',
+            ],
         ],
 
         'mariadb' => [
@@ -88,6 +95,13 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            // Cloud backups (spatie/laravel-backup): a consistent snapshot while staff keep working; the host's MySQL
+            // has a self-signed certificate (the connection stays encrypted, over the host's private network) and its
+            // user may lack the PROCESS right needed to list tablespaces.
+            'dump' => [
+                'use_single_transaction',
+                'add_extra_option' => '--skip-ssl-verify-server-cert --no-tablespaces',
+            ],
         ],
 
         'pgsql' => [

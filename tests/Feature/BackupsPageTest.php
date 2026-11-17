@@ -6,6 +6,12 @@ use App\Support\Navigation;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
+use Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification;
+use Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification;
+use Spatie\Backup\Notifications\Notifications\CleanupWasSuccessfulNotification;
+use Spatie\Backup\Notifications\Notifications\HealthyBackupWasFoundNotification;
+use Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification;
 
 // Cloud copy: the Administrator's Backups page shows the encrypted 3-2-1 backups (server volume + off-site storage).
 
@@ -105,6 +111,27 @@ it('shows Backups in the Administrator\'s menu on the cloud copy only', function
 
     config(['agapay.edition' => 'office']);
     expect($labels())->not->toContain('Backups');
+});
+
+it('lists every backup notification (with no channel), so a failure is reported instead of crashing', function () {
+    $notifications = config('backup.notifications.notifications');
+
+    foreach ([
+        BackupHasFailedNotification::class,
+        BackupWasSuccessfulNotification::class,
+        CleanupHasFailedNotification::class,
+        CleanupWasSuccessfulNotification::class,
+        HealthyBackupWasFoundNotification::class,
+        UnhealthyBackupWasFoundNotification::class,
+    ] as $class) {
+        expect($notifications)->toHaveKey($class)->and($notifications[$class])->toBe([]);
+    }
+});
+
+it('dumps a hosted MySQL that has a self-signed certificate and limited rights', function () {
+    expect(config('database.connections.mysql.dump.add_extra_option'))
+        ->toContain('--skip-ssl-verify-server-cert')
+        ->toContain('--no-tablespaces');
 });
 
 it('runs the scheduled backups only on the cloud copy', function () {

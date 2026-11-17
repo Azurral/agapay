@@ -1,6 +1,12 @@
 <?php
 
 use Spatie\Backup\Notifications\Notifiable;
+use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
+use Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification;
+use Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification;
+use Spatie\Backup\Notifications\Notifications\CleanupWasSuccessfulNotification;
+use Spatie\Backup\Notifications\Notifications\HealthyBackupWasFoundNotification;
+use Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification;
 use Spatie\Backup\Tasks\Cleanup\Strategies\DefaultStrategy;
 use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays;
 use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumStorageInMegabytes;
@@ -55,7 +61,14 @@ return [
 
     // No e-mail is set up; results are shown on the Backups page and in the audit trail instead.
     'notifications' => [
-        'notifications' => [],
+        'notifications' => [
+            BackupHasFailedNotification::class => [],
+            UnhealthyBackupWasFoundNotification::class => [],
+            CleanupHasFailedNotification::class => [],
+            BackupWasSuccessfulNotification::class => [],
+            HealthyBackupWasFoundNotification::class => [],
+            CleanupWasSuccessfulNotification::class => [],
+        ],
         'notifiable' => Notifiable::class,
         'mail' => ['to' => 'agapay@example.org', 'from' => ['address' => env('MAIL_FROM_ADDRESS', 'agapay@example.org'), 'name' => 'AGAPAY']],
         'slack' => ['webhook_url' => '', 'channel' => null, 'username' => null, 'icon' => null],
