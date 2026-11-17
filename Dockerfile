@@ -25,7 +25,8 @@ ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/relea
 RUN install-php-extensions pdo_mysql gd intl zip exif bcmath opcache \
     && apt-get update && apt-get install -y --no-install-recommends mariadb-client \
     && rm -rf /var/lib/apt/lists/* \
-    && a2enmod rewrite headers
+    && a2dismod -f mpm_event mpm_worker || true \
+    && a2enmod mpm_prefork rewrite headers
 
 COPY docker/php.ini /usr/local/etc/php/conf.d/agapay.ini
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf

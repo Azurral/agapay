@@ -5,6 +5,10 @@ cd /var/www/html
 
 # Apache's default listen port would clash with the host's ${PORT}.
 sed -i 's/^Listen 80$//' /etc/apache2/ports.conf
+# Exactly one Apache process model (prefork, which mod_php needs); some hosts otherwise fail with
+# "AH00534: More than one MPM loaded".
+rm -f /etc/apache2/mods-enabled/mpm_event.* /etc/apache2/mods-enabled/mpm_worker.*
+[ -e /etc/apache2/mods-enabled/mpm_prefork.load ] || a2enmod mpm_prefork >/dev/null
 
 # A persistent volume mounted on storage/ starts empty: recreate the folders Laravel needs.
 mkdir -p storage/app/private storage/app/backups storage/app/backup-temp storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
