@@ -1,6 +1,6 @@
 @props(['active'])
 {{-- LGU page: every farmer (municipal list), the LGU program records, or assistance requests. --}}
-<nav class="flex h-[39px] w-[460px] items-center rounded-[50px] bg-[linear-gradient(90deg,var(--color-brand-soft)_0%,var(--color-brand)_55%,var(--color-brand-deep)_100%)] px-[8px]" aria-label="LGU list">
+<nav class="flex h-[39px] w-[460px] items-center rounded-[50px] brand-track px-[8px]" aria-label="LGU list">
     @foreach (['beneficiaries' => ['Beneficiaries', route('interventions.lgu')], 'records' => ['Program Records', route('interventions.lgu', ['tab' => 'records'])], 'requests' => ['Requests', route('interventions.lgu', ['tab' => 'requests'])]] as $key => [$label, $url])
         <a href="{{ $url }}" @if ($active === $key) aria-current="page" @endif
            @class([

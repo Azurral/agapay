@@ -10,11 +10,11 @@
     --color-muted: #b4b4b4;
     --color-subtle: #b5b5b5;
     /* Theme colours: Navy & Gold is the default; html[data-palette] picks another (see "Colour themes" below). */
-    --color-canvas: #f6f7fb;
-    --color-brand: #2e2a86;
-    --color-brand-soft: #4a46b5;
-    --color-brand-deep: #1d1a5e;
-    --color-tint: #ebeaf8;
+    --color-canvas: #f5f7fb;
+    --color-brand: #1b2f6b;
+    --color-brand-soft: #2c4a96;
+    --color-brand-deep: #12204b;
+    --color-tint: #e7ecf6;
     --color-panel: #f7f7f9;
     --color-accent: #f5c518;
     --color-accent-soft: #fff6d1;
@@ -25,7 +25,7 @@
     --color-arrow: #868686;
     --color-danger: #d64545;
     --color-stat-1: #c96f3b;
-    --color-stat-2: #2e2a86;
+    --color-stat-2: #1b2f6b;
     --color-stat-3: #a8790a;
     --color-stat-4: #2a8fa3;
 }
@@ -35,21 +35,21 @@
    errors) and the PDFs and Excel files are the same in every theme. Chart colours were checked for colour-blind
    separation in light and dark mode (dataviz validate_palette.js); every bar also prints its number. */
 :root {
-    --grad-from: #2e2a86;
-    --grad-to: #4a46b5;
-    --logo-1: #2e2a86;
-    --logo-2: #4a46b5;
-    --logo-3: #7d79d6;
+    --grad-from: #2c4a96;
+    --grad-to: #1b2f6b;
+    --logo-1: #1b2f6b;
+    --logo-2: #2c4a96;
+    --logo-3: #5a7cc7;
     --logo-leaf: #f5c518;
-    --switch-night: #1d1a5e;
-    --chart-claimed: #4a46b5;
+    --switch-night: #12204b;
+    --chart-claimed: #3a5fbf;
     --chart-waiting: #2aa0b5;
     --chart-notclaimable: #d0733f;
     /* Avatar circles by role (components/app/avatar). */
-    --avatar-administrator: #2e2a86;
+    --avatar-administrator: #1b2f6b;
     --avatar-agricultural_technologist: #a8790a;
     --avatar-data_encoder: #2a8fa3;
-    --avatar-agritech_encoder: #4a46b5;
+    --avatar-agritech_encoder: #2c4a96;
 }
 /* Green & Cream (the Department of Agriculture's colours): cream page, dark green, light green. */
 html[data-palette="green"] {
@@ -129,16 +129,11 @@ html[data-palette="violet"] {
         background-size: 2135.5px 1529px;
     }
 
-    .bg-brand-bar { background: url('/images/figma/gradients/navy/bar.svg') 0 0 / 100% 100% no-repeat; }
-    .bg-brand-button { background: url('/images/figma/gradients/navy/button.svg') 0 0 / 100% 100% no-repeat; }
-    .bg-brand-login { background: url('/images/figma/gradients/navy/login.svg') 0 0 / 100% 100% no-repeat; }
-    .bg-brand-card { background: url('/images/figma/gradients/navy/card.svg') 0 0 / 100% 100% no-repeat; }
-    .bg-brand-logout { background: url('/images/figma/gradients/navy/logout.svg') 0 0 / 100% 100% no-repeat; }
-    html[data-palette="green"] .bg-brand-bar { background-image: url('/images/figma/gradients/green/bar.svg'); }
-    html[data-palette="green"] .bg-brand-button { background-image: url('/images/figma/gradients/green/button.svg'); }
-    html[data-palette="green"] .bg-brand-login { background-image: url('/images/figma/gradients/green/login.svg'); }
-    html[data-palette="green"] .bg-brand-card { background-image: url('/images/figma/gradients/green/card.svg'); }
-    html[data-palette="green"] .bg-brand-logout { background-image: url('/images/figma/gradients/green/logout.svg'); }
+    .bg-brand-bar { background: url('/images/figma/gradients/bar.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-button { background: url('/images/figma/gradients/button.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-login { background: url('/images/figma/gradients/login.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-card { background: url('/images/figma/gradients/card.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-logout { background: url('/images/figma/gradients/logout.svg') 0 0 / 100% 100% no-repeat; }
     html[data-palette="violet"] .bg-brand-bar { background-image: url('/images/figma/gradients/bar.svg'); }
     html[data-palette="violet"] .bg-brand-button { background-image: url('/images/figma/gradients/button.svg'); }
     html[data-palette="violet"] .bg-brand-login { background-image: url('/images/figma/gradients/login.svg'); }
@@ -199,7 +194,7 @@ html[data-palette="violet"] {
         transform: none;
     }
     .pill-button.is-current > span {
-        background: linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 80%, #000), var(--color-brand));
+        background: linear-gradient(90deg, #00c2b8, #5a5de3);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
@@ -401,7 +396,7 @@ html.nav-restored .nav-enter { animation: none; }
 .damage-row { transition: background-color 150ms; }
 .damage-row:hover, .damage-row:focus-visible { background-color: var(--color-tint); outline: none; }
 .damage-row:focus-visible { box-shadow: 0 0 0 2px var(--color-brand-soft); }
-html.dark .damage-row:hover, html.dark .damage-row:focus-visible { background-color: var(--dark-tint); }
+html.dark .damage-row:hover, html.dark .damage-row:focus-visible { background-color: rgb(126 128 255 / 0.16); }
 
 /* Home page charts (components/dashboard/overview). Colours checked for colour-blind separation and contrast in light
    and dark mode; every bar also prints its number. Segments end in 4px rounded corners with a 2px gap between them. */
@@ -414,6 +409,9 @@ html.dark .damage-row:hover, html.dark .damage-row:focus-visible { background-co
 .chart-mark-key { display: inline-block; width: 2px; height: 12px; background-color: #2f2f2f; }
 html.dark .chart-mark, html.dark .chart-mark-key { background-color: #e6e6ef; }
 @media (prefers-reduced-motion: reduce) { .chart-seg { animation: none; } }
+
+/* The pill track behind the Records / Archived toggles (components/intervention/segmented-toggle, lgu-tabs). */
+.brand-track { background: linear-gradient(90deg, #7e80ff 0%, #5a5de3 55%, #4b4fc4 100%); }
 
 /* Pop-up windows (components/ui/modal) cover only the grid container: the header and the side panel stay in view and
    usable. Inside the container everything is drawn at 85% (layouts/app), so its offsets are divided by 0.85. */
@@ -456,13 +454,13 @@ html.dark {
     --dark-surface: #1c1e2e;
     --dark-chrome: #171827;
     --dark-field: #23253a;
-    --dark-tint: #2c2a52;
+    --dark-tint: #22305a;
     --dark-border: #2c2f45;
     --dark-text: #e8e9f3;
     --dark-muted: #8b8fa8;
     --dark-brand: #f5c84c;
-    --chart-claimed: #7470e0;
-    --chart-waiting: #1e93ad;
+    --chart-claimed: #5f82d8;
+    --chart-waiting: #1e9e8a;
 }
 /* Green & Cream: the cream becomes a deep olive; the greens stay, brightened to read on it. */
 html.dark[data-palette="green"] {
@@ -480,7 +478,7 @@ html.dark[data-palette="green"] {
     --chart-notclaimable: #cf5f8f;
 }
 /* The logo's darkest bars brighten in dark mode so they stay visible on the dark header. */
-html.dark:not([data-palette="violet"]):not([data-palette="green"]) { --logo-1: #6c68d8; --logo-2: #8f8cf0; --logo-3: #b9b7ff; }
+html.dark:not([data-palette="violet"]):not([data-palette="green"]) { --logo-1: #5a7cc7; --logo-2: #8aa4e0; --logo-3: #c0cff0; }
 html.dark[data-palette="green"] { --logo-1: #2f9e4e; --logo-2: #4cbb6a; --logo-3: #8fd16f; --logo-leaf: #c1f2b0; }
 /* Violet & Blue: the original dark theme. */
 html.dark[data-palette="violet"] {
@@ -560,7 +558,7 @@ html.dark .pill-button.is-current:hover {
 html.dark .pill-button.is-current > span { background-image: linear-gradient(90deg, var(--color-accent), var(--dark-brand)); }
 html.dark .pill-button:not(.is-current):hover {
     background:
-        linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 14%, var(--dark-surface)), var(--dark-tint)) padding-box,
+        linear-gradient(90deg, #13343a, var(--dark-tint)) padding-box,
         linear-gradient(90deg, var(--color-accent) 0%, var(--color-brand) 100%) border-box;
 }
 
@@ -574,8 +572,8 @@ html.dark img[src*="/images/figma/icons/"]:not(.invert):not([src*="task.svg"]):n
 
 /* The phone/tablet notice keeps its blur, over a dark wash. */
 html.dark .desktop-only-notice { background: color-mix(in srgb, var(--dark-page) 60%, transparent); }
-html.dark .switch-ring { color: var(--dark-brand); }
-html.dark .group:hover .switch-ring, html.dark .group:focus-visible .switch-ring { color: var(--dark-text); }
+html.dark .switch-ring { color: #b3b5ff; }
+html.dark .group:hover .switch-ring, html.dark .group:focus-visible .switch-ring { color: #d4d5ff; }
 html.dark .menu-fold { color: var(--dark-muted); }
 html.dark .group:hover .menu-fold, html.dark .group:focus-visible .menu-fold { color: var(--dark-brand); }
 
@@ -593,3 +591,67 @@ html[data-palette="green"] img[src$="/figma/icons/ring.svg"] { content: url('/im
 html[data-palette="green"]:not(.dark) .bg-white:not(.bg-brand-card *):not(.bg-brand-bar *) { background-color: #fffcf3; }
 html[data-palette="green"]:not(.dark) .bg-\[\#f7f7f9\],
 html[data-palette="green"]:not(.dark) .bg-panel { background-color: var(--color-panel); }
+
+/* ==== Flat themes: Navy & Gold and Green & Cream ====
+   Solid colours instead of gradients, the header in the theme's main colour in light and dark mode, and one "lift"
+   effect that flips with the mode: a soft dark shadow in light mode, a soft light glow in dark mode. Every rule is
+   scoped away from Violet & Blue, which keeps its original look (tests/Feature/ColourThemeTest). */
+html:not([data-palette="violet"]) {
+    --lift: 0 4px 12px rgb(0 0 0 / 0.18);
+    --lift-strong: 0 8px 22px rgb(0 0 0 / 0.24);
+    --fill: var(--color-brand);
+    --fill-hover: var(--color-brand-deep);
+    --line: color-mix(in srgb, var(--color-brand-soft) 60%, transparent);
+}
+html.dark:not([data-palette="violet"]) {
+    --lift: 0 0 0 1px rgb(255 255 255 / 0.08), 0 4px 16px rgb(255 255 255 / 0.10);
+    --lift-strong: 0 0 0 1px rgb(255 255 255 / 0.14), 0 6px 22px rgb(255 255 255 / 0.16);
+    --fill: var(--color-brand-soft);
+    --fill-hover: color-mix(in srgb, var(--color-brand-soft) 82%, #fff);
+    --line: color-mix(in srgb, var(--dark-brand) 55%, transparent);
+}
+
+/* Solid fills: search bar, buttons, side-panel cards, login. */
+html:not([data-palette="violet"]) .bg-brand-bar, html:not([data-palette="violet"]) .bg-brand-button, html:not([data-palette="violet"]) .bg-brand-login, html:not([data-palette="violet"]) .bg-brand-card, html:not([data-palette="violet"]) .bg-brand-logout,
+html:not([data-palette="violet"]) .brand-track { background-image: none; background-color: var(--fill); }
+html:not([data-palette="violet"]) .bg-brand-bar, html:not([data-palette="violet"]) .bg-brand-card { box-shadow: var(--lift); }
+html:not([data-palette="violet"]) .gradient-button { box-shadow: var(--lift); }
+html:not([data-palette="violet"]) .gradient-button::after { display: none; }
+html:not([data-palette="violet"]) .gradient-button:hover { filter: none; background-color: var(--fill-hover); box-shadow: var(--lift-strong); }
+html:not([data-palette="violet"]) .invert-button:hover { background-color: var(--color-brand-deep); }
+
+/* Outlined inputs, pills and windows: one solid line. */
+html:not([data-palette="violet"]) .border-gradient { background: #fff; border-color: var(--line); }
+html[data-palette="green"]:not(.dark) .border-gradient { background: #fffcf3; }
+html.dark:not([data-palette="violet"]) .border-gradient { background: var(--dark-surface); border-color: var(--line); }
+html:not([data-palette="violet"]) .pill-button:hover { background: var(--color-tint); border-color: var(--color-brand); box-shadow: var(--lift); }
+html.dark:not([data-palette="violet"]) .pill-button:not(.is-current):hover { background: var(--dark-tint); border-color: var(--dark-brand); box-shadow: var(--lift); }
+html:not([data-palette="violet"]) .pill-button.is-current, html:not([data-palette="violet"]) .pill-button.is-current:hover { background: #fff; border-color: var(--color-brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-soft) 20%, transparent), var(--lift); }
+html.dark:not([data-palette="violet"]) .pill-button.is-current, html.dark:not([data-palette="violet"]) .pill-button.is-current:hover { background: var(--dark-surface); border-color: var(--dark-brand); }
+html:not([data-palette="violet"]) .pill-button.is-current > span { background-image: none; color: var(--color-brand); }
+html.dark:not([data-palette="violet"]) .pill-button.is-current > span { background-image: none; color: var(--dark-brand); }
+html:not([data-palette="violet"]) [role="dialog"] > .border-gradient { border-color: var(--color-brand); box-shadow: var(--lift-strong); }
+html.dark:not([data-palette="violet"]) [role="dialog"] > .border-gradient { border-color: var(--line); }
+
+/* Headings and bars in one colour. */
+html:not([data-palette="violet"]) .text-gradient-heading { background-image: none; color: var(--color-brand); }
+html.dark:not([data-palette="violet"]) .text-gradient-heading { color: var(--dark-brand); }
+html:not([data-palette="violet"]) .damage-bar { background: var(--chart-claimed); }
+html:not([data-palette="violet"]) .stat-card:hover, html:not([data-palette="violet"]) .stat-card:focus-visible { box-shadow: var(--lift-strong); }
+
+/* The header in the theme's main colour, in light and dark mode, with white text and a light logo. The class is
+   repeated to outrank the dark theme's rule for white surfaces (html.dark .bg-white:not(...):not(...)). */
+html:not([data-palette="violet"]) .site-header.site-header.site-header.site-header { background-color: var(--color-brand); border-color: var(--color-brand); color: #fff; box-shadow: var(--lift);
+    --logo-1: #ffffff; --logo-2: #dfe6f5; --logo-3: #b9c7e6; --logo-leaf: var(--color-accent); }
+html[data-palette="green"] .site-header.site-header.site-header.site-header { --logo-2: #e6f6dc; --logo-3: #c1f2b0; --logo-leaf: #9fe08a; }
+html:not([data-palette="violet"]) .site-header .bg-tint, html:not([data-palette="violet"]) .site-header .hover\:bg-tint:hover { background-color: rgb(255 255 255 / 0.14); color: #fff; }
+html:not([data-palette="violet"]) .site-header .text-brand, html:not([data-palette="violet"]) .site-header .group:hover .group-hover\:text-brand { color: var(--color-accent); }
+html:not([data-palette="violet"]) .site-header .text-muted { color: rgb(255 255 255 / 0.75); }
+html[data-palette="green"] .site-header .text-brand, html[data-palette="green"] .site-header .group:hover .group-hover\:text-brand { color: #c1f2b0; }
+html:not([data-palette="violet"]) .site-header .focus-visible\:outline-brand-soft:focus-visible { outline-color: var(--color-accent); }
+
+/* Side panel: the open page's bar in gold (Navy & Gold); the chosen swatch ringed in white on the solid card. */
+html:not([data-palette="violet"]):not([data-palette="green"]) .nav-enter[aria-current="page"]::before { background-color: var(--color-accent); }
+html:not([data-palette="violet"]) .theme-swatch[aria-checked="true"] { box-shadow: 0 0 0 2px var(--fill), 0 0 0 4px #fff; }
+html:not([data-palette="violet"]) .hover-tint:focus-visible, html:not([data-palette="violet"]) .pill-button:focus-visible, html:not([data-palette="violet"]) .gradient-button:focus-visible { outline-color: var(--color-accent); }
+/* ==== End of flat themes ==== */
