@@ -302,6 +302,20 @@ html.nav-restored .nav-enter { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) { .damage-bar { animation: none; } }
 
+/* Home page charts (components/dashboard/overview). Colours checked for colour-blind separation and contrast in light
+   and dark mode; every bar also prints its number. Segments end in 4px rounded corners with a 2px gap between them. */
+.chart-claimed { background-color: #5a5de3; }
+.chart-waiting { background-color: #2aa7c4; }
+.chart-notclaimable { background-color: #d0733f; }
+html.dark .chart-claimed { background-color: #7e80ff; }
+html.dark .chart-waiting { background-color: #1e93ad; }
+.chart-seg { display: block; height: 100%; min-width: 3px; border-radius: 4px; transform-origin: left center; animation: bar-grow 700ms cubic-bezier(.2, .8, .2, 1) 150ms both; }
+.chart-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+.chart-mark { width: 2px; border-radius: 1px; background-color: #2f2f2f; }
+.chart-mark-key { display: inline-block; width: 2px; height: 12px; background-color: #2f2f2f; }
+html.dark .chart-mark, html.dark .chart-mark-key { background-color: #e6e6ef; }
+@media (prefers-reduced-motion: reduce) { .chart-seg { animation: none; } }
+
 /* Dark mode switch: the sun spins away while the moon turns in. */
 .theme-sun, .theme-moon { transition: transform 400ms cubic-bezier(.3, 1.3, .5, 1), opacity 250ms ease; }
 .theme-moon { transform: rotate(-90deg) scale(0); opacity: 0; }

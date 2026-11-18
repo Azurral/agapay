@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Beneficiary;
 use App\Models\Role;
+use App\Support\DashboardOverview;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -15,6 +16,7 @@ class DashboardController extends Controller
         $showsEncodingQueue = in_array($request->user()->role?->slug, [Role::ENCODER, Role::AGRITECH_ENCODER], true);
 
         return view('dashboard', [
+            'overview' => DashboardOverview::build(),
             'showsEncodingQueue' => $showsEncodingQueue,
             'queue' => $showsEncodingQueue
                 ? Beneficiary::whereNotNull('encoding_issue')->oldest()->oldest('id')->limit(10)->get()
