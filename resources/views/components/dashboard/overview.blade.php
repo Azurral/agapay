@@ -30,7 +30,7 @@
             @php([$label, $value, $note, $modal] = $tiles[$id])
             {{-- A button, like the Crisis Reports cards: opens what the number is made of. --}}
             <button type="button" x-data @click="$dispatch('open-modal', '{{ $modal }}')" aria-haspopup="dialog" data-dash-tile="{{ $modal }}"
-                    class="stat-card group relative cursor-pointer rounded-[16px] border-[1.5px] border-transparent bg-[#f7f7f9] px-[18px] py-[14px] text-left transition hover:-translate-y-[2px] hover:border-brand-soft hover:shadow-[0_8px_20px_rgba(90,93,227,0.15)] focus-visible:border-brand-soft focus-visible:outline-none">
+                    class="stat-card group relative cursor-pointer rounded-[16px] border-[1.5px] border-transparent bg-[#f7f7f9] px-[18px] py-[14px] text-left transition hover:-translate-y-[2px] hover:border-brand-soft hover:shadow-[0_8px_20px_color-mix(in_srgb,var(--color-brand)_15%,transparent)] focus-visible:border-brand-soft focus-visible:outline-none">
                 <span class="block text-[13px] font-bold text-arrow">{{ $label }}</span>
                 <span class="mt-[2px] block text-[28px] font-bold leading-[34px] tabular-nums">{{ $value }}</span>
                 <span class="block pr-[84px] text-[12px] text-arrow">{{ $note }}</span>

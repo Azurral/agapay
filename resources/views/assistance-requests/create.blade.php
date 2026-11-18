@@ -34,7 +34,7 @@
                            placeholder="Search by name or RSBSA number..." class="{{ $control }}">
                 </label>
                 <input type="hidden" name="beneficiary_id" :value="id">
-                <ul x-cloak x-show="open" class="absolute top-[48px] right-0 left-0 z-30 max-h-[260px] overflow-auto rounded-[10px] border border-field bg-white py-[4px] text-[14px] shadow-[0_8px_24px_rgba(90,93,227,0.18)]">
+                <ul x-cloak x-show="open" class="absolute top-[48px] right-0 left-0 z-30 max-h-[260px] overflow-auto rounded-[10px] border border-field bg-white py-[4px] text-[14px] shadow-[0_8px_24px_color-mix(in_srgb,var(--color-brand)_18%,transparent)]">
                     <template x-for="r in results" :key="r.id">
                         <li><button type="button" @click="pick(r)" class="hover-tint flex w-full gap-[10px] px-[16px] py-[8px] text-left">
                             <span class="font-bold" x-text="r.name"></span><span class="text-muted" x-text="r.rsbsa + ' · ' + (r.barangay ?? '')"></span>

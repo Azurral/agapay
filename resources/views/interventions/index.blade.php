@@ -11,7 +11,7 @@
                 <h2 class="text-[16px] font-bold leading-[20px]">{{ $title }}</h2>
                 <p class="text-[12px] leading-[16px]">{{ $scope }}</p>
                 <a href="{{ $url }}"
-                   class="absolute right-[13px] bottom-[13px] left-[13px] flex h-[31px] items-center justify-center rounded-[50px] bg-white text-[16px] font-bold text-ink transition-colors hover:bg-[#4b32c3] hover:text-white">{{ $button }}</a>
+                   class="absolute right-[13px] bottom-[13px] left-[13px] flex h-[31px] items-center justify-center rounded-[50px] bg-white text-[16px] font-bold text-ink transition-colors hover:bg-brand-deep hover:text-white">{{ $button }}</a>
             </section>
         @endforeach
     </div>

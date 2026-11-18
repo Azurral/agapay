@@ -22,7 +22,7 @@
         }">
         <x-ui.card title="Distribution Cycles">
             <x-slot:actions>
-                <button type="button" @click="add()" class="flex h-[39px] w-[200px] items-center justify-center rounded-[8px] bg-brand-soft text-[14px] font-bold text-white transition-colors hover:bg-[#4b32c3]">+ Add Cycle</button>
+                <button type="button" @click="add()" class="flex h-[39px] w-[200px] items-center justify-center rounded-[8px] bg-brand-soft text-[14px] font-bold text-white transition-colors hover:bg-brand-deep">+ Add Cycle</button>
             </x-slot:actions>
             <p class="mt-[6px] text-[14px] font-medium leading-[18px] text-muted">Distributions and reports belong to a cycle. Only one cycle is ongoing at a time; starting one completes the previous.</p>
 

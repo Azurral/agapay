@@ -164,7 +164,7 @@ it('switches to the dark theme by colours only, keeping the grid', function () {
 
     $this->actingAs(userWithRole(Role::ADMIN))->get('/dashboard')
         ->assertSee("localStorage.getItem('agapay-theme') === 'dark'", false)              // applied before the page paints
-        ->assertSee("document.documentElement.classList.toggle('dark', night)", false);   // the switch flips it
+        ->assertSee("root.classList.toggle('dark', change.dark)", false);   // the switch flips it
 
     expect($css)->toContain('html.dark .bg-grid')->toContain('grid-bg-dark.svg')
         ->and(file_exists(public_path('images/figma/grid-bg-dark.svg')))->toBeTrue()

@@ -6,7 +6,7 @@
     <x-ui.card title="Intervention Records">
         <x-slot:actions>
             <a href="{{ route('intervention-records.create') }}"
-               class="-mt-[11.5px] -mr-[18.5px] flex h-[39px] w-[230px] items-center justify-center rounded-[8px] bg-brand-soft text-[14px] font-bold text-white transition-colors hover:bg-[#4b32c3]">+ Add Record</a>
+               class="-mt-[11.5px] -mr-[18.5px] flex h-[39px] w-[230px] items-center justify-center rounded-[8px] bg-brand-soft text-[14px] font-bold text-white transition-colors hover:bg-brand-deep">+ Add Record</a>
         </x-slot:actions>
 
         <form method="GET" class="relative mt-[20.5px] flex h-[39px] items-center gap-[25px] pl-[1.5px]">
@@ -34,7 +34,7 @@
                                                 :tone="$record->claimTone()"
                                                 :actions="['claimed' => route('intervention-records.claim', $record), 'unclaimed' => route('intervention-records.unclaim', $record)]" />
                     <a href="{{ route('intervention-records.edit', $record) }}"
-                       class="flex h-[39px] w-[98px] items-center justify-center rounded-[10px] border-4 border-[#7e80ff] bg-white text-[11px] transition-colors hover:bg-[#efeaff] hover:text-brand">Edit</a>
+                       class="flex h-[39px] w-[98px] items-center justify-center rounded-[10px] border-4 border-brand-soft bg-white text-[11px] transition-colors hover:bg-tint hover:text-brand">Edit</a>
                 </div>
             @empty
                 <p class="py-[14px] pl-[16.5px] text-[14px] font-bold">No intervention records match these filters.</p>

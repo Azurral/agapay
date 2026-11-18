@@ -54,7 +54,7 @@
                 <button type="submit" class="sr-only">Apply filters</button>
                 @can('damage.create')
                     <a href="{{ route('damage.create') }}"
-                       class="ml-auto flex h-[44px] w-[260px] items-center justify-center rounded-[10px] bg-brand-soft text-[14px] font-bold text-white transition-colors hover:bg-[#4b32c3]">+ New Damage Report</a>
+                       class="ml-auto flex h-[44px] w-[260px] items-center justify-center rounded-[10px] bg-brand-soft text-[14px] font-bold text-white transition-colors hover:bg-brand-deep">+ New Damage Report</a>
                 @endcan
             </form>
 
@@ -63,7 +63,7 @@
                 @foreach ($cards as [$label, $value, $dot, $text, $modal])
                     {{-- A button (panel): opens the data behind the number. Pointer, lift and "View details" show it can be clicked. --}}
                     <button type="button" x-data @click="$dispatch('damage-filter', null); $dispatch('open-modal', '{{ $modal }}')" aria-haspopup="dialog"
-                            class="stat-card group relative h-[108px] cursor-pointer rounded-[16px] border-[1.5px] border-transparent bg-[#f7f7f9] pt-[18px] pl-[20px] text-left transition hover:-translate-y-[2px] hover:border-brand-soft hover:shadow-[0_8px_20px_rgba(90,93,227,0.15)] focus-visible:border-brand-soft focus-visible:outline-none">
+                            class="stat-card group relative h-[108px] cursor-pointer rounded-[16px] border-[1.5px] border-transparent bg-[#f7f7f9] pt-[18px] pl-[20px] text-left transition hover:-translate-y-[2px] hover:border-brand-soft hover:shadow-[0_8px_20px_color-mix(in_srgb,var(--color-brand)_15%,transparent)] focus-visible:border-brand-soft focus-visible:outline-none">
                         <span class="flex items-center gap-[7px] text-[13px] leading-[17px]"><span class="size-[11px] rounded-[3px] {{ $dot }}"></span>{{ $label }}</span>
                         <span class="mt-[5px] block text-[30px] font-bold leading-[39px] tabular-nums {{ $text }}" data-count-up>{{ $value }}</span>
                         <span class="absolute right-[16px] bottom-[12px] text-[12px] font-bold text-brand opacity-70 group-hover:opacity-100">View details &rsaquo;</span>
@@ -123,7 +123,7 @@
                        class="flex h-[40px] w-[220px] shrink-0 items-center justify-center rounded-[10px] border border-field bg-white text-[13px] font-bold transition-colors hover:border-brand-soft hover:text-brand">Export to Excel</a>
                 @endcan
                 <a href="{{ Route::has('damage.pdf') ? route('damage.pdf', $exportQuery) : '#' }}"
-                   class="flex h-[40px] w-[220px] shrink-0 items-center justify-center rounded-[10px] bg-brand-soft text-[13px] font-bold text-white transition-colors hover:bg-[#4b32c3]">Generate PDF Report</a>
+                   class="flex h-[40px] w-[220px] shrink-0 items-center justify-center rounded-[10px] bg-brand-soft text-[13px] font-bold text-white transition-colors hover:bg-brand-deep">Generate PDF Report</a>
             </div>
         </x-ui.card>
 

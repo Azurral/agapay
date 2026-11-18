@@ -6,8 +6,8 @@
     {{-- The logo is the menu button: it opens the side panel (▾ turns while open). --}}
     <button type="button" @click="nav = ! nav" :aria-expanded="nav.toString()" aria-controls="side-panel"
             aria-label="Open menu" :aria-label="nav ? 'Close menu' : 'Open menu'"
-            class="group ml-[10px] flex h-[52px] items-center gap-[10px] rounded-[16px] pr-[12px] pl-[10px] transition-colors hover:bg-[#efeaff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-soft"
-            :class="nav && 'bg-[#efeaff]'">
+            class="group ml-[10px] flex h-[52px] items-center gap-[10px] rounded-[16px] pr-[12px] pl-[10px] transition-colors hover:bg-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-soft"
+            :class="nav && 'bg-tint'">
         <x-logo class="block size-[38px]" />
         <span class="text-[19px] font-bold leading-[28px] group-hover:text-brand" :class="nav && 'text-brand'">Agapay</span>
         <svg class="size-[18px] text-muted transition-transform duration-300 group-hover:text-brand" :class="nav && 'rotate-180 text-brand'"

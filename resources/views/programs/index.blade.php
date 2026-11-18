@@ -21,7 +21,7 @@
         @foreach ($groups as $source => [$title, $hint, $programs])
             <x-ui.card :title="$title">
                 <x-slot:actions>
-                    <button type="button" @click="add('{{ $source }}')" class="flex h-[39px] w-[200px] items-center justify-center rounded-[8px] bg-brand-soft text-[14px] font-bold text-white transition-colors hover:bg-[#4b32c3]">+ Add {{ strtoupper($source) }} Program</button>
+                    <button type="button" @click="add('{{ $source }}')" class="flex h-[39px] w-[200px] items-center justify-center rounded-[8px] bg-brand-soft text-[14px] font-bold text-white transition-colors hover:bg-brand-deep">+ Add {{ strtoupper($source) }} Program</button>
                 </x-slot:actions>
                 <p class="mt-[6px] text-[14px] font-medium leading-[18px] text-muted">{{ $hint }}</p>
 

@@ -9,7 +9,7 @@ return [
     'consent_text' => 'The farmer has given consent for OMAG to record and use their personal information for agricultural programs and assistance, as stated in the privacy notice.',
     'import_consent_text' => 'The farmers in this file gave consent for OMAG to record and use their personal information for agricultural programs and assistance (for example on their RSBSA forms), as stated in the privacy notice.',
 
-    'version' => '0.17.11',
+    'version' => '0.18.0',
 
     // In-app updates of the office copy ("AGAPAY for Windows"): the Administrator sees "Update available" when GitHub
     // has a newer release. Off in a development copy, which is updated from the source code.
@@ -20,6 +20,15 @@ return [
 
     // 'office' = AGAPAY for Windows on one laptop (installer, tools\backup.ps1, in-app updates);
     // 'cloud' = one online server shared by every staff laptop (Backups page with 3-2-1 encrypted backups).
+    // Colour themes (resources/css/app.css, html[data-palette]): the side panel offers them; each user's choice is
+    // saved on the account. Navy & Gold follows the LGU Bontoc site, Green & Cream the Department of Agriculture's.
+    'themes' => [
+        'navy' => ['label' => 'Navy & Gold', 'swatch' => ['#2e2a86', '#f5c518']],
+        'green' => ['label' => 'Green & Cream', 'swatch' => ['#11692e', '#efe7d1']],
+        'violet' => ['label' => 'Violet & Blue', 'swatch' => ['#5a5de3', '#00fff2']],
+    ],
+    'default_theme' => 'navy',
+
     'edition' => env('AGAPAY_EDITION', 'office'),
 
     // Geolocation (panel): every farm has GPS coordinates; each damage photo must carry its own GPS position (EXIF)

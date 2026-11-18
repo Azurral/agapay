@@ -18,7 +18,7 @@
             @endforeach
             @if ($canManage)
                 <button type="button" x-data @click="$dispatch('open-modal', 'record-movement')"
-                        class="ml-auto -mr-[1.5px] flex h-[39px] w-[230px] items-center justify-center rounded-[8px] bg-brand-soft text-[14px] font-bold text-white transition-colors hover:bg-[#4b32c3]">+ Record Movement</button>
+                        class="ml-auto -mr-[1.5px] flex h-[39px] w-[230px] items-center justify-center rounded-[8px] bg-brand-soft text-[14px] font-bold text-white transition-colors hover:bg-brand-deep">+ Record Movement</button>
             @endif
             <button type="submit" class="sr-only">Search</button>
         </form>
@@ -50,7 +50,7 @@
         <ul class="mt-[10px] flex flex-col gap-[8px]">
             @forelse ($movements as $movement)
                 <li class="flex items-center gap-[10px] text-[14px] font-medium leading-[20px]">
-                    <span class="w-[60px] shrink-0 rounded-[6px] bg-[#efeaff] py-[2px] text-center text-[12px] font-bold text-brand">{{ strtoupper($movement->source) }}</span>
+                    <span class="w-[60px] shrink-0 rounded-[6px] bg-tint py-[2px] text-center text-[12px] font-bold text-brand">{{ strtoupper($movement->source) }}</span>
                     <span>{{ $movement->line() }}</span>
                 </li>
             @empty

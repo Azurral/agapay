@@ -4,8 +4,22 @@
     Phones and tablets are not scaled: they get the desktop-only notice instead (see <x-desktop-only>).
 --}}
 <script>
-    // The saved theme is applied before the page paints, so a dark page never flashes white.
-    try { document.documentElement.classList.toggle('dark', localStorage.getItem('agapay-theme') === 'dark'); } catch (e) {}
+    // The theme is applied before the page paints, so a dark page never flashes white. Signed-in pages carry the
+    // account's choice (data-palette, data-dark) and this browser keeps a copy for the pages before sign-in.
+    (function () {
+        const root = document.documentElement;
+        try {
+            if (root.dataset.dark !== undefined) {
+                localStorage.setItem('agapay-theme', root.dataset.dark === '1' ? 'dark' : 'light');
+            }
+            root.classList.toggle('dark', root.dataset.dark !== undefined ? root.dataset.dark === '1' : localStorage.getItem('agapay-theme') === 'dark');
+            if (root.dataset.palette) {
+                localStorage.setItem('agapay-palette', root.dataset.palette);
+            } else {
+                root.dataset.palette = localStorage.getItem('agapay-palette') || @js(config('agapay.default_theme'));
+            }
+        } catch (e) {}
+    })();
 
     (function () {
         const DESIGN_WIDTH = 1600;

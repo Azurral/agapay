@@ -9,19 +9,105 @@
     --color-ink: #2f2f2f;
     --color-muted: #b4b4b4;
     --color-subtle: #b5b5b5;
-    --color-canvas: #f9f6ff;
-    --color-brand: #5a5de3;
-    --color-brand-soft: #7e80ff;
+    /* Theme colours: Navy & Gold is the default; html[data-palette] picks another (see "Colour themes" below). */
+    --color-canvas: #f6f7fb;
+    --color-brand: #2e2a86;
+    --color-brand-soft: #4a46b5;
+    --color-brand-deep: #1d1a5e;
+    --color-tint: #ebeaf8;
+    --color-panel: #f7f7f9;
+    --color-accent: #f5c518;
+    --color-accent-soft: #fff6d1;
     --color-cyan: #00fff2;
     --color-ok: #a8f9b1;
     --color-bad: #f9a8a9;
     --color-field: #e2e2e2;
     --color-arrow: #868686;
     --color-danger: #d64545;
+    --color-stat-1: #c96f3b;
+    --color-stat-2: #2e2a86;
+    --color-stat-3: #a8790a;
+    --color-stat-4: #2a8fa3;
+}
+
+/* ==== Colour themes (html[data-palette], saved on the account; the side panel's swatches switch them) ====
+   Each theme is a list of colours only, so every theme shares one layout. Status colours (eligible, claimed, low stock,
+   errors) and the PDFs and Excel files are the same in every theme. Chart colours were checked for colour-blind
+   separation in light and dark mode (dataviz validate_palette.js); every bar also prints its number. */
+:root {
+    --grad-from: #2e2a86;
+    --grad-to: #4a46b5;
+    --logo-1: #2e2a86;
+    --logo-2: #4a46b5;
+    --logo-3: #7d79d6;
+    --logo-leaf: #f5c518;
+    --switch-night: #1d1a5e;
+    --chart-claimed: #4a46b5;
+    --chart-waiting: #2aa0b5;
+    --chart-notclaimable: #d0733f;
+    /* Avatar circles by role (components/app/avatar). */
+    --avatar-administrator: #2e2a86;
+    --avatar-agricultural_technologist: #a8790a;
+    --avatar-data_encoder: #2a8fa3;
+    --avatar-agritech_encoder: #4a46b5;
+}
+/* Green & Cream (the Department of Agriculture's colours): cream page, dark green, light green. */
+html[data-palette="green"] {
+    --color-canvas: #efe7d1;
+    --color-brand: #11692e;
+    --color-brand-soft: #1f7a3a;
+    --color-brand-deep: #0a4a1f;
+    --color-tint: #dcf3d0;
+    --color-panel: #f7f1df;
+    --color-accent: #7fd86a;
+    --color-accent-soft: #e8f8df;
+    --color-stat-1: #b5651d;
+    --color-stat-2: #11692e;
+    --color-stat-3: #8a6d0f;
+    --color-stat-4: #2a7fb8;
+    --grad-from: #11692e;
+    --grad-to: #2f8a45;
+    --logo-1: #0b5e27;
+    --logo-2: #1c8a36;
+    --logo-3: #56b34f;
+    --logo-leaf: #8fd16f;
+    --switch-night: #0a4a1f;
+    --chart-claimed: #11692e;
+    --chart-waiting: #2a7fb8;
+    --chart-notclaimable: #c0507f;
+    --avatar-administrator: #11692e;
+    --avatar-agricultural_technologist: #8a6d0f;
+    --avatar-data_encoder: #2a7fb8;
+    --avatar-agritech_encoder: #1f7a3a;
+}
+/* Violet & Blue: AGAPAY's original colours. */
+html[data-palette="violet"] {
+    --color-canvas: #f9f6ff;
+    --color-brand: #5a5de3;
+    --color-brand-soft: #7e80ff;
+    --color-brand-deep: #4b32c3;
+    --color-tint: #efeaff;
+    --color-panel: #f7f7f9;
+    --color-accent: #00fff2;
+    --color-accent-soft: #e6fffd;
     --color-stat-1: #da37ff;
     --color-stat-2: #8037ff;
     --color-stat-3: #4671ff;
     --color-stat-4: #0bcaff;
+    --grad-from: #7e80ff;
+    --grad-to: #5a5de3;
+    --logo-1: #8037ff;
+    --logo-2: #4671ff;
+    --logo-3: #0bcaff;
+    --logo-leaf: #22d3ff;
+    --switch-night: #2b2d6e;
+    --chart-claimed: #5a5de3;
+    --chart-waiting: #2aa7c4;
+    --chart-notclaimable: #d0733f;
+    --avatar-administrator: #8037ff;
+    --avatar-agricultural_technologist: #4671ff;
+    --avatar-data_encoder: #0bcaff;
+    --avatar-agritech_encoder: #2f8fff;
 }
 
 @layer components {
@@ -43,22 +129,32 @@
         background-size: 2135.5px 1529px;
     }
 
-    .bg-brand-bar { background: url('/images/figma/gradients/bar.svg') 0 0 / 100% 100% no-repeat; }
-    .bg-brand-button { background: url('/images/figma/gradients/button.svg') 0 0 / 100% 100% no-repeat; }
-    .bg-brand-login { background: url('/images/figma/gradients/login.svg') 0 0 / 100% 100% no-repeat; }
-    .bg-brand-card { background: url('/images/figma/gradients/card.svg') 0 0 / 100% 100% no-repeat; }
-    .bg-brand-logout { background: url('/images/figma/gradients/logout.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-bar { background: url('/images/figma/gradients/navy/bar.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-button { background: url('/images/figma/gradients/navy/button.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-login { background: url('/images/figma/gradients/navy/login.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-card { background: url('/images/figma/gradients/navy/card.svg') 0 0 / 100% 100% no-repeat; }
+    .bg-brand-logout { background: url('/images/figma/gradients/navy/logout.svg') 0 0 / 100% 100% no-repeat; }
+    html[data-palette="green"] .bg-brand-bar { background-image: url('/images/figma/gradients/green/bar.svg'); }
+    html[data-palette="green"] .bg-brand-button { background-image: url('/images/figma/gradients/green/button.svg'); }
+    html[data-palette="green"] .bg-brand-login { background-image: url('/images/figma/gradients/green/login.svg'); }
+    html[data-palette="green"] .bg-brand-card { background-image: url('/images/figma/gradients/green/card.svg'); }
+    html[data-palette="green"] .bg-brand-logout { background-image: url('/images/figma/gradients/green/logout.svg'); }
+    html[data-palette="violet"] .bg-brand-bar { background-image: url('/images/figma/gradients/bar.svg'); }
+    html[data-palette="violet"] .bg-brand-button { background-image: url('/images/figma/gradients/button.svg'); }
+    html[data-palette="violet"] .bg-brand-login { background-image: url('/images/figma/gradients/login.svg'); }
+    html[data-palette="violet"] .bg-brand-card { background-image: url('/images/figma/gradients/card.svg'); }
+    html[data-palette="violet"] .bg-brand-logout { background-image: url('/images/figma/gradients/logout.svg'); }
 
     /* Pill buttons and login inputs: cyan -> brand linear stroke (sampled from Figma render). */
     .border-gradient {
         border: 1.5px solid transparent;
         background:
             linear-gradient(#fff, #fff) padding-box,
-            linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
+            linear-gradient(90deg, var(--color-accent) 0%, var(--color-brand) 100%) border-box;
     }
 
     .text-gradient-heading {
-        background-image: linear-gradient(90deg, #00fff2 0%, #7e80ff 75.489%);
+        background-image: linear-gradient(90deg, var(--color-accent) 0%, var(--color-brand-soft) 75.489%);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
@@ -75,7 +171,7 @@
         transition: background-color 150ms ease, color 150ms ease;
     }
     .hover-tint:hover {
-        background-color: #efeaff;
+        background-color: var(--color-tint);
         color: var(--color-brand);
     }
 
@@ -85,10 +181,10 @@
     }
     .pill-button:hover {
         background:
-            linear-gradient(90deg, #e6fffd, #efeaff) padding-box,
-            linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
+            linear-gradient(90deg, var(--color-accent-soft), var(--color-tint)) padding-box,
+            linear-gradient(90deg, var(--color-accent) 0%, var(--color-brand) 100%) border-box;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgb(90 93 227 / 0.18);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--color-brand) 18%, transparent);
     }
 
     /* The quick action of the open page: a white pill with a thicker gradient border, the label in the brand gradient
@@ -98,12 +194,12 @@
         border-width: 2.5px;
         background:
             linear-gradient(#fff, #fff) padding-box,
-            linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
-        box-shadow: 0 0 0 4px rgb(126 128 255 / 0.15), 0 4px 14px rgb(90 93 227 / 0.25);
+            linear-gradient(90deg, var(--color-accent) 0%, var(--color-brand) 100%) border-box;
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-brand-soft) 15%, transparent), 0 4px 14px color-mix(in srgb, var(--color-brand) 25%, transparent);
         transform: none;
     }
     .pill-button.is-current > span {
-        background: linear-gradient(90deg, #00c2b8, #5a5de3);
+        background: linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 80%, #000), var(--color-brand));
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
@@ -114,7 +210,7 @@
     .gradient-button {
         position: relative;
         overflow: hidden;
-        box-shadow: 0 4px 12px rgb(75 50 195 / 0.38);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--color-brand-deep) 38%, transparent);
         transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease;
     }
     /* A soft shine sweeps across on hover (it starts and ends outside the button, so leaving snaps back unseen). */
@@ -133,7 +229,7 @@
     .gradient-button:hover {
         filter: brightness(1.07) saturate(1.1);
         transform: translateY(-1px);
-        box-shadow: 0 8px 20px rgb(75 50 195 / 0.5);
+        box-shadow: 0 8px 20px color-mix(in srgb, var(--color-brand-deep) 50%, transparent);
     }
 
     /* White pills sitting on a gradient card (Switch): a faint tint vanishes there, so they invert to dark purple. */
@@ -141,7 +237,7 @@
         transition: background-color 150ms ease, color 150ms ease;
     }
     .invert-button:hover {
-        background-color: #4b32c3;
+        background-color: var(--color-brand-deep);
         color: #ffffff;
     }
 
@@ -181,7 +277,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(249, 246, 255, 0.55);
+        background: color-mix(in srgb, var(--color-canvas) 55%, transparent);
     }
     body > :not(.desktop-only-notice):not(script) {
         filter: blur(6px);
@@ -197,8 +293,8 @@
 
 /* Account menu: the ring around switchable accounts rests still and spins while its row is hovered. */
 @keyframes switch-spin { to { transform: rotate(360deg); } }
-.switch-ring { color: #7e80ff; transform-origin: center; transition: color 150ms; }
-.group:hover .switch-ring, .group:focus-visible .switch-ring { color: #5a5de3; animation: switch-spin 1.2s linear infinite; }
+.switch-ring { color: var(--color-brand-soft); transform-origin: center; transition: color 150ms; }
+.group:hover .switch-ring, .group:focus-visible .switch-ring { color: var(--color-brand); animation: switch-spin 1.2s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .group:hover .switch-ring, .group:focus-visible .switch-ring { animation: none; } }
 
 /* Account menu arrow: two bars forming a down chevron that dips on hover and folds into an X once the menu is open. */
@@ -289,37 +385,47 @@ html.nav-restored .nav-enter { animation: none; }
 
 /* Status chips: a slow pulsing dot while waiting; the chip just claimed or unclaimed pops once. */
 @keyframes chip-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.7); } }
-@keyframes chip-pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); box-shadow: 0 0 0 6px rgb(126 128 255 / 0.25); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgb(126 128 255 / 0); } }
-.chip-dot { width: 8px; height: 8px; margin-right: 8px; flex-shrink: 0; border-radius: 9999px; background: #7e80ff; animation: chip-dot 1.6s ease-in-out infinite; }
+@keyframes chip-pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-brand-soft) 25%, transparent); } 100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; } }
+.chip-dot { width: 8px; height: 8px; margin-right: 8px; flex-shrink: 0; border-radius: 9999px; background: var(--color-brand-soft); animation: chip-dot 1.6s ease-in-out infinite; }
 .chip-pop { animation: chip-pop 650ms cubic-bezier(.3, 1.4, .5, 1) 250ms both; }
 
 /* Damage bar charts grow from the left, one after another. */
 @keyframes bar-grow { from { transform: scaleX(0); } }
 .damage-bar {
-    background: linear-gradient(90deg, #7e80ff, #5a5de3);
+    background: linear-gradient(90deg, var(--grad-from), var(--grad-to));
     transform-origin: left center;
     animation: bar-grow 700ms cubic-bezier(.2, .8, .2, 1) calc(150ms + var(--i, 0) * 70ms) both;
 }
 @media (prefers-reduced-motion: reduce) { .damage-bar { animation: none; } }
 /* A bar row that opens the farmers behind it (Crisis Reports): tinted on hover and keyboard focus. */
 .damage-row { transition: background-color 150ms; }
-.damage-row:hover, .damage-row:focus-visible { background-color: #efeaff; outline: none; }
-.damage-row:focus-visible { box-shadow: 0 0 0 2px #7e80ff; }
-html.dark .damage-row:hover, html.dark .damage-row:focus-visible { background-color: rgb(126 128 255 / 0.16); }
+.damage-row:hover, .damage-row:focus-visible { background-color: var(--color-tint); outline: none; }
+.damage-row:focus-visible { box-shadow: 0 0 0 2px var(--color-brand-soft); }
+html.dark .damage-row:hover, html.dark .damage-row:focus-visible { background-color: var(--dark-tint); }
 
 /* Home page charts (components/dashboard/overview). Colours checked for colour-blind separation and contrast in light
    and dark mode; every bar also prints its number. Segments end in 4px rounded corners with a 2px gap between them. */
-.chart-claimed { background-color: #5a5de3; }
-.chart-waiting { background-color: #2aa7c4; }
-.chart-notclaimable { background-color: #d0733f; }
-html.dark .chart-claimed { background-color: #7e80ff; }
-html.dark .chart-waiting { background-color: #1e93ad; }
+.chart-claimed { background-color: var(--chart-claimed); }
+.chart-waiting { background-color: var(--chart-waiting); }
+.chart-notclaimable { background-color: var(--chart-notclaimable); }
 .chart-seg { display: block; height: 100%; min-width: 3px; border-radius: 4px; transform-origin: left center; animation: bar-grow 700ms cubic-bezier(.2, .8, .2, 1) 150ms both; }
 .chart-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
 .chart-mark { width: 2px; border-radius: 1px; background-color: #2f2f2f; }
 .chart-mark-key { display: inline-block; width: 2px; height: 12px; background-color: #2f2f2f; }
 html.dark .chart-mark, html.dark .chart-mark-key { background-color: #e6e6ef; }
 @media (prefers-reduced-motion: reduce) { .chart-seg { animation: none; } }
+
+/* Pop-up windows (components/ui/modal) cover only the grid container: the header and the side panel stay in view and
+   usable. Inside the container everything is drawn at 85% (layouts/app), so its offsets are divided by 0.85. */
+.modal-area { padding-top: var(--modal-top, 300px); }
+main .modal-area { top: calc(92px / 0.85); left: calc(10px / 0.85); padding-top: max(20px, calc(var(--modal-top, 300px) - 108px)); }
+html[data-nav="open"] main .modal-area { left: calc(234px / 0.85); }
+
+/* Colour theme swatches (side panel): the chosen one is ringed in white; they grow a little on hover. */
+.theme-swatch { transition: transform 150ms ease, box-shadow 150ms ease; }
+.theme-swatch:hover { transform: scale(1.12); }
+.theme-swatch[aria-checked="true"] { box-shadow: 0 0 0 2px var(--color-brand-deep), 0 0 0 4px #fff; }
+.theme-swatch:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
 /* Dark mode switch: the sun spins away while the moon turns in. */
 .theme-sun, .theme-moon { transition: transform 400ms cubic-bezier(.3, 1.3, .5, 1), opacity 250ms ease; }
@@ -345,15 +451,43 @@ html.dark .theme-moon { transform: none; opacity: 1; }
    Unlayered rules, so they win over Tailwind's utilities. PDFs and Excel files are separate and stay light. */
 html.dark {
     color-scheme: dark;
+    /* Navy & Gold: AGAPAY's dark navy, with gold for links and the open page. */
     --dark-page: #0f1020;
     --dark-surface: #1c1e2e;
     --dark-chrome: #171827;
     --dark-field: #23253a;
-    --dark-tint: #2a2b55;
+    --dark-tint: #2c2a52;
     --dark-border: #2c2f45;
     --dark-text: #e8e9f3;
     --dark-muted: #8b8fa8;
+    --dark-brand: #f5c84c;
+    --chart-claimed: #7470e0;
+    --chart-waiting: #1e93ad;
+}
+/* Green & Cream: the cream becomes a deep olive; the greens stay, brightened to read on it. */
+html.dark[data-palette="green"] {
+    --dark-page: #14170f;
+    --dark-surface: #1f2318;
+    --dark-chrome: #191c13;
+    --dark-field: #282d1f;
+    --dark-tint: #27402a;
+    --dark-border: #343a29;
+    --dark-text: #eeecdc;
+    --dark-muted: #9c9d86;
+    --dark-brand: #a8e895;
+    --chart-claimed: #3fa957;
+    --chart-waiting: #4a86d6;
+    --chart-notclaimable: #cf5f8f;
+}
+/* The logo's darkest bars brighten in dark mode so they stay visible on the dark header. */
+html.dark:not([data-palette="violet"]):not([data-palette="green"]) { --logo-1: #6c68d8; --logo-2: #8f8cf0; --logo-3: #b9b7ff; }
+html.dark[data-palette="green"] { --logo-1: #2f9e4e; --logo-2: #4cbb6a; --logo-3: #8fd16f; --logo-leaf: #c1f2b0; }
+/* Violet & Blue: the original dark theme. */
+html.dark[data-palette="violet"] {
+    --dark-tint: #2a2b55;
     --dark-brand: #a5a7ff;
+    --chart-claimed: #7e80ff;
+    --chart-waiting: #1e93ad;
 }
 
 /* Native controls (open dropdown lists, date pickers, scrollbars) are drawn dark too, so options stay readable. */
@@ -370,7 +504,8 @@ html.dark .bg-grid-login { background-color: var(--dark-page); background-image:
 html.dark .bg-white:not(.bg-brand-card *):not(.bg-brand-bar *),
 html.dark .bg-\[\#ececec\] { background-color: var(--dark-surface); }
 /* Grey panels inside a card (summary cards, charts, checklists) sit one step lighter, so they still read as boxes. */
-html.dark .bg-\[\#f7f7f9\] { background-color: var(--dark-field); }
+html.dark .bg-\[\#f7f7f9\],
+html.dark .bg-panel { background-color: var(--dark-field); }
 html.dark .bg-black\/5 { background-color: rgb(255 255 255 / 0.08); }
 html.dark header.bg-white,
 html.dark #side-panel.bg-white { background-color: var(--dark-chrome); }
@@ -379,7 +514,7 @@ html.dark .bg-brand-card .bg-white { color: #2f2f2f; }
 html.dark .bg-brand-soft\/10,
 html.dark .bg-field\/60 { background-color: var(--dark-field); }
 html.dark .bg-brand-soft\/20,
-html.dark .bg-\[\#efeaff\] { background-color: var(--dark-tint); }
+html.dark .bg-tint { background-color: var(--dark-tint); }
 
 /* Text */
 html.dark .text-ink,
@@ -413,33 +548,48 @@ html.dark .border-bad.bg-white { background-color: rgb(249 168 169 / 0.1); color
 html.dark .border-gradient {
     background:
         linear-gradient(var(--dark-surface), var(--dark-surface)) padding-box,
-        linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
+        linear-gradient(90deg, var(--color-accent) 0%, var(--color-brand) 100%) border-box;
 }
 html.dark .pill-button.is-current,
 html.dark .pill-button.is-current:hover {
     background:
         linear-gradient(var(--dark-surface), var(--dark-surface)) padding-box,
-        linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
-    box-shadow: 0 0 0 4px rgb(126 128 255 / 0.18), 0 4px 16px rgb(0 0 0 / 0.45);
+        linear-gradient(90deg, var(--color-accent) 0%, var(--color-brand) 100%) border-box;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-brand-soft) 18%, transparent), 0 4px 16px rgb(0 0 0 / 0.45);
 }
-html.dark .pill-button.is-current > span { background-image: linear-gradient(90deg, #00fff2, #a5a7ff); }
+html.dark .pill-button.is-current > span { background-image: linear-gradient(90deg, var(--color-accent), var(--dark-brand)); }
 html.dark .pill-button:not(.is-current):hover {
     background:
-        linear-gradient(90deg, #13343a, var(--dark-tint)) padding-box,
-        linear-gradient(90deg, #00fff2 0%, #5a5de3 100%) border-box;
+        linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 14%, var(--dark-surface)), var(--dark-tint)) padding-box,
+        linear-gradient(90deg, var(--color-accent) 0%, var(--color-brand) 100%) border-box;
 }
 
 /* Hover states */
 html.dark .hover-tint:hover,
-html.dark .hover\:bg-\[\#efeaff\]:hover { background-color: var(--dark-tint); color: var(--dark-brand); }
+html.dark .hover\:bg-tint:hover { background-color: var(--dark-tint); color: var(--dark-brand); }
 html.dark .account-trigger:hover { background-color: var(--dark-field); }
 
 /* Black and grey line icons become light; the purple ones and icons already turned white (on gradient buttons) stay. */
 html.dark img[src*="/images/figma/icons/"]:not(.invert):not([src*="task.svg"]):not([src*="plus.svg"]):not([src*="calendar.svg"]):not([src*="ring.svg"]) { filter: invert(0.88); }
 
 /* The phone/tablet notice keeps its blur, over a dark wash. */
-html.dark .desktop-only-notice { background: rgb(15 16 32 / 0.6); }
-html.dark .switch-ring { color: #b3b5ff; }
-html.dark .group:hover .switch-ring, html.dark .group:focus-visible .switch-ring { color: #d4d5ff; }
+html.dark .desktop-only-notice { background: color-mix(in srgb, var(--dark-page) 60%, transparent); }
+html.dark .switch-ring { color: var(--dark-brand); }
+html.dark .group:hover .switch-ring, html.dark .group:focus-visible .switch-ring { color: var(--dark-text); }
 html.dark .menu-fold { color: var(--dark-muted); }
 html.dark .group:hover .menu-fold, html.dark .group:focus-visible .menu-fold { color: var(--dark-brand); }
+
+/* Brand-coloured icons: the img keeps the violet file; each other theme shows its own copy in its place. */
+html:not([data-palette="violet"]):not([data-palette="green"]) img[src$="/figma/icons/task.svg"] { content: url('/images/figma/icons/navy/task.svg'); }
+html[data-palette="green"] img[src$="/figma/icons/task.svg"] { content: url('/images/figma/icons/green/task.svg'); }
+html:not([data-palette="violet"]):not([data-palette="green"]) img[src$="/figma/icons/plus.svg"] { content: url('/images/figma/icons/navy/plus.svg'); }
+html[data-palette="green"] img[src$="/figma/icons/plus.svg"] { content: url('/images/figma/icons/green/plus.svg'); }
+html:not([data-palette="violet"]):not([data-palette="green"]) img[src$="/figma/icons/calendar.svg"] { content: url('/images/figma/icons/navy/calendar.svg'); }
+html[data-palette="green"] img[src$="/figma/icons/calendar.svg"] { content: url('/images/figma/icons/green/calendar.svg'); }
+html:not([data-palette="violet"]):not([data-palette="green"]) img[src$="/figma/icons/ring.svg"] { content: url('/images/figma/icons/navy/ring.svg'); }
+html[data-palette="green"] img[src$="/figma/icons/ring.svg"] { content: url('/images/figma/icons/green/ring.svg'); }
+
+/* Green & Cream, light: white cards turn a warm white and grey panels a pale cream, as on the DA site. */
+html[data-palette="green"]:not(.dark) .bg-white:not(.bg-brand-card *):not(.bg-brand-bar *) { background-color: #fffcf3; }
+html[data-palette="green"]:not(.dark) .bg-\[\#f7f7f9\],
+html[data-palette="green"]:not(.dark) .bg-panel { background-color: var(--color-panel); }

@@ -2,7 +2,7 @@
 @if ($paginator->hasPages())
     @php
         $shape = 'flex h-[36px] min-w-[36px] items-center justify-center rounded-[10px] border px-[10px] text-[14px] font-bold';
-        $link = $shape.' border-field bg-white text-ink transition-colors hover:border-brand-soft hover:bg-[#efeaff] hover:text-brand';
+        $link = $shape.' border-field bg-white text-ink transition-colors hover:border-brand-soft hover:bg-tint hover:text-brand';
         $off = $shape.' border-field bg-white cursor-not-allowed text-muted';
         $current = $shape.' border-brand bg-brand text-white';
         // Only one page number on the far side of each "...": "1 2 3 … 14", not "… 13 14" (and "1 …", not "1 2 …").

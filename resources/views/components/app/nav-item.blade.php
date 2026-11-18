@@ -5,7 +5,7 @@
    @class([
        'nav-enter relative block h-[42px] w-[235px] shrink-0 rounded-[13px]',
        'hover-tint' => ! $item['active'],
-       'bg-[#efeaff] text-brand before:absolute before:top-[9px] before:left-0 before:h-[24px] before:w-[4px] before:rounded-full before:bg-brand' => $item['active'],
+       'bg-tint text-brand before:absolute before:top-[9px] before:left-0 before:h-[24px] before:w-[4px] before:rounded-full before:bg-brand' => $item['active'],
    ])>
     <span class="nav-icon absolute top-[9px] left-[14px] flex size-[24px] items-center justify-center">
         <img src="{{ asset('images/figma/icons/'.$item['icon'].'.svg') }}" alt="">

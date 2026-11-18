@@ -162,10 +162,10 @@
     @if ($variant !== 'view')
     <x-beneficiary.action-bar :title="$bar[0]" :subtitle="$bar[1]" class="mt-[7px]">
         @if ($isEdit)
-            <button type="submit" form="profile-edit" class="hover-tint {{ $barButton }} hover:bg-[#efeaff] hover:text-brand">{{ $bar[2] }}</button>
+            <button type="submit" form="profile-edit" class="hover-tint {{ $barButton }} hover:bg-tint hover:text-brand">{{ $bar[2] }}</button>
         @else
             @if ($claimable->isNotEmpty() && auth()->user()->can('interventions.claim'))
-                <button type="button" x-data @click="$dispatch('open-modal', 'process-claim')" class="{{ $barButton }} transition-colors hover:bg-[#4b32c3] hover:text-white">{{ $bar[2] }}</button>
+                <button type="button" x-data @click="$dispatch('open-modal', 'process-claim')" class="{{ $barButton }} transition-colors hover:bg-brand-deep hover:text-white">{{ $bar[2] }}</button>
             @else
                 <button type="button" disabled title="No claimable interventions." class="{{ $barButton }} cursor-not-allowed opacity-80">{{ $bar[2] }}</button>
             @endif

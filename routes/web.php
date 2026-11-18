@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppearanceController;
 use App\Http\Controllers\AssistanceRequestController;
 use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\Auth\LoginController;
@@ -42,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
     Route::post('/switch-account', [LoginController::class, 'switch'])->name('account.switch');
     Route::post('/account/sidebar', SidebarController::class)->middleware('active')->name('account.sidebar');
+    Route::post('/account/appearance', AppearanceController::class)->middleware('active')->name('account.appearance');
 });
 
 // The public landing page, for everyone; its Log in button takes signed-in users straight to their dashboard.

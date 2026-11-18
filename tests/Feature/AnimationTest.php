@@ -72,7 +72,7 @@ it('morphs the dark mode sun into a moon instead of swapping them', function () 
 
 it('fades the page between light and dark instead of flipping it at once', function () {
     $html = $this->actingAs($this->admin)->get('/dashboard')->getContent();
-    $card = Str::betweenFirst($html, 'DARK MODE', '</button>');
+    $card = Str::betweenFirst($html, 'agapay-palette', 'RETURN TO LOGIN');   // the appearance card (dark mode + colour theme)
     $css = file_get_contents(resource_path('css/app.css'));
 
     // The theme changes inside a view transition (skipped for reduced motion); the switch is kept out of the

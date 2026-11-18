@@ -1,9 +1,16 @@
 @props(['title'])
-@php($navOpen = (bool) auth()->user()?->sidebar_open)
+@php
+    $navOpen = (bool) auth()->user()?->sidebar_open;
+    // The colour theme and dark mode saved on the account (null dark mode: this browser's last choice, screen-fit).
+    $palette = auth()->user()?->color_theme ?? config('agapay.default_theme');
+    $dark = auth()->user()?->dark_mode;
+    $classes = array_filter([$navOpen ? 'nav-restored' : null, $dark ? 'dark' : null]);
+@endphp
 <!DOCTYPE html>
 {{-- data-nav is drawn by the server so a page opened with the panel open shows it in place, with no slide or jump
-     (app.css); nav-restored also skips the menu stagger until the user toggles the panel again. --}}
-<html lang="en" data-nav="{{ $navOpen ? 'open' : 'closed' }}" @if ($navOpen) class="nav-restored" @endif>
+     (app.css); nav-restored also skips the menu stagger until the user toggles the panel again. data-palette and the
+     dark class are drawn too, so the page never flashes another theme. --}}
+<html lang="en" data-nav="{{ $navOpen ? 'open' : 'closed' }}" data-palette="{{ $palette }}" @if ($dark !== null) data-dark="{{ $dark ? 1 : 0 }}" @endif @if ($classes) class="{{ implode(' ', $classes) }}" @endif>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
