@@ -10,6 +10,7 @@ use App\Models\DamageReport;
 use App\Models\Disaster;
 use App\Models\User;
 use App\Services\DamageReportService;
+use App\Support\DamageBreakdown;
 use App\Support\DamageCharts;
 use App\Support\DamageReportFilters;
 use App\Support\StagedPhotos;
@@ -47,6 +48,8 @@ class DamageReportController extends Controller
                 .' COALESCE(SUM(loss_mt), 0) AS loss, COALESCE(SUM(cost), 0) AS cost'
             )->first(),
             'charts' => DamageCharts::build($query),
+            // The data behind each summary card, shown when the card is clicked.
+            'breakdown' => DamageBreakdown::build($query),
             // Newest first: the reports still being encoded after an event stay on page one.
             'reports' => $query->with(['beneficiary', 'barangay:id,name', 'crop:id,name', 'photos:id,damage_report_id'])
                 ->withCount('photos')->latest()->latest('id')->paginate(10)->withQueryString(),

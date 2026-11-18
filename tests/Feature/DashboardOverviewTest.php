@@ -47,12 +47,20 @@ it('shows each stock item against its low-stock level', function () {
         ->and($stock['HDPE Pipes'])->toMatchArray(['balance' => 180.0, 'low' => false]);
 });
 
-it('puts the overview on every role\'s home page', function (string $username) {
-    $this->actingAs(User::where('username', $username)->sole())->get('/dashboard')->assertOk()
+it('puts each role\'s default overview on its home page', function (string $username, array $sees, array $hidden) {
+    $response = $this->actingAs(User::where('username', $username)->sole())->get('/dashboard')->assertOk()
         ->assertSee('Overview')
         ->assertSee('Registered farmers')
         ->assertSee('Releases in 2026-Q3')
-        ->assertSee('Farmers per barangay')
-        ->assertSee('Stock levels')
         ->assertSeeInOrder(['Claimed', 'Waiting', 'Not claimable']);   // the legend
-})->with(['Admin_01', 'Agritech_02', 'Encoder_03']);
+    foreach ($sees as $text) {
+        $response->assertSee($text);
+    }
+    foreach ($hidden as $text) {
+        $response->assertDontSee($text);
+    }
+})->with([
+    'administrator' => ['Admin_01', ['Farmers per barangay', 'low-stock level', 'Walk-in registrations waiting'], []],
+    'agricultural technologist' => ['Agritech_02', ['Farmers per barangay', 'Latest crisis damage', 'Next claiming dates'], ['low-stock level']],
+    'data encoder' => ['Encoder_03', ['low-stock level', 'Next claiming dates', 'Pending Encoding Queue'], ['Open Walk-in Approvals']],
+]);

@@ -22,16 +22,22 @@ until php artisan migrate --force; do
     echo "AGAPAY: waiting for the database ($tries)..."
     sleep 3
 done
+# Demo copies only: AGAPAY_RESET_DEMO=true (with AGAPAY_SAMPLE_DATA=true) wipes the demo database and loads the sample
+# records again, e.g. after a first load that was interrupted. Set it once, deploy, then delete the variable.
+if [ "${AGAPAY_SAMPLE_DATA:-false}" = "true" ] && [ "${AGAPAY_RESET_DEMO:-false}" = "true" ]; then
+    echo "AGAPAY: resetting the demo database (AGAPAY_RESET_DEMO=true)."
+    php artisan migrate:fresh --force
+fi
 # First start of a demo copy (AGAPAY_SAMPLE_DATA=true): load the sample records and the test accounts once.
 # A real copy instead creates its Administrator once from the host's shell: php artisan agapay:install
 if [ "${AGAPAY_SAMPLE_DATA:-false}" = "true" ] && ! php artisan agapay:install --status >/dev/null 2>&1; then
     php artisan agapay:install --sample-data
 fi
-# Demo copies made before farm locations existed: give the sample farmers one, for the photo GPS check.
+# Demo copies: farm locations for the photo GPS check, and about 120 more made-up farmers (each added once).
+# Never fatal: the website must start even if the demo extras cannot be added.
 if [ "${AGAPAY_SAMPLE_DATA:-false}" = "true" ]; then
-    php artisan agapay:demo-farm-locations --force
-    # About 120 more made-up farmers with complete records (added once).
-    php artisan agapay:demo-data --force
+    php artisan agapay:demo-farm-locations --force || echo "AGAPAY: demo farm locations skipped."
+    php artisan agapay:demo-data --force || echo "AGAPAY: demo farmers skipped."
 fi
 php artisan config:cache
 php artisan route:cache

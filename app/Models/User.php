@@ -28,7 +28,7 @@ class User extends Authenticatable
     protected string $auditSubject = 'User';
 
     /** Changes that happen on every sign-in are not user activity worth auditing. */
-    protected array $auditIgnore = ['remember_token', 'last_login_at'];
+    protected array $auditIgnore = ['remember_token', 'last_login_at', 'dashboard_widgets'];
 
     public function auditRecordLabel(): string
     {
@@ -67,6 +67,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'must_change_password' => 'boolean',
             'sidebar_open' => 'boolean',
+            'dashboard_widgets' => 'array',
         ];
     }
 

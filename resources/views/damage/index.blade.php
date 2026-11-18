@@ -4,11 +4,12 @@
     $cols = 'grid-cols-[220px_150px_142px_137px_231px_108px_150px_1fr_140px]';
     $filterBox = 'relative block h-[44px] shrink-0 rounded-[10px] border border-field bg-white';
     $filterSelect = 'h-full w-full cursor-pointer appearance-none bg-transparent pr-[36px] pl-[16px] text-[14px] font-bold leading-[20px] outline-none';
+    // label, value, colours, the details window it opens
     $cards = [
-        ['Farmers Affected', DamageCalculator::compact((float) $summary->farmers), 'bg-stat-1', 'text-stat-1'],
-        ['Total Area Damaged (ha)', DamageCalculator::compact((float) $summary->area), 'bg-stat-2', 'text-stat-2'],
-        ['Production Loss (MT)', DamageCalculator::compact((float) $summary->loss), 'bg-stat-4', 'text-stat-4'],
-        ['Est. Cost of Damage (₱)', DamageCalculator::compact((float) $summary->cost), 'bg-stat-3', 'text-stat-3'],
+        ['Farmers Affected', DamageCalculator::compact((float) $summary->farmers), 'bg-stat-1', 'text-stat-1', 'damage-farmers'],
+        ['Total Area Damaged (ha)', DamageCalculator::compact((float) $summary->area), 'bg-stat-2', 'text-stat-2', 'damage-area'],
+        ['Production Loss (MT)', DamageCalculator::compact((float) $summary->loss), 'bg-stat-4', 'text-stat-4', 'damage-loss'],
+        ['Est. Cost of Damage (₱)', DamageCalculator::compact((float) $summary->cost), 'bg-stat-3', 'text-stat-3', 'damage-cost'],
     ];
     $exportQuery = $filters->toQuery();
 @endphp
@@ -59,13 +60,18 @@
 
             {{-- Figma 423:133–148 --}}
             <div class="mt-[16px] grid grid-cols-4 gap-[20px] pl-[1.5px]">
-                @foreach ($cards as [$label, $value, $dot, $text])
-                    <div class="h-[108px] rounded-[16px] bg-[#f7f7f9] pt-[18px] pl-[20px]">
-                        <p class="flex items-center gap-[7px] text-[13px] leading-[17px]"><span class="size-[11px] rounded-[3px] {{ $dot }}"></span>{{ $label }}</p>
-                        <p class="mt-[5px] text-[30px] font-bold leading-[39px] tabular-nums {{ $text }}" data-count-up>{{ $value }}</p>
-                    </div>
+                @foreach ($cards as [$label, $value, $dot, $text, $modal])
+                    {{-- A button (panel): opens the data behind the number. Pointer, lift and "View details" show it can be clicked. --}}
+                    <button type="button" x-data @click="$dispatch('open-modal', '{{ $modal }}')" aria-haspopup="dialog"
+                            class="stat-card group relative h-[108px] cursor-pointer rounded-[16px] border-[1.5px] border-transparent bg-[#f7f7f9] pt-[18px] pl-[20px] text-left transition hover:-translate-y-[2px] hover:border-brand-soft hover:shadow-[0_8px_20px_rgba(90,93,227,0.15)] focus-visible:border-brand-soft focus-visible:outline-none">
+                        <span class="flex items-center gap-[7px] text-[13px] leading-[17px]"><span class="size-[11px] rounded-[3px] {{ $dot }}"></span>{{ $label }}</span>
+                        <span class="mt-[5px] block text-[30px] font-bold leading-[39px] tabular-nums {{ $text }}" data-count-up>{{ $value }}</span>
+                        <span class="absolute right-[16px] bottom-[12px] text-[12px] font-bold text-brand opacity-70 group-hover:opacity-100">View details &rsaquo;</span>
+                    </button>
                 @endforeach
             </div>
+
+            <x-damage.card-details :breakdown="$breakdown" />
 
             {{-- Graphical summary of the same filtered reports (paper 1.4.1). --}}
             <div class="mt-[20px] grid grid-cols-2 gap-[20px] pl-[1.5px]">

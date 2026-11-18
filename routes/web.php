@@ -52,6 +52,8 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
     Route::get('/account/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('/account/password', [PasswordController::class, 'update'])->name('password.update');
     Route::get('/dashboard', DashboardController::class)->middleware('can:dashboard.view')->name('dashboard');
+    // Customizable home page: the widgets this user shows (or back to the role's defaults).
+    Route::put('/account/dashboard', [DashboardController::class, 'customize'])->middleware('can:dashboard.view')->name('dashboard.customize');
     Route::get('/audit-trail', [AuditTrailController::class, 'index'])->middleware('can:audit.view')->name('audit.index');
 
     Route::get('/search', SearchController::class)->middleware('can:beneficiaries.view')->name('search');
