@@ -24,10 +24,10 @@
     --color-field: #e2e2e2;
     --color-arrow: #868686;
     --color-danger: #d64545;
-    --color-stat-1: #c96f3b;
+    --color-stat-1: #b7791f;
     --color-stat-2: #1b2f6b;
     --color-stat-3: #a8790a;
-    --color-stat-4: #2a8fa3;
+    --color-stat-4: #3a78c2;
 }
 
 /* ==== Colour themes (html[data-palette], saved on the account; the side panel's swatches switch them) ====
@@ -42,13 +42,14 @@
     --logo-3: #5a7cc7;
     --logo-leaf: #f5c518;
     --switch-night: #12204b;
+    /* Navy / light blue / gold: passes the colour-blind check (validate_palette.js) in light mode. */
     --chart-claimed: #3a5fbf;
-    --chart-waiting: #2aa0b5;
-    --chart-notclaimable: #d0733f;
+    --chart-waiting: #6fa8e8;
+    --chart-notclaimable: #d99a00;
     /* Avatar circles by role (components/app/avatar). */
     --avatar-administrator: #1b2f6b;
     --avatar-agricultural_technologist: #a8790a;
-    --avatar-data_encoder: #2a8fa3;
+    --avatar-data_encoder: #3a78c2;
     --avatar-agritech_encoder: #2c4a96;
 }
 /* Green & Cream (the Department of Agriculture's colours): cream page, dark green, light green. */
@@ -61,10 +62,10 @@ html[data-palette="green"] {
     --color-panel: #f7f1df;
     --color-accent: #7fd86a;
     --color-accent-soft: #e8f8df;
-    --color-stat-1: #b5651d;
+    --color-stat-1: #a8790a;
     --color-stat-2: #11692e;
     --color-stat-3: #8a6d0f;
-    --color-stat-4: #2a7fb8;
+    --color-stat-4: #3f8f3a;
     --grad-from: #11692e;
     --grad-to: #2f8a45;
     --logo-1: #0b5e27;
@@ -72,12 +73,14 @@ html[data-palette="green"] {
     --logo-3: #56b34f;
     --logo-leaf: #8fd16f;
     --switch-night: #0a4a1f;
+    /* Dark green / light green / gold: light green and gold are close for colour-blind readers (validator warns),
+       so not claimable and low stock also carry a stripe (flat themes, below). */
     --chart-claimed: #11692e;
-    --chart-waiting: #2a7fb8;
-    --chart-notclaimable: #c0507f;
+    --chart-waiting: #6dbb5a;
+    --chart-notclaimable: #d99a00;
     --avatar-administrator: #11692e;
     --avatar-agricultural_technologist: #8a6d0f;
-    --avatar-data_encoder: #2a7fb8;
+    --avatar-data_encoder: #3f8f3a;
     --avatar-agritech_encoder: #1f7a3a;
 }
 /* Violet & Blue: AGAPAY's original colours. */
@@ -459,8 +462,9 @@ html.dark {
     --dark-text: #e8e9f3;
     --dark-muted: #8b8fa8;
     --dark-brand: #f5c84c;
-    --chart-claimed: #5f82d8;
-    --chart-waiting: #1e9e8a;
+    --chart-claimed: #3a5cba;
+    --chart-waiting: #5d98dc;
+    --chart-notclaimable: #b8891d;
 }
 /* Green & Cream: the cream becomes a deep olive; the greens stay, brightened to read on it. */
 html.dark[data-palette="green"] {
@@ -473,9 +477,9 @@ html.dark[data-palette="green"] {
     --dark-text: #eeecdc;
     --dark-muted: #9c9d86;
     --dark-brand: #a8e895;
-    --chart-claimed: #3fa957;
-    --chart-waiting: #4a86d6;
-    --chart-notclaimable: #cf5f8f;
+    --chart-claimed: #2b8042;
+    --chart-waiting: #72b45e;
+    --chart-notclaimable: #b9802a;
 }
 /* The logo's darkest bars brighten in dark mode so they stay visible on the dark header. */
 html.dark:not([data-palette="violet"]):not([data-palette="green"]) { --logo-1: #5a7cc7; --logo-2: #8aa4e0; --logo-3: #c0cff0; }
@@ -486,6 +490,7 @@ html.dark[data-palette="violet"] {
     --dark-brand: #a5a7ff;
     --chart-claimed: #7e80ff;
     --chart-waiting: #1e93ad;
+    --chart-notclaimable: #d0733f;
 }
 
 /* Native controls (open dropdown lists, date pickers, scrollbars) are drawn dark too, so options stay readable. */
@@ -654,4 +659,7 @@ html:not([data-palette="violet"]) .site-header .focus-visible\:outline-brand-sof
 html:not([data-palette="violet"]):not([data-palette="green"]) .nav-enter[aria-current="page"]::before { background-color: var(--color-accent); }
 html:not([data-palette="violet"]) .theme-swatch[aria-checked="true"] { box-shadow: 0 0 0 2px var(--fill), 0 0 0 4px #fff; }
 html:not([data-palette="violet"]) .hover-tint:focus-visible, html:not([data-palette="violet"]) .pill-button:focus-visible, html:not([data-palette="violet"]) .gradient-button:focus-visible { outline-color: var(--color-accent); }
+/* Not claimable and low stock: a fine stripe as well as gold, so they read apart from the light blue or light green
+   without colour (dataviz texture rule); the legend swatch matches. */
+html:not([data-palette="violet"]) .chart-notclaimable { background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / 0.38) 0 2px, transparent 2px 5px); }
 /* ==== End of flat themes ==== */
