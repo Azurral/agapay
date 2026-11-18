@@ -29,7 +29,10 @@ use Throwable;
 final class ReportService
 {
     /** Validation statuses that end a record's claim (spec rule 6). */
-    public const NOT_CLAIMABLE = [InterventionRecord::VALIDATION_DUPLICATE, InterventionRecord::VALIDATION_RELOCATED, InterventionRecord::VALIDATION_INACTIVE];
+    public const NOT_CLAIMABLE = [
+        InterventionRecord::VALIDATION_OFW, InterventionRecord::VALIDATION_BEDRIDDEN, InterventionRecord::VALIDATION_DECEASED,
+        InterventionRecord::VALIDATION_INACTIVE, InterventionRecord::VALIDATION_RELOCATED, InterventionRecord::VALIDATION_DUPLICATE,
+    ];
 
     /**
      * @return array{

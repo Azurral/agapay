@@ -32,12 +32,20 @@ it('lists DA records with Figma columns for the administrator', function () {
         ->assertSee('<p>DA INTERVENTION</p>', false)
         ->assertSee('DA Intervention Beneficiaries')
         ->assertSeeInOrder(['Juan Dela Cruz', 'RSBSA-0231', 'Poblacion', 'Certified Rice Seeds', '2 sacks', 'Eligible', 'Claimed'])
-        ->assertSeeInOrder(['Liza Domingo', 'PAFF', 'Bedridden', 'Unclaimed'])
         ->assertSee('Archived/Restore')
         ->assertSee('>Archive<', false)
         ->assertDontSee('name="validation_status"', false)
         ->assertDontSee('Maria Santos')        // LGU record
         ->assertDontSee('Federico Wasing');    // archived record
+});
+
+it('leaves OFW, bedridden and deceased farmers off the list by itself, and shows them under Not claimable', function () {
+    $this->actingAs($this->admin);
+
+    $this->get('/interventions/da')->assertOk()->assertSee('Juan Dela Cruz')->assertDontSee('Liza Domingo');   // Liza: Bedridden
+    $this->get('/interventions/da?show=not')->assertOk()
+        ->assertSeeInOrder(['Liza Domingo', 'PAFF', 'Bedridden', 'Unclaimed'])->assertDontSee('Juan Dela Cruz');
+    $this->get('/interventions/da?show=all')->assertOk()->assertSee('Juan Dela Cruz')->assertSee('Liza Domingo');
 });
 
 it('gives agri techs validation and status dropdowns without archive controls', function () {
@@ -75,7 +83,7 @@ it('counts only active crisis reports per farmer', function () {
 });
 
 it('lists LGU program records like DA ones, with N/A for a missing RSBSA number', function () {
-    $this->actingAs($this->admin)->get('/interventions/lgu?tab=records')->assertOk()
+    $this->actingAs($this->admin)->get('/interventions/lgu?tab=records&show=all')->assertOk()   // Maria Santos is Bedridden
         ->assertSee('<p>LGU INTERVENTION</p>', false)
         ->assertSeeInOrder(['Maria Santos', 'RSBSA-0198', 'Samoki', 'Complete Fertilizer'])
         ->assertSeeInOrder(['Pedro Reyes', 'N/A', 'Bontoc Ili', 'Emergency Seedlings'])
@@ -91,7 +99,7 @@ it('filters by name, RSBSA, barangay and intervention', function () {
     $this->get('/interventions/da?name=juan')->assertSee('Juan Dela Cruz')->assertDontSee('Rosa Mendez');
     $this->get('/interventions/da?rsbsa=0187')->assertSee('Rosa Mendez')->assertDontSee('Juan Dela Cruz');
     $this->get("/interventions/da?barangay={$samoki}")->assertSee('Rosa Mendez')->assertDontSee('Carlos Ibanez');
-    $this->get("/interventions/da?intervention={$paff}")->assertSee('Liza Domingo')->assertDontSee('Juan Dela Cruz');
+    $this->get("/interventions/da?intervention={$paff}&show=all")->assertSee('Liza Domingo')->assertDontSee('Juan Dela Cruz');
     $this->get('/interventions/da?name=nobody')->assertSee('No intervention records match these filters.');
 });
 

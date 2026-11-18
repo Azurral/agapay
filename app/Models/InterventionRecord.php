@@ -47,8 +47,17 @@ class InterventionRecord extends Model
         self::VALIDATION_DUPLICATE => 'Duplicate',
     ];
 
-    /** Statuses that may be claimed (deceased only through a proxy). */
-    public const CLAIMABLE = [self::VALIDATION_ELIGIBLE, self::VALIDATION_OFW, self::VALIDATION_BEDRIDDEN, self::VALIDATION_DECEASED];
+    /**
+     * Only an Eligible record may be claimed. OFW, Bedridden and Deceased farmers (who cannot come to receive it) and
+     * Inactive, Relocated and Duplicate records are Not claimable: AGAPAY leaves them off the claim lists by itself.
+     */
+    public const CLAIMABLE = [self::VALIDATION_ELIGIBLE];
+
+    /** @return list<string> every status that is Not claimable */
+    public static function notClaimable(): array
+    {
+        return array_values(array_diff(array_keys(self::VALIDATIONS), self::CLAIMABLE));
+    }
 
     public const CLAIM_UNCLAIMED = 'unclaimed';
 

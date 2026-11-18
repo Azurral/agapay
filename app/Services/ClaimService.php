@@ -29,11 +29,6 @@ final class ClaimService
             if ($record->isClaimed() && ! in_array($status, InterventionRecord::CLAIMABLE, true)) {
                 throw new InterventionRuleViolation('Unclaim it first.');
             }
-            // A deceased beneficiary's claim needs a proxy and proof (spec rule 6), also when the status changes after claiming.
-            if ($record->isClaimed() && $status === InterventionRecord::VALIDATION_DECEASED
-                && (trim((string) $record->proxy_claimant) === '' || trim((string) $record->proof_note) === '')) {
-                throw new InterventionRuleViolation('Unclaim it first, or record the proxy.');
-            }
 
             $old = $record->only(['validation_status']);
             $record->forceFill(['validation_status' => $status, 'validated_by' => $actor->id])->saveQuietly();
@@ -44,7 +39,7 @@ final class ClaimService
     }
 
     /**
-     * @param  array{date_distributed?: string|null, quantity?: float|int|string|null, proxy_claimant?: string|null, proof_note?: string|null, override_reason?: string|null}  $input
+     * @param  array{date_distributed?: string|null, quantity?: float|int|string|null, override_reason?: string|null}  $input
      * @param  bool  $historical  Encoding a past distribution from a logbook (audited as "Historical Encoding").
      */
     public function claim(InterventionRecord $record, User $actor, array $input = [], bool $historical = false): InterventionRecord
@@ -52,8 +47,6 @@ final class ClaimService
         $input = Validator::make($input, [
             'date_distributed' => ['nullable', 'date', 'before_or_equal:today'],
             'quantity' => ['nullable', 'numeric', 'min:0', 'max:99999'],
-            'proxy_claimant' => ['nullable', 'string', 'max:255'],
-            'proof_note' => ['nullable', 'string', 'max:1000'],
             'override_reason' => ['nullable', 'string', 'max:1000'],
         ], ['date_distributed.before_or_equal' => 'The distribution date cannot be in the future.'])->validate();
 
@@ -78,20 +71,6 @@ final class ClaimService
                 throw new InterventionRuleViolation("Enter the quantity given out: {$record->intervention->name} is deducted from stock.");
             }
 
-            $deceased = $record->validation_status === InterventionRecord::VALIDATION_DECEASED;
-            $proxy = trim((string) ($input['proxy_claimant'] ?? ''));
-            $proof = trim((string) ($input['proof_note'] ?? ''));
-            if ($deceased) {
-                // Only the Administrator's Process Claim has the proxy fields; other roles are refused even when a
-                // request carries them.
-                if ($actor->role?->slug !== Role::ADMIN) {
-                    throw new InterventionRuleViolation('Only the Administrator can record a proxy claim for a deceased beneficiary.');
-                }
-                if ($proxy === '' || $proof === '') {
-                    throw new InterventionRuleViolation('A deceased beneficiary can only be claimed by a proxy with a proof note.');
-                }
-            }
-
             $override = trim((string) ($input['override_reason'] ?? ''));
             $overridden = false;
             if ($blocker = $this->householdClaim($record)) {
@@ -106,8 +85,6 @@ final class ClaimService
                 'claim_status' => InterventionRecord::CLAIM_CLAIMED,
                 'date_distributed' => $input['date_distributed'] ?? today()->toDateString(),
                 'quantity' => $input['quantity'] ?? $record->quantity,
-                'proxy_claimant' => $deceased ? $proxy : null,
-                'proof_note' => $deceased ? $proof : null,
                 'override_reason' => $overridden ? $override : null,
                 'claimed_by' => $actor->id,
             ])->saveQuietly();
@@ -115,7 +92,7 @@ final class ClaimService
             // Spec rule 7: deduct the stock (throws InsufficientStock, rolling the claim back).
             $this->inventory->syncRecord($record, $actor);
 
-            $keys = ['claim_status', 'validation_status', 'date_distributed', 'proxy_claimant', 'override_reason'];
+            $keys = ['claim_status', 'validation_status', 'date_distributed', 'override_reason'];
             AuditLogger::record(
                 match (true) {
                     $overridden => 'Claimed Intervention (Household Override)',

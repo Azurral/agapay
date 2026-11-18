@@ -154,7 +154,7 @@
                     <span class="shrink-0">Intervention:</span>
                     <select x-model="picked" class="ml-[6px] h-full min-w-0 flex-1 cursor-pointer bg-transparent font-bold outline-none">
                         @foreach ($claimable as $record)
-                            <option value="{{ $record->id }}">{{ $record->intervention->name }} ({{ $record->cycle->code }}){{ $record->validation_status === 'deceased' ? ' · Deceased' : '' }}</option>
+                            <option value="{{ $record->id }}">{{ $record->intervention->name }} ({{ $record->cycle->code }})</option>
                         @endforeach
                     </select>
                 </label>
@@ -162,10 +162,6 @@
                                    placeholder="Amount given out" :error="$errors->intervention->first('quantity')" />
                 <x-ui.inline-field label="Date Distributed" name="date_distributed" type="date" max="{{ now()->toDateString() }}"
                                    :value="old('date_distributed', now()->toDateString())" :error="$errors->intervention->first('date_distributed')" />
-                <div x-show="statuses[picked] === 'deceased'" class="flex flex-col gap-[14px]">
-                    <x-ui.inline-field label="Proxy Claimant" name="proxy_claimant" placeholder="Full name of the family member claiming" :value="old('proxy_claimant')" />
-                    <x-ui.inline-field label="Proof Note" name="proof_note" placeholder="e.g. Death certificate No., barangay certification" :value="old('proof_note')" />
-                </div>
                 @if ($others->isNotEmpty())
                     <x-ui.inline-field label="Override reason (household already claimed)" name="override_reason" placeholder="Administrator only; leave blank normally" :value="old('override_reason')" />
                 @endif

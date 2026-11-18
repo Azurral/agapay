@@ -29,7 +29,7 @@ class InterventionRecordActionController extends Controller
 
     public function claim(Request $request, InterventionRecord $record): RedirectResponse
     {
-        $input = $request->only(['date_distributed', 'quantity', 'proxy_claimant', 'proof_note', 'override_reason']);
+        $input = $request->only(['date_distributed', 'quantity', 'override_reason']);
 
         // Always a live claim: past distributions are encoded through the Add/Edit form, which requires their date.
         return $this->attempt($record,

@@ -56,17 +56,18 @@ it('processes a claim from the admin profile', function () {
     expect($paff->fresh()->claim_status)->toBe('claimed');
 });
 
-it('asks for proxy fields when the record is deceased', function () {
-    $record = record($this->juan, program('da', 'PAFF'), ['validation_status' => 'deceased']);
+it('does not offer OFW, bedridden or deceased records for release, and has no proxy fields', function (string $status) {
+    $record = record($this->juan, program('da', 'PAFF'), ['validation_status' => $status]);
     $this->actingAs($this->admin);
 
-    $this->get(route('beneficiaries.show', $this->juan))->assertSee('Proxy Claimant')->assertSee('Proof Note');
+    $this->get(route('beneficiaries.show', $this->juan))
+        ->assertDontSee('Proxy Claimant')->assertDontSee('Proof Note')
+        ->assertDontSee('PAFF (2026-Q3)</option>', false);
 
-    $this->post(route('intervention-records.claim', $record))
-        ->assertSessionHasErrorsIn('intervention', ['intervention' => 'A deceased beneficiary can only be claimed by a proxy with a proof note.']);
-    $this->post(route('intervention-records.claim', $record), ['proxy_claimant' => 'Maria Dela Cruz', 'proof_note' => 'Death certificate, barangay-certified'])
-        ->assertSessionHasNoErrors();
-});
+    $this->post(route('intervention-records.claim', $record), ['proxy_claimant' => 'Maria Dela Cruz', 'proof_note' => 'Death certificate'])
+        ->assertSessionHasErrorsIn('intervention');
+    expect($record->fresh()->claim_status)->toBe('unclaimed');
+})->with(['ofw', 'bedridden', 'deceased']);
 
 it('lets the admin override the household block with a reason', function () {
     record(($this->person)('Maria', 'Dela Cruz'), program('da', 'PAFF'), ['validation_status' => 'eligible', 'claim_status' => 'claimed', 'date_distributed' => '2026-07-20']);

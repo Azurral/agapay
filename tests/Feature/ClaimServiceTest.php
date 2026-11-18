@@ -111,17 +111,15 @@ it('refuses ineligible statuses', function (string $status, string $label) {
     expect(fn () => $this->claims->claim($record, $this->admin))
         ->toThrow(InterventionRuleViolation::class, "Not eligible: {$label}.");
     expect($record->fresh()->claim_status)->toBe('unclaimed');
-})->with([['inactive', 'Inactive'], ['relocated', 'Relocated'], ['duplicate', 'Duplicate']]);
+})->with([['ofw', 'OFW'], ['bedridden', 'Bedridden'], ['deceased', 'Deceased'], ['inactive', 'Inactive'], ['relocated', 'Relocated'], ['duplicate', 'Duplicate']]);
 
-it('requires a proxy and proof note for deceased beneficiaries', function () {
+it('never releases to an OFW, bedridden or deceased farmer, even when a proxy is named', function () {
     [$juan] = sameHousehold(['Juan']);
     $record = record($juan, program('da', 'Certified Rice Seeds'), ['validation_status' => 'deceased']);
 
-    expect(fn () => $this->claims->claim($record, $this->admin, ['proxy_claimant' => 'Maria Dela Cruz']))
-        ->toThrow(InterventionRuleViolation::class, 'A deceased beneficiary can only be claimed by a proxy with a proof note.');
-
-    $this->claims->claim($record, $this->admin, ['proxy_claimant' => 'Maria Dela Cruz', 'proof_note' => 'Death certificate No. 123, barangay-certified']);
-    expect($record->fresh())->claim_status->toBe('claimed')->proxy_claimant->toBe('Maria Dela Cruz');
+    expect(fn () => $this->claims->claim($record, $this->admin, ['proxy_claimant' => 'Maria Dela Cruz', 'proof_note' => 'Death certificate No. 123']))
+        ->toThrow(InterventionRuleViolation::class, 'Not eligible: Deceased.');
+    expect($record->fresh())->claim_status->toBe('unclaimed')->proxy_claimant->toBeNull();
 });
 
 it('refuses to move a claimed record to a non-claimable status', function (string $status) {
@@ -131,7 +129,7 @@ it('refuses to move a claimed record to a non-claimable status', function (strin
     expect(fn () => $this->claims->validate($record, $status, $this->agritech))
         ->toThrow(InterventionRuleViolation::class, 'Unclaim it first.');
     expect($record->fresh()->validation_status)->toBe('eligible');
-})->with(['inactive', 'relocated', 'duplicate']);
+})->with(['ofw', 'bedridden', 'deceased', 'inactive', 'relocated', 'duplicate']);
 
 it('validates records and refuses unknown statuses', function () {
     [$juan] = sameHousehold(['Juan']);

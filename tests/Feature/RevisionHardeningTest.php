@@ -16,7 +16,7 @@ it('keeps the LGU program records tab when its filters are applied', function ()
     $this->actingAs($this->admin)->get('/interventions/lgu?tab=records')
         ->assertSee('<input type="hidden" name="tab" value="records">', false);
 
-    $this->get('/interventions/lgu?tab=records&barangay='.brgy('Samoki'))
+    $this->get('/interventions/lgu?tab=records&show=all&barangay='.brgy('Samoki'))   // Maria Santos is Bedridden
         ->assertSee('Qty / Unit')->assertSee('Maria Santos')->assertDontSee('Pedro Reyes');
 });
 

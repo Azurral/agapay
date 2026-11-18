@@ -52,6 +52,9 @@ class InterventionController extends Controller
         $barangayId = ctype_digit($request->queryText('barangay')) ? (int) $request->queryText('barangay') : null;
         $name = mb_substr($request->queryText('name'), 0, 100);
         $rsbsa = mb_substr($request->queryText('rsbsa'), 0, 50);
+        // The claim list shows only claimable (Eligible) records; OFW, Bedridden, Deceased, Inactive, Relocated and
+        // Duplicate ones leave it by themselves and are found under Validation: Not claimable.
+        $show = in_array($request->queryText('show'), ['not', 'all'], true) ? $request->queryText('show') : 'claimable';
 
         $records = InterventionRecord::query()
             ->ofSource($source)
@@ -64,6 +67,10 @@ class InterventionController extends Controller
             )))
             ->when($barangayId, fn (Builder $q) => $q->whereHas('beneficiary', fn (Builder $b) => $b->where('barangay_id', $barangayId)))
             ->when($interventionId, fn (Builder $q) => $q->where('intervention_id', $interventionId))
+            ->when($show === 'claimable', fn (Builder $q) => $q->where(fn (Builder $w) => $w
+                ->whereIn('validation_status', InterventionRecord::CLAIMABLE)->orWhere('claim_status', InterventionRecord::CLAIM_CLAIMED)))
+            ->when($show === 'not', fn (Builder $q) => $q->whereIn('validation_status', InterventionRecord::notClaimable())
+                ->where('claim_status', '!=', InterventionRecord::CLAIM_CLAIMED))
             ->orderByDesc('distribution_cycle_id')->orderBy('id')
             ->paginate(15)->withQueryString();
 

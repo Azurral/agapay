@@ -30,13 +30,13 @@ it('turns a double-submitted record into a message', function () {
         ->assertSessionHasErrors(['intervention_id' => 'Another save for this record happened at the same moment. Check the list, then try again if it is missing.']);
 });
 
-it('keeps proxy rules on claimed records', function () {
+it('refuses to mark a claimed record Deceased until it is unclaimed', function () {
     $ana = Beneficiary::where(['first_name' => 'Ana', 'last_name' => 'Dela Cruz'])->sole();
     $record = record($ana, program('lgu', 'Municipal Cash Subsidy'), ['validation_status' => 'eligible', 'distribution_cycle_id' => $this->cycle->id]);
     app(ClaimService::class)->claim($record, $this->admin);
 
     expect(fn () => app(ClaimService::class)->validate($record->fresh(), 'deceased', $this->agritech))
-        ->toThrow(InterventionRuleViolation::class, 'Unclaim it first, or record the proxy.');
+        ->toThrow(InterventionRuleViolation::class, 'Unclaim it first.');
 });
 
 it('keeps the claim form input after a refusal', function () {
@@ -44,9 +44,9 @@ it('keeps the claim form input after a refusal', function () {
     $record = record($ana, program('lgu', 'Municipal Cash Subsidy'), ['validation_status' => 'deceased', 'distribution_cycle_id' => $this->cycle->id]);
 
     $this->actingAs($this->admin)->from(route('beneficiaries.show', $ana))
-        ->post(route('intervention-records.claim', $record), ['proxy_claimant' => 'Pedro Dela Cruz', 'proof_note' => ''])
+        ->post(route('intervention-records.claim', $record), ['date_distributed' => '2026-07-21'])
         ->assertSessionHasErrorsIn('intervention')
-        ->assertSessionHasInput('proxy_claimant', 'Pedro Dela Cruz');
+        ->assertSessionHasInput('date_distributed', '2026-07-21');
 });
 
 it('warns about household claims in the chosen cycle', function () {
@@ -62,12 +62,12 @@ it('warns about household claims in the chosen cycle', function () {
         ->assertSee('Marita Dela Cruz already claimed Certified Rice Seeds in 2026-Q2.');
 });
 
-it('tells encoders who can record a proxy claim', function () {
+it('refuses a deceased farmer claim from the logbook too', function () {
     $ana = Beneficiary::where(['first_name' => 'Ana', 'last_name' => 'Dela Cruz'])->sole();
     $record = record($ana, program('lgu', 'Municipal Cash Subsidy'), ['validation_status' => 'deceased', 'distribution_cycle_id' => $this->cycle->id]);
 
     expect(fn () => app(ClaimService::class)->claim($record, $this->encoder, ['date_distributed' => today()->toDateString()], historical: true))
-        ->toThrow(InterventionRuleViolation::class, 'Only the Administrator can record a proxy claim for a deceased beneficiary.');
+        ->toThrow(InterventionRuleViolation::class, 'Not eligible: Deceased.');
 });
 
 it('shows an inactive program on edit', function () {

@@ -120,7 +120,7 @@ it('separates records that cannot be claimed', function () {
 
     $data = app(ReportService::class)->build(new ReportCriteria($cycle));
     $notClaimable = InterventionRecord::where('distribution_cycle_id', $cycle->id)->where('claim_status', 'unclaimed')
-        ->whereIn('validation_status', ['duplicate', 'relocated', 'inactive'])->count();
+        ->whereIn('validation_status', ['ofw', 'bedridden', 'deceased', 'duplicate', 'relocated', 'inactive'])->count();
 
     expect($data['summary']['not_claimable'])->toBe($notClaimable)
         ->and($data['summary']['assigned'])->toBe($data['summary']['claimed'] + $data['summary']['unclaimed'] + $data['summary']['not_claimable'])

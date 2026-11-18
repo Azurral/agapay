@@ -276,23 +276,27 @@ test('BB-23 DA intervention: one per household per cycle', async ({ page }) => {
     actual(`Juan: Claimed. Maria: refused, message "${await shown(page, /already claimed PAFF for this household/)}".`);
 });
 
-test('BB-24 DA intervention: deceased beneficiary without a proxy', async ({ page }) => {
-    testCase({ module: 'DA intervention', input: 'Agricultural Technologist marks Carlos Ibanez\'s Complete Fertilizer as Deceased; Administrator processes the claim with no proxy name', expected: 'Refused: a proxy and proof note are needed.' });
+test('BB-24 DA intervention: a deceased farmer leaves the claim list by itself', async ({ page }) => {
+    testCase({ module: 'DA intervention', input: "Agricultural Technologist marks Carlos Ibanez's Complete Fertilizer as Deceased", expected: 'AGAPAY removes the record from the claim list; it is listed under Validation: Not claimable.' });
     await login(page, 'Agritech_02');
     await page.goto('/interventions/da?name=Carlos');
     const row = page.locator('div.grid').filter({ hasText: 'Carlos Ibanez' }).filter({ hasText: 'Complete Fertilizer' }).first();
     await row.locator('select[name=validation_status]').selectOption('deceased');
     await page.waitForLoadState('networkidle');
-    await login(page, 'Admin_01');
-    await processClaim(page, 'Carlos Ibanez', 'Complete Fertilizer', { quantity: '1' });
-    actual(`Not claimed; message "${await shown(page, 'A deceased beneficiary can only be claimed by a proxy with a proof note.')}".`);
+    await page.goto('/interventions/da?name=Carlos');
+    await expect(page.getByText('No intervention records match these filters.')).toBeVisible();
+    await page.goto('/interventions/da?name=Carlos&show=not');
+    await expect(page.locator('div.grid').filter({ hasText: 'Carlos Ibanez' }).filter({ hasText: 'Complete Fertilizer' })).toHaveCount(1);
+    actual('Gone from the claim list; listed under Validation: Not claimable.');
 });
 
-test('BB-25 DA intervention: deceased beneficiary claimed by a proxy', async ({ page }) => {
-    testCase({ module: 'DA intervention', input: 'Same record; proxy "Teresa Ibanez (spouse)", proof note "Death certificate No. 2026-114"', expected: 'Claimed through the proxy.' });
+test('BB-25 DA intervention: a deceased farmer cannot be claimed, even by a proxy', async ({ page }) => {
+    testCase({ module: 'DA intervention', input: "Administrator opens Carlos Ibanez's profile to release his Complete Fertilizer", expected: 'Process Claim does not offer the program and has no proxy fields.' });
     await login(page, 'Admin_01');
-    await processClaim(page, 'Carlos Ibanez', 'Complete Fertilizer', { quantity: '1', proxy_claimant: 'Teresa Ibanez (spouse)', proof_note: 'Death certificate No. 2026-114' });
-    actual(`Claimed; profile shows "${await shown(page, /Complete Fertilizer \(\d{4}-Q\d\): Claimed/)}".`);
+    await openProfile(page, 'Carlos Ibanez');
+    await expect(page.locator('option', { hasText: 'Complete Fertilizer (' })).toHaveCount(0);
+    await expect(page.getByText('Proxy Claimant')).toHaveCount(0);
+    actual('Process Claim offers no Complete Fertilizer and has no proxy fields.');
 });
 
 // ---------------------------------------------------------------- LGU interventions
@@ -658,7 +662,7 @@ test('BB-52 LGU intervention: same assistance again in a later cycle', async ({ 
     await expect(page.getByText('2026-Q4 Wet Season added.')).toBeVisible();
     await addRecord(page, 'Joy Kiwang', 'lgu', 'Municipal Cash Subsidy');
     await expect(page.getByText('Intervention record saved.')).toBeVisible();
-    await page.goto('/interventions/lgu?tab=records&name=Joy');
+    await page.goto('/interventions/lgu?tab=records&name=Joy&show=not');   // a Duplicate is Not claimable
     const row = page.locator('div.grid').filter({ hasText: 'Joy Kiwang' }).filter({ hasText: 'Municipal Cash Subsidy' });
     await expect(row.filter({ hasText: 'Duplicate' })).toHaveCount(1);
     await openProfile(page, 'Joy Kiwang');

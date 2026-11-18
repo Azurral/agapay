@@ -20,7 +20,13 @@
     <x-ui.pill-select name="barangay" label="Barangay" :options="['' => 'All'] + $barangays->all()" :selected="request()->queryText('barangay')" :width="$filterWidth" />
     <x-ui.pill-select name="intervention" label="Intervention" :options="['' => 'All'] + $interventions->all()" :selected="request()->queryText('intervention')" :width="$filterWidth" />
     <span class="absolute left-[1024.5px] text-[14px] font-medium text-muted">Qty / Unit</span>
-    <span class="absolute left-[1124.5px] w-[155px] text-center text-[14px] font-medium text-muted">Validation</span>
+    {{-- Not claimable records (OFW, Bedridden, Deceased, Inactive, Relocated, Duplicate) leave the list by themselves. --}}
+    <select name="show" onchange="this.form.submit()" aria-label="Validation"
+            class="absolute left-[1124.5px] w-[155px] cursor-pointer bg-transparent text-center text-[14px] font-medium text-muted outline-none">
+        @foreach (['' => 'Validation: Claimable', 'not' => 'Not claimable', 'all' => 'All'] as $value => $text)
+            <option value="{{ $value }}" @selected(request()->queryText('show') === $value)>{{ $text }}</option>
+        @endforeach
+    </select>
     <span class="absolute left-[1286.5px] w-[155px] text-center text-[14px] font-medium text-muted">Status</span>
     <button type="submit" class="sr-only">Apply filters</button>
 </form>

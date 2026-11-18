@@ -94,7 +94,8 @@ it('rolls back a distributed DE record when stock is short', function () {
 });
 
 it('does not touch stock for cash aid', function () {
-    $liza = ($this->recordOf)('Liza');   // PAFF, bedridden (claimable)
+    $liza = ($this->recordOf)('Liza');   // PAFF (cash aid)
+    $liza->forceFill(['validation_status' => 'eligible'])->saveQuietly();
     $before = InventoryMovement::count();
 
     $this->actingAs($this->admin)->post(route('intervention-records.claim', $liza))->assertSessionHasNoErrors();
@@ -115,7 +116,7 @@ it('requires a quantity to claim a stocked program', function () {
 });
 
 it('offers a quantity field in the Process Claim modal', function () {
-    $liza = Beneficiary::where('first_name', 'Liza')->sole();
+    $carlos = Beneficiary::where('first_name', 'Carlos')->sole();   // Complete Fertilizer, Eligible
 
-    $this->actingAs($this->admin)->get(route('beneficiaries.show', $liza))->assertSee('name="quantity"', false);
+    $this->actingAs($this->admin)->get(route('beneficiaries.show', $carlos))->assertSee('name="quantity"', false);
 });
