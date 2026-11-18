@@ -30,6 +30,7 @@ RUN install-php-extensions pdo_mysql gd intl zip exif bcmath opcache \
 
 COPY docker/php.ini /usr/local/etc/php/conf.d/agapay.ini
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
+COPY docker/mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
 
 WORKDIR /var/www/html
 COPY --from=vendor /app /var/www/html

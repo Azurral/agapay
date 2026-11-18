@@ -3,6 +3,7 @@
 use App\Models\AssistanceRequest;
 use App\Models\Barangay;
 use App\Models\Beneficiary;
+use App\Models\DamageReport;
 use App\Models\InterventionRecord;
 use Database\Seeders\DatabaseSeeder;
 
@@ -37,6 +38,16 @@ it('gives the farmers program records, claims and requests', function () {
         ->and($records->where('claim_status', 'claimed')->count())->toBeGreaterThan(40)
         ->and($records->where('claim_status', 'unclaimed')->count())->toBeGreaterThan(40)
         ->and(AssistanceRequest::whereIn('beneficiary_id', $ids)->count())->toBeGreaterThan(10);
+});
+
+it('grows to a larger count for the scalability test, adding only what is missing', function () {
+    $this->artisan('agapay:demo-data', ['--force' => true])->assertSuccessful();
+    $this->artisan('agapay:demo-data', ['--force' => true, '--count' => 300])->assertSuccessful();
+
+    $demo = Beneficiary::where('source', 'demo');
+    expect($demo->count())->toBe(300)
+        ->and((clone $demo)->distinct()->count('rsbsa_number'))->toBe((clone $demo)->whereNotNull('rsbsa_number')->count())   // no duplicate RSBSA No.
+        ->and(DamageReport::whereIn('beneficiary_id', (clone $demo)->select('id'))->count())->toBeGreaterThan(20);
 });
 
 it('runs only once and only with --force', function () {

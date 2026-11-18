@@ -6,6 +6,7 @@ use App\Models\AssistanceRequest;
 use App\Models\Barangay;
 use App\Models\Beneficiary;
 use App\Models\DistributionCycle;
+use App\Models\Intervention;
 use App\Models\InterventionRecord;
 use App\Models\InventoryItem;
 
@@ -50,25 +51,27 @@ final class DashboardOverview
     /** @return list<array{name: string, claimed: int, waiting: int, not_claimable: int, total: int}> */
     private static function programs(DistributionCycle $cycle): array
     {
-        return InterventionRecord::query()
+        // Counted by the database, grouped per program (the scalability test showed that loading every record of
+        // the cycle into PHP made Home slow with 5,000 farmers and 30 staff at once).
+        $claimable = implode(',', array_map(fn (string $s) => "'".$s."'", InterventionRecord::CLAIMABLE));
+        $counts = InterventionRecord::query()->toBase()
             ->where('distribution_cycle_id', $cycle->id)
+            ->whereNull('deleted_at')
             ->whereIn('beneficiary_id', Beneficiary::select('id'))   // archived farmers stay out
-            ->with('intervention:id,source,name')
-            ->get(['id', 'intervention_id', 'validation_status', 'claim_status'])
+            ->selectRaw('intervention_id, COUNT(*) AS total,'
+                ." SUM(CASE WHEN claim_status = 'claimed' THEN 1 ELSE 0 END) AS claimed,"
+                ." SUM(CASE WHEN claim_status <> 'claimed' AND forward_status IS NULL AND validation_status IN ({$claimable}) THEN 1 ELSE 0 END) AS waiting")
             ->groupBy('intervention_id')
-            ->map(function ($records) {
-                $claimed = $records->filter->isClaimed()->count();
-                $waiting = $records->reject->isClaimed()->filter(fn ($r) => in_array($r->validation_status, InterventionRecord::CLAIMABLE, true))->count();
-                $intervention = $records->first()->intervention;
+            ->get();
+        $names = Intervention::whereIn('id', $counts->pluck('intervention_id'))->get(['id', 'source', 'name'])->keyBy('id');
 
-                return [
-                    'name' => strtoupper($intervention->source).' - '.$intervention->name,
-                    'claimed' => $claimed,
-                    'waiting' => $waiting,
-                    'not_claimable' => $records->count() - $claimed - $waiting,
-                    'total' => $records->count(),
-                ];
-            })
+        return $counts->map(fn ($row) => [
+            'name' => strtoupper((string) $names[$row->intervention_id]?->source).' - '.$names[$row->intervention_id]?->name,
+            'claimed' => (int) $row->claimed,
+            'waiting' => (int) $row->waiting,
+            'not_claimable' => (int) $row->total - (int) $row->claimed - (int) $row->waiting,
+            'total' => (int) $row->total,
+        ])
             ->sortBy([['total', 'desc'], ['name', 'asc']])
             ->values()
             ->all();

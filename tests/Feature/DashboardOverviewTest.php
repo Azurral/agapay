@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\InterventionRecord;
 use App\Models\User;
 use App\Support\DashboardOverview;
 use Database\Seeders\DatabaseSeeder;
@@ -64,3 +65,11 @@ it('puts each role\'s default overview on its home page', function (string $user
     'agricultural technologist' => ['Agritech_02', ['Farmers per barangay', 'Latest crisis damage', 'Next claiming dates'], ['low-stock level']],
     'data encoder' => ['Encoder_03', ['low-stock level', 'Next claiming dates', 'Pending Encoding Queue'], ['Open Walk-in Approvals']],
 ]);
+
+it('does not count a record forwarded to a later cycle as still waiting', function () {
+    $carlos = InterventionRecord::whereHas('beneficiary', fn ($q) => $q->where('first_name', 'Carlos'))->sole();
+    $carlos->forceFill(['forward_status' => 'forwarded'])->saveQuietly();
+
+    expect(collect(DashboardOverview::build()['programs'])->keyBy('name')['DA - Complete Fertilizer'])
+        ->toMatchArray(['claimed' => 0, 'waiting' => 0, 'not_claimable' => 1]);
+});

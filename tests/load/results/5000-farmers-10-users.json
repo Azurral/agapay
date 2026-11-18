@@ -1,0 +1,167 @@
+{
+  "label": "5000 farmers - 10 users",
+  "url": "http://localhost:8099",
+  "users": 10,
+  "seconds": 120,
+  "requests": 1668,
+  "failed": 0,
+  "errorRate": 0,
+  "perSecond": 13.806804072510554,
+  "avg": 57.3899278177458,
+  "p95": 106.00530000000435,
+  "max": 925.0487999999998,
+  "pages": [
+    {
+      "page": "/beneficiaries/approvals",
+      "requests": 60,
+      "failed": 0,
+      "avg": 25.218786666666322,
+      "p95": 33.25909999999931,
+      "max": 76.8907999999999
+    },
+    {
+      "page": "/beneficiaries/{id}",
+      "requests": 204,
+      "failed": 0,
+      "avg": 32.23656862745108,
+      "p95": 38.614099999991595,
+      "max": 83.69730000000004
+    },
+    {
+      "page": "/beneficiaries",
+      "requests": 72,
+      "failed": 0,
+      "avg": 35.14410277777652,
+      "p95": 42.51230000000214,
+      "max": 89.28920000000016
+    },
+    {
+      "page": "/search?q=Ramos",
+      "requests": 71,
+      "failed": 0,
+      "avg": 37.75905211267533,
+      "p95": 47.42559999998775,
+      "max": 96.20229999999992
+    },
+    {
+      "page": "/intervention-records",
+      "requests": 73,
+      "failed": 0,
+      "avg": 81.6971136986306,
+      "p95": 97.61999999999534,
+      "max": 170.75150000000008
+    },
+    {
+      "page": "/interventions/lgu?tab=records&show=all",
+      "requests": 60,
+      "failed": 0,
+      "avg": 60.11917833333298,
+      "p95": 64.0821999999971,
+      "max": 171.74530000000004
+    },
+    {
+      "page": "/damage-reports?disaster=all",
+      "requests": 131,
+      "failed": 0,
+      "avg": 73.20453129771026,
+      "p95": 88.59119999999984,
+      "max": 190.75290000000018
+    },
+    {
+      "page": "/dashboard",
+      "requests": 205,
+      "failed": 0,
+      "avg": 93.99397219512173,
+      "p95": 116.03489999999874,
+      "max": 925.0487999999998
+    },
+    {
+      "page": "/search?q=Dela",
+      "requests": 60,
+      "failed": 0,
+      "avg": 61.88707666666719,
+      "p95": 71.226800000004,
+      "max": 88.22939999999653
+    },
+    {
+      "page": "/inventory",
+      "requests": 133,
+      "failed": 0,
+      "avg": 42.321281203006954,
+      "p95": 47.9828000000125,
+      "max": 57.62310000000434
+    },
+    {
+      "page": "/claiming",
+      "requests": 204,
+      "failed": 0,
+      "avg": 25.962083333333812,
+      "p95": 30.04989999999816,
+      "max": 39.15230000000156
+    },
+    {
+      "page": "/interventions/da",
+      "requests": 132,
+      "failed": 0,
+      "avg": 104.52943560606069,
+      "p95": 116.55629999999655,
+      "max": 912.2722000000001
+    },
+    {
+      "page": "/audit-trail",
+      "requests": 59,
+      "failed": 0,
+      "avg": 27.979203389830086,
+      "p95": 33.643599999999424,
+      "max": 36.19640000000072
+    },
+    {
+      "page": "/interventions/lgu?tab=records",
+      "requests": 71,
+      "failed": 0,
+      "avg": 60.63120845070391,
+      "p95": 66.71739999999409,
+      "max": 70.33160000000498
+    },
+    {
+      "page": "/search?q=Kinaw",
+      "requests": 73,
+      "failed": 0,
+      "avg": 50.603069863013886,
+      "p95": 60.28940000000148,
+      "max": 65.27019999999902
+    },
+    {
+      "page": "/interventions/da?page=3",
+      "requests": 60,
+      "failed": 0,
+      "avg": 98.50713333333397,
+      "p95": 111.56640000000061,
+      "max": 148.1877999999997
+    }
+  ],
+  "heavy": [
+    {
+      "name": "Distribution list export (Excel)",
+      "path": "/export/download",
+      "ms": 6006,
+      "status": 200,
+      "kb": 409
+    },
+    {
+      "name": "Crisis damage PDF",
+      "path": "/damage-reports/pdf?disaster=all",
+      "ms": 5197,
+      "status": 200,
+      "kb": 964
+    },
+    {
+      "name": "Crisis damage export (Excel)",
+      "path": "/damage-reports/export?disaster=all",
+      "ms": 368,
+      "status": 200,
+      "kb": 45
+    }
+  ],
+  "finishedAt": "2026-11-18T17:18:30.027Z"
+}
