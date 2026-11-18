@@ -26,8 +26,8 @@ it('keeps the contact number out of the audit trail', function () {
     $logged = AuditLog::where(['auditable_type' => $farmer->getMorphClass(), 'auditable_id' => $farmer->id])->get()
         ->map(fn (AuditLog $log) => json_encode([$log->old_values, $log->new_values]))->implode(' ');
 
-    expect($logged)->not->toContain('0917')
-        ->and($logged)->not->toContain('0918')
+    expect($logged)->not->toContain('555-0101')
+        ->and($logged)->not->toContain('222-3333')
         ->and($logged)->toContain('(hidden)');
 });
 
