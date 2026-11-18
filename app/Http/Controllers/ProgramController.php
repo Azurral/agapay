@@ -58,6 +58,7 @@ class ProgramController extends Controller
                 }
             }],
             'unit' => ['nullable', 'string', 'max:20'],
+            'kind' => ['nullable', 'string', Rule::in(array_keys(Intervention::KINDS))],
         ], [
             'name.required' => 'Enter the program name.',
             'source.*' => 'Choose DA or LGU.',
@@ -65,6 +66,7 @@ class ProgramController extends Controller
         ]);
 
         return [...$data,
+            'kind' => $request->input('kind') === Intervention::KIND_CASH ? Intervention::KIND_CASH : Intervention::KIND_GOODS,
             'one_per_household' => $request->boolean('one_per_household'),
             'allow_repeat' => $request->boolean('allow_repeat'),
             'is_active' => $request->boolean('is_active'),

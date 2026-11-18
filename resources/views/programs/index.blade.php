@@ -2,11 +2,11 @@
     $cols = 'grid-cols-[1fr_120px_170px_150px_120px_100px_70px]';
     $editing = old('editing_id');
     $programData = collect($groups)->flatMap(fn ($g) => $g[2])->map(fn ($p) => [
-        'id' => $p->id, 'source' => $p->source, 'name' => $p->name, 'unit' => $p->unit,
+        'id' => $p->id, 'source' => $p->source, 'name' => $p->name, 'kind' => $p->kind, 'unit' => $p->unit,
         'one_per_household' => $p->one_per_household, 'allow_repeat' => $p->allow_repeat, 'is_active' => $p->is_active,
         'url' => route('programs.update', $p),
     ])->values();
-    $oldForm = ['id' => $editing ? (int) $editing : null, 'source' => old('source', 'lgu'), 'name' => old('name', ''), 'unit' => old('unit', ''),
+    $oldForm = ['id' => $editing ? (int) $editing : null, 'source' => old('source', 'lgu'), 'name' => old('name', ''), 'kind' => old('kind', 'goods'), 'unit' => old('unit', ''),
         'one_per_household' => (bool) old('one_per_household'), 'allow_repeat' => (bool) old('allow_repeat'), 'is_active' => (bool) old('is_active', true)];
 @endphp
 <x-layouts.app title="PROGRAMS">
@@ -15,7 +15,7 @@
 
     <div class="flex flex-col gap-[14px]" x-data="{
             programs: @js($programData), form: @js($oldForm), storeUrl: @js(route('programs.store')),
-            add(source) { this.form = { id: null, source, name: '', unit: '', one_per_household: false, allow_repeat: false, is_active: true }; $dispatch('open-modal', 'program-form'); },
+            add(source) { this.form = { id: null, source, name: '', kind: 'goods', unit: '', one_per_household: false, allow_repeat: false, is_active: true }; $dispatch('open-modal', 'program-form'); },
             edit(id) { this.form = { ...this.programs.find(p => p.id === id) }; $dispatch('open-modal', 'program-form'); },
         }">
         @foreach ($groups as $source => [$title, $hint, $programs])
@@ -64,6 +64,13 @@
                         </select>
                     </label>
                     <x-ui.inline-field label="Program" name="name" maxlength="100" placeholder="e.g. Heirloom Rice Seeds" required x-model="form.name" :error="$errors->first('name')" />
+                    <label class="flex h-[39px] items-center rounded-[15px] bg-brand-soft/10 px-[16px] text-[14px]">
+                        <span class="font-bold">Type:</span>
+                        <select name="kind" x-model="form.kind" class="ml-[6px] h-full min-w-0 flex-1 cursor-pointer bg-transparent font-bold outline-none">
+                            <option value="goods">Goods (seeds, fertilizer, materials)</option>
+                            <option value="cash">Cash aid (amount in pesos)</option>
+                        </select>
+                    </label>
                     <x-ui.inline-field label="Unit" name="unit" maxlength="20" placeholder="e.g. sack, kg, L (optional)" x-model="form.unit" :error="$errors->first('unit')" />
                     <div class="flex flex-col justify-center gap-[6px] pl-[4px] text-[14px] font-bold">
                         <label class="flex cursor-pointer items-center gap-[8px]"><input type="hidden" name="one_per_household" value="0"><input type="checkbox" name="one_per_household" value="1" x-model="form.one_per_household" class="size-[16px] accent-brand"> One per household per cycle</label>

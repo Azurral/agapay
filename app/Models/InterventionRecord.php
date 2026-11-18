@@ -140,6 +140,13 @@ class InterventionRecord extends Model
             return '-';
         }
 
+        // Cash aid: the amount in pesos, e.g. ₱5,000.
+        if ($this->intervention?->isCash()) {
+            $amount = (float) $this->quantity;
+
+            return '₱'.number_format($amount, fmod($amount, 1.0) == 0.0 ? 0 : 2);
+        }
+
         $qty = rtrim(rtrim((string) $this->quantity, '0'), '.');
         $unit = (string) $this->intervention?->unit;
 

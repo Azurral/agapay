@@ -30,6 +30,8 @@ fi
 # Demo copies made before farm locations existed: give the sample farmers one, for the photo GPS check.
 if [ "${AGAPAY_SAMPLE_DATA:-false}" = "true" ]; then
     php artisan agapay:demo-farm-locations --force
+    # About 120 more made-up farmers with complete records (added once).
+    php artisan agapay:demo-data --force
 fi
 php artisan config:cache
 php artisan route:cache

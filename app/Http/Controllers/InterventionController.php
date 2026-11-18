@@ -49,6 +49,8 @@ class InterventionController extends Controller
 
         $interventions = Intervention::where('source', $source)->orderBy('name')->pluck('name', 'id');
         $interventionId = ctype_digit($request->queryText('intervention')) ? (int) $request->queryText('intervention') : null;
+        // "All goods" / "All cash" (panel: a filter for goods or cash).
+        $kind = in_array($request->queryText('intervention'), array_keys(Intervention::KINDS), true) ? $request->queryText('intervention') : null;
         $barangayId = ctype_digit($request->queryText('barangay')) ? (int) $request->queryText('barangay') : null;
         $name = mb_substr($request->queryText('name'), 0, 100);
         $rsbsa = mb_substr($request->queryText('rsbsa'), 0, 50);
@@ -67,6 +69,7 @@ class InterventionController extends Controller
             )))
             ->when($barangayId, fn (Builder $q) => $q->whereHas('beneficiary', fn (Builder $b) => $b->where('barangay_id', $barangayId)))
             ->when($interventionId, fn (Builder $q) => $q->where('intervention_id', $interventionId))
+            ->when($kind, fn (Builder $q) => $q->whereIn('intervention_id', Intervention::where('kind', $kind)->select('id')))
             ->when($show === 'claimable', fn (Builder $q) => $q->where(fn (Builder $w) => $w
                 ->whereIn('validation_status', InterventionRecord::CLAIMABLE)->orWhere('claim_status', InterventionRecord::CLAIM_CLAIMED)))
             ->when($show === 'not', fn (Builder $q) => $q->whereIn('validation_status', InterventionRecord::notClaimable())

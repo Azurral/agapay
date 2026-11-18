@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['source', 'name', 'unit', 'inventory_item_id', 'one_per_household', 'allow_repeat', 'is_active'])]
+#[Fillable(['source', 'name', 'kind', 'unit', 'inventory_item_id', 'one_per_household', 'allow_repeat', 'is_active'])]
 class Intervention extends Model
 {
     use Auditable;
@@ -21,6 +21,18 @@ class Intervention extends Model
     public const SOURCE_LGU = 'lgu';
 
     public const SOURCES = [self::SOURCE_DA, self::SOURCE_LGU];
+
+    /** Goods (seeds, fertilizer, pipes, ...) or cash aid; a cash record's quantity is the amount in pesos. */
+    public const KIND_GOODS = 'goods';
+
+    public const KIND_CASH = 'cash';
+
+    public const KINDS = [self::KIND_GOODS => 'Goods', self::KIND_CASH => 'Cash'];
+
+    public function isCash(): bool
+    {
+        return $this->kind === self::KIND_CASH;
+    }
 
     /** Excel import note when a DA program is skipped for a farmer without an RSBSA number. */
     public const RSBSA_REQUIRED_MESSAGE = "no RSBSA No. (DA programs need one; LGU programs don't)";

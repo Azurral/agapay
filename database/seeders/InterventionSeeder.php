@@ -35,6 +35,7 @@ class InterventionSeeder extends Seeder
     {
         foreach (self::PROGRAMS as [$source, $name, $unit, $onePerHousehold, $allowRepeat]) {
             Intervention::updateOrCreate(['source' => $source, 'name' => $name], [
+                'kind' => in_array($name, ['PAFF', 'RFFA', 'Municipal Cash Subsidy'], true) ? Intervention::KIND_CASH : Intervention::KIND_GOODS,
                 'unit' => $unit, 'one_per_household' => $onePerHousehold, 'allow_repeat' => $allowRepeat, 'is_active' => true,
             ]);
         }

@@ -18,7 +18,7 @@
     <x-ui.pill-input name="name" placeholder="Search Name..." :value="request()->queryText('name')" :width="$filterWidth" />
     <x-ui.pill-input name="rsbsa" placeholder="RSBSA Number..." :value="request()->queryText('rsbsa')" :width="$filterWidth" />
     <x-ui.pill-select name="barangay" label="Barangay" :options="['' => 'All'] + $barangays->all()" :selected="request()->queryText('barangay')" :width="$filterWidth" />
-    <x-ui.pill-select name="intervention" label="Intervention" :options="['' => 'All'] + $interventions->all()" :selected="request()->queryText('intervention')" :width="$filterWidth" />
+    <x-ui.pill-select name="intervention" label="Intervention" :options="['' => 'All', 'goods' => 'All goods', 'cash' => 'All cash'] + $interventions->all()" :selected="request()->queryText('intervention')" :width="$filterWidth" />
     <span class="absolute left-[1024.5px] text-[14px] font-medium text-muted">Qty / Unit</span>
     {{-- Not claimable records (OFW, Bedridden, Deceased, Inactive, Relocated, Duplicate) leave the list by themselves. --}}
     <select name="show" onchange="this.form.submit()" aria-label="Validation"
