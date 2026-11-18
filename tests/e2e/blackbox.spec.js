@@ -454,7 +454,8 @@ test('BB-35 Crisis: validate a damage report', async ({ page }) => {
     testCase({ module: 'Crisis and damage', input: 'Agricultural Technologist opens Bryan Fagyao\'s report and clicks Validate Report', expected: 'The report becomes Validated.' });
     await login(page, 'Agritech_02');
     await page.goto('/damage-reports?status=');
-    await page.locator('a', { hasText: 'Bryan Fagyao' }).first().click();
+    // The report link in the list (the Farmers affected window lists the same names, hidden until opened).
+    await page.getByRole('listitem').filter({ hasText: 'Bryan Fagyao' }).locator('a', { hasText: 'Bryan Fagyao' }).first().click();
     await page.getByRole('button', { name: 'Validate Report' }).click();
     actual(`Message "${await shown(page, 'Damage report validated.')}".`);
 });

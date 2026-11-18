@@ -8,6 +8,9 @@ const TODAY = new Date().toISOString().slice(0, 10);
 const scratch = mkdtempSync(join(tmpdir(), 'agapay-e2e-'));
 
 async function login(page, username) {
+    // A background request still running (e.g. saving the menu's open/closed state) could set the old session cookie
+    // again after it is cleared, so wait for it first.
+    await page.waitForLoadState('networkidle');
     await page.context().clearCookies();   // a signed-in user would be sent past /login
     await page.goto('/login');
     await page.fill('#username', username);
