@@ -20,11 +20,30 @@ use Illuminate\Support\Facades\DB;
     'first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'house_no', 'street', 'sitio', 'barangay_id', 'contact_number',
     'farm_area_ha', 'crop_type', 'rsbsa_number', 'rsbsa_status', 'rsbsa_status_reason', 'life_status',
     'encoding_issue', 'source', 'consent_confirmed_at', 'consent_confirmed_by', 'created_by', 'updated_by',
+    'valid_id_type', 'valid_id_number', 'valid_id_photo', 'verification_status', 'verified_by', 'verified_at', 'rejection_reason',
 ])]
 class Beneficiary extends Model
 {
     /** @use HasFactory<BeneficiaryFactory> */
     use Auditable, HasFactory, SoftDeletes;
+
+    /** Valid IDs accepted for a walk-in registration (slug => label). */
+    public const VALID_IDS = [
+        'philsys' => 'PhilSys National ID',
+        'voters' => "Voter's ID",
+        'drivers' => "Driver's License",
+        'umid' => 'UMID',
+        'senior' => 'Senior Citizen ID',
+        'postal' => 'Postal ID',
+        'barangay' => 'Barangay Certificate',
+    ];
+
+    /** Walk-in verification (no ghost farmers): pending until the Administrator approves or rejects. */
+    public const VERIFICATION_PENDING = 'pending';
+
+    public const VERIFICATION_VERIFIED = 'verified';
+
+    public const VERIFICATION_REJECTED = 'rejected';
 
     /** Every profile is registered on entry (OMAG no longer tracks an RSBSA application workflow). */
     public const RSBSA_REGISTERED = 'registered';
@@ -160,7 +179,8 @@ class Beneficiary extends Model
     protected function casts(): array
     {
         // The contact number is encrypted in the database with the server's APP_KEY (privacy on the cloud copy).
-        return ['birthdate' => 'date', 'consent_confirmed_at' => 'datetime', 'contact_number' => 'encrypted'];
+        return ['birthdate' => 'date', 'consent_confirmed_at' => 'datetime', 'contact_number' => 'encrypted',
+            'valid_id_number' => 'encrypted', 'verified_at' => 'datetime'];
     }
 
     public function barangay(): BelongsTo
@@ -188,6 +208,31 @@ class Beneficiary extends Model
     public function latestRecord(): HasOne
     {
         return $this->hasOne(InterventionRecord::class)->ofMany(['distribution_cycle_id' => 'max', 'id' => 'max']);
+    }
+
+    public function isVerified(): bool
+    {
+        return ($this->verification_status ?? self::VERIFICATION_VERIFIED) === self::VERIFICATION_VERIFIED;
+    }
+
+    public function validIdLabel(): ?string
+    {
+        return self::VALID_IDS[$this->valid_id_type] ?? null;
+    }
+
+    /** Why this farmer cannot be put on a program yet, or null when verified. */
+    public function unverifiedReason(): ?string
+    {
+        return match ($this->verification_status) {
+            self::VERIFICATION_PENDING => "{$this->fullName()} is waiting for the Administrator's approval (walk-in registration).",
+            self::VERIFICATION_REJECTED => "{$this->fullName()}'s registration was rejected: {$this->rejection_reason}",
+            default => null,
+        };
+    }
+
+    public function verifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 
     public function consentConfirmer(): BelongsTo

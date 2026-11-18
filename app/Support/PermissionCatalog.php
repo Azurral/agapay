@@ -16,6 +16,7 @@ final class PermissionCatalog
         'beneficiaries.view' => ['View beneficiary profiles', 'Beneficiaries'],
         'beneficiaries.manage' => ['Add and edit beneficiary profiles', 'Beneficiaries'],
         'rsbsa.register' => ['Add beneficiaries', 'Beneficiaries'],
+        'beneficiaries.approve' => ['Approve walk-in registrations', 'Beneficiaries'],
         'interventions.view' => ['View DA and LGU intervention lists', 'Interventions'],
         'interventions.validate' => ['Change eligibility status (e.g. Deceased, Duplicate)', 'Interventions'],
         'interventions.claim' => ['Process intervention claims', 'Interventions'],

@@ -28,6 +28,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SidebarController;
 use App\Http\Controllers\SystemUpdateController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WalkInApprovalController;
 use App\Models\Intervention;
 use Illuminate\Support\Facades\Route;
 
@@ -58,6 +59,13 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
     // Registered before /beneficiaries/{beneficiary} so "create" is not read as a profile id.
     Route::get('/beneficiaries/create', [BeneficiaryRegistrationController::class, 'create'])->middleware('can:rsbsa.register')->name('beneficiaries.create');
     Route::post('/beneficiaries', [BeneficiaryRegistrationController::class, 'store'])->middleware('can:rsbsa.register')->name('beneficiaries.store');
+    // Walk-in verification (no ghost farmers): the Administrator approves or rejects each hand-entered registration.
+    Route::middleware('can:beneficiaries.approve')->group(function () {
+        Route::get('/beneficiaries/approvals', [WalkInApprovalController::class, 'index'])->name('beneficiaries.approvals');
+        Route::post('/beneficiaries/{beneficiary}/approve', [WalkInApprovalController::class, 'approve'])->name('beneficiaries.approve');
+        Route::post('/beneficiaries/{beneficiary}/reject', [WalkInApprovalController::class, 'reject'])->name('beneficiaries.reject');
+    });
+    Route::get('/beneficiaries/{beneficiary}/valid-id', [WalkInApprovalController::class, 'photo'])->middleware('can:beneficiaries.view')->name('beneficiaries.valid-id');
     Route::get('/beneficiaries/{beneficiary}', [BeneficiaryController::class, 'show'])->middleware('can:beneficiaries.view')->name('beneficiaries.show');
     Route::put('/beneficiaries/{beneficiary}', [BeneficiaryController::class, 'update'])->middleware('can:beneficiaries.manage')->name('beneficiaries.update');
 

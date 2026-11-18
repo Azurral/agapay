@@ -110,6 +110,10 @@ function validRegistration(array $overrides = []): array
         'farm_area_ha' => '1.5',
         'crop_type' => 'Cabbage',
         'consent' => '1',
+        // Walk-in verification (no ghost farmers): a valid ID with its number and a photo.
+        'valid_id_type' => 'voters',
+        'valid_id_number' => 'VIN-1234-5678',
+        'valid_id_photo' => UploadedFile::fake()->image('valid-id.jpg', 600, 380),
         ...$overrides,
     ];
 }

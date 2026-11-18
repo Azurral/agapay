@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Beneficiary;
 use App\Models\Intervention;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 /** Figma 446:198 Add / Edit Intervention Record. The beneficiary is chosen on create only. */
 class InterventionRecordRequest extends FormRequest
@@ -41,6 +43,20 @@ class InterventionRecordRequest extends FormRequest
             'date_distributed.required_if' => 'Enter the date it was distributed.',
             'date_distributed.before_or_equal' => 'The distribution date cannot be in the future.',
         ];
+    }
+
+    /** No ghost farmers: a walk-in waiting for (or refused) the Administrator's approval gets no program yet. */
+    public function after(): array
+    {
+        return [function (Validator $validator) {
+            if ($validator->errors()->has('beneficiary_id') || ! $this->filled('beneficiary_id')) {
+                return;
+            }
+            $reason = Beneficiary::find((int) $this->input('beneficiary_id'))?->unverifiedReason();
+            if ($reason) {
+                $validator->errors()->add('beneficiary_id', $reason);
+            }
+        }];
     }
 
     public function wantsDistributed(): bool

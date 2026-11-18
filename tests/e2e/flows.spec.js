@@ -62,9 +62,14 @@ test('an encoder adds a farmer without an RSBSA number, who shows as N/A on the 
     await page.selectOption('[name=barangay_id]', { label: 'Samoki' });
     await page.fill('[name=farm_area_ha]', '1.25');
     await page.check('[name=consent]');
+    await page.selectOption('[name=valid_id_type]', 'philsys');
+    await page.fill('[name=valid_id_number]', '1234-5678-9012-3456');
+    const id = join(scratch, 'valid-id.png');
+    writeFileSync(id, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'));
+    await page.setInputFiles('input[name=valid_id_photo]', id);
     await page.getByRole('button', { name: /Add Beneficiary/ }).last().click();
 
-    await expect(page.getByText('Lito Bayang was added.')).toBeVisible();
+    await expect(page.getByText("Lito Bayang was added and is waiting for the Administrator's approval.")).toBeVisible();
 
     await login(page, 'Admin_01');
     await page.goto('/interventions/lgu?name=Lito');

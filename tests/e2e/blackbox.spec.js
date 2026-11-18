@@ -67,6 +67,20 @@ async function fillFarmer(page, { first, last, born = '1980-03-15', rsbsa = '', 
     if (rsbsa) await page.fill('[name=rsbsa_number]', rsbsa);
     if (area !== '') await page.fill('[name=farm_area_ha]', area);
     if (consent) await page.check('[name=consent]');
+    // Walk-in verification: a valid ID with its number and a photo.
+    await page.selectOption('[name=valid_id_type]', 'voters');
+    await page.fill('[name=valid_id_number]', 'VIN-1234-5678');
+    const id = join(scratch, 'valid-id.png');
+    writeFileSync(id, PNG);
+    await page.setInputFiles('input[name=valid_id_photo]', id);
+}
+
+/** The Administrator approves a walk-in registration on Walk-in Approvals. */
+async function approveWalkIn(page, name) {
+    await page.goto('/beneficiaries/approvals');
+    const row = page.locator('div.grid').filter({ hasText: name }).first();
+    await row.getByRole('button', { name: 'Approve' }).click();
+    await expect(page.getByText(`${name} was approved.`)).toBeVisible();
 }
 const addFarmer = async (page) => { await skipBrowserChecks(page); await page.getByRole('button', { name: /Add Beneficiary/ }).last().click(); };
 
@@ -154,7 +168,7 @@ test('BB-06 Beneficiary: add with complete details', async ({ page }) => {
     await login(page, 'Encoder_03');
     await fillFarmer(page, { first: 'Bryan', last: 'Fagyao', rsbsa: 'RSBSA-9001', area: '1.5' });
     await addFarmer(page);
-    actual(`Saved; message "${await shown(page, 'Bryan Fagyao was added.')}" and the profile opened.`);
+    actual(`Saved; message "${await shown(page, /Bryan Fagyao was added/)}" and the profile opened.`);
 });
 
 test('BB-07 Beneficiary: required fields left blank', async ({ page }) => {
@@ -180,7 +194,7 @@ test('BB-09 Beneficiary: age exactly 18 today', async ({ page }) => {
     await login(page, 'Encoder_03');
     await fillFarmer(page, { first: 'Joy', last: 'Kiwang', born: birthdate(18) });
     await addFarmer(page);
-    actual(`Saved; message "${await shown(page, 'Joy Kiwang was added.')}".`);
+    actual(`Saved; message "${await shown(page, /Joy Kiwang was added/)}".`);
 });
 
 for (const [id, area, ok] of [['BB-10', '-0.01', false], ['BB-11', '0', true], ['BB-12', '9999.99', true], ['BB-13', '10000', false]]) {
@@ -194,7 +208,7 @@ for (const [id, area, ok] of [['BB-10', '-0.01', false], ['BB-11', '0', true], [
         await fillFarmer(page, { first: name[0], last: name[1], area });
         await addFarmer(page);
         actual(ok
-            ? `Saved; message "${await shown(page, `${name[0]} ${name[1]} was added.`)}".`
+            ? `Saved; message "${await shown(page, new RegExp(`${name[0]} ${name[1]} was added`))}".`
             : `Not saved; message "${await shown(page, 'Enter the farm area in hectares, e.g. 1.5.')}".`);
     });
 }
@@ -243,6 +257,10 @@ test('BB-19 Beneficiary: update a profile', async ({ page }) => {
 
 test('BB-20 DA intervention: record for a farmer with an RSBSA No.', async ({ page }) => {
     testCase({ module: 'DA intervention', input: 'Bryan Fagyao (RSBSA-9001), DA Certified Rice Seeds, not yet distributed', expected: 'The intervention record is stored.' });
+    // Bryan Fagyao and Joy Kiwang are walk-ins: the Administrator approves them first (no ghost farmers).
+    await login(page, 'Admin_01');
+    await approveWalkIn(page, 'Bryan Fagyao');
+    await approveWalkIn(page, 'Joy Kiwang');
     await login(page, 'Encoder_03');
     await addRecord(page, 'Bryan Fagyao', 'da', 'Certified Rice Seeds');
     actual(`Stored; message "${await shown(page, 'Intervention record saved.')}".`);

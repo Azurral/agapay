@@ -9,7 +9,7 @@
     @endif
 
     {{-- Figma 329:3290 form card + 329:3330 submit bar (20px apart); the address follows the RSBSA form's parts. --}}
-    <form method="POST" action="{{ route('beneficiaries.store') }}" class="flex flex-col gap-[20px]"
+    <form method="POST" action="{{ route('beneficiaries.store') }}" enctype="multipart/form-data" class="flex flex-col gap-[20px]"
           x-on:submit="busy = true"
           x-data="{ busy: false, birthdate: @js(old('birthdate', '')), get age() { if (! this.birthdate) return ''; const b = new Date(this.birthdate), n = new Date(); let a = n.getFullYear() - b.getFullYear(); if (n.getMonth() < b.getMonth() || (n.getMonth() === b.getMonth() && n.getDate() < b.getDate())) a--; return a >= 0 ? a : ''; } }">
         @csrf
@@ -54,6 +54,31 @@
                 <x-beneficiary.form-field label="Farm Area (ha)" name="farm_area_ha" type="number" step="0.01" min="0" :value="old('farm_area_ha')" placeholder="1.5" :error="$errors->first('farm_area_ha')" />
                 <x-beneficiary.form-field label="Crop Type" name="crop_type" :value="old('crop_type')" placeholder="Cabbage" :error="$errors->first('crop_type')" />
             </div>
+        </x-ui.card>
+
+        {{-- No ghost farmers: a walk-in shows a valid ID; the Administrator checks it before any program is given. --}}
+        <x-ui.card title="Valid ID" class="pb-[12px]">
+            <div class="divider mt-[7px]"></div>
+            <div class="mt-[9.5px] grid grid-cols-3 gap-x-[29px]">
+                <x-beneficiary.form-field label="ID Type" name="valid_id_type" :error="$errors->first('valid_id_type')">
+                    <select id="field-valid_id_type" name="valid_id_type" required
+                            class="h-[39px] w-full cursor-pointer appearance-none rounded-[15px] bg-brand-soft/10 px-[16px] text-[14px] font-medium text-ink outline-none invalid:text-muted">
+                        <option value="" disabled @selected(! old('valid_id_type'))>Select the ID shown</option>
+                        @foreach (Beneficiary::VALID_IDS as $value => $label)
+                            <option value="{{ $value }}" @selected(old('valid_id_type') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <img src="{{ asset('images/figma/icons/arrow-down.svg') }}" alt="" class="pointer-events-none absolute top-[10.5px] right-[14px] size-[18px]">
+                </x-beneficiary.form-field>
+                <x-beneficiary.form-field label="ID Number" name="valid_id_number" :value="old('valid_id_number')" placeholder="As printed on the ID" :error="$errors->first('valid_id_number')" required />
+                <x-beneficiary.form-field label="ID Photo" name="valid_id_photo" :error="$errors->first('valid_id_photo')">
+                    <input id="field-valid_id_photo" name="valid_id_photo" type="file" accept="image/jpeg,image/png" required
+                           class="h-[39px] w-full cursor-pointer rounded-[15px] bg-brand-soft/10 px-[10px] py-[7px] text-[13px] font-medium text-ink outline-none file:mr-[10px] file:rounded-full file:border-0 file:bg-white file:px-[12px] file:text-[12px] file:font-bold">
+                </x-beneficiary.form-field>
+            </div>
+            @cannot('beneficiaries.approve')
+                <p class="mt-[6px] text-[12px] text-arrow">This walk-in registration will wait for the Administrator's approval before any program can be given.</p>
+            @endcannot
         </x-ui.card>
 
         <x-beneficiary.consent-check :text="config('agapay.consent_text')" :error="$errors->first('consent')" />

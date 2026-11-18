@@ -36,7 +36,7 @@ it('adds a beneficiary straight away, with N/A for a missing RSBSA number', func
 
     $beneficiary = Beneficiary::sole();
     $response->assertRedirect(route('beneficiaries.show', $beneficiary))
-        ->assertSessionHas('status', 'Juan Abenoja Dela Cruz was added.');
+        ->assertSessionHas('status', "Juan Abenoja Dela Cruz was added and is waiting for the Administrator's approval.");
     expect($beneficiary->rsbsa_status)->toBe(Beneficiary::RSBSA_REGISTERED)
         ->and($beneficiary->rsbsaDisplay())->toBe('N/A')
         ->and($beneficiary->created_by)->toBe($encoder->id)

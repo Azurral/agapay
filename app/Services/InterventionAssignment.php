@@ -26,6 +26,10 @@ final class InterventionAssignment
         return DB::transaction(function () use ($beneficiary, $intervention, $cycle, $attrs, $actor) {
             // One assignment per beneficiary at a time, so a double-submitted form cannot fill the same slot twice.
             $current = Beneficiary::whereKey($beneficiary->id)->lockForUpdate()->first() ?? $beneficiary;
+            // No ghost farmers: a walk-in gets programs only after the Administrator approved the registration.
+            if ($reason = $current->unverifiedReason()) {
+                throw new InterventionRuleViolation($reason);
+            }
             self::ensureRsbsaFor($current, $intervention);
             $this->ensureSlotFree($beneficiary, $intervention, $cycle);
 

@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBeneficiaryRequest;
 use App\Models\Barangay;
 use App\Models\Beneficiary;
+use App\Models\DamagePhoto;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
@@ -43,8 +45,17 @@ class BeneficiaryRegistrationController extends Controller
                 return $duplicate();
             }
 
+            // The ID photo is a private file (like damage photos): served only to signed-in staff.
+            $photo = $request->file('valid_id_photo')->store('valid-ids', DamagePhoto::disk());
+            // The Administrator approves walk-ins, so their own registrations are verified at once.
+            $approver = $request->user()->can('beneficiaries.approve');
+
             $beneficiary = Beneficiary::create([
-                ...$data,
+                ...Arr::except($data, ['valid_id_photo', 'consent']),
+                'valid_id_photo' => $photo,
+                'verification_status' => $approver ? Beneficiary::VERIFICATION_VERIFIED : Beneficiary::VERIFICATION_PENDING,
+                'verified_by' => $approver ? $request->user()->id : null,
+                'verified_at' => $approver ? now() : null,
                 'rsbsa_number' => ($data['rsbsa_number'] ?? null) ?: null,
                 'rsbsa_status' => Beneficiary::RSBSA_REGISTERED,
                 'source' => Beneficiary::SOURCE_MANUAL,
@@ -64,6 +75,8 @@ class BeneficiaryRegistrationController extends Controller
         }
 
         return redirect()->route('beneficiaries.show', $beneficiary)
-            ->with('status', "{$beneficiary->fullName()} was added.");
+            ->with('status', $beneficiary->isVerified()
+                ? "{$beneficiary->fullName()} was added."
+                : "{$beneficiary->fullName()} was added and is waiting for the Administrator's approval.");
     }
 }

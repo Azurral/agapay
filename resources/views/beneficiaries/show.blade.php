@@ -95,6 +95,24 @@
                 <p class="font-medium text-muted">Data Privacy Consent</p>
                 <p @class(['font-bold', 'text-danger' => ! $beneficiary->consent_confirmed_at])>{{ $beneficiary->consentDisplay() }}</p>
             </div>
+            {{-- Walk-in verification (no ghost farmers). --}}
+            <div class="mt-[12px] text-[14px] leading-[18px]">
+                <p class="font-medium text-muted">Verification</p>
+                @if ($beneficiary->verification_status === \App\Models\Beneficiary::VERIFICATION_PENDING)
+                    <p class="font-bold text-danger">Pending approval &middot; the Administrator must check the valid ID before any program is given</p>
+                @elseif ($beneficiary->verification_status === \App\Models\Beneficiary::VERIFICATION_REJECTED)
+                    <p class="font-bold text-danger">Rejected: {{ $beneficiary->rejection_reason }}</p>
+                @else
+                    <p class="font-bold">Verified{{ $beneficiary->verifier ? ' by '.$beneficiary->verifier->username.' on '.$beneficiary->verified_at?->format('M j, Y') : '' }}</p>
+                @endif
+                @if ($beneficiary->valid_id_type)
+                    <p class="mt-[2px]">{{ $beneficiary->validIdLabel() }} &middot; No. {{ $beneficiary->valid_id_number }}
+                        @if ($beneficiary->valid_id_photo)
+                            &middot; <a href="{{ route('beneficiaries.valid-id', $beneficiary) }}" target="_blank" class="font-bold text-brand hover:underline">View ID photo</a>
+                        @endif
+                    </p>
+                @endif
+            </div>
         </x-ui.card>
 
         <x-ui.card title="Intervention History" class="self-stretch">

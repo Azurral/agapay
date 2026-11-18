@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Beneficiary;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class StoreBeneficiaryRequest extends FormRequest
@@ -27,12 +28,24 @@ class StoreBeneficiaryRequest extends FormRequest
             // Optional: farmers outside the RSBSA can still receive LGU programs.
             'rsbsa_number' => ['nullable', 'string', 'max:50'],
             'consent' => ['accepted'],
+            // Walk-in verification (no ghost farmers).
+            'valid_id_type' => ['required', Rule::in(array_keys(Beneficiary::VALID_IDS))],
+            'valid_id_number' => ['required', 'string', 'max:50'],
+            'valid_id_photo' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:8192'],
         ];
     }
 
     public function messages(): array
     {
-        return [...$this->beneficiaryMessages(), 'consent.accepted' => 'Confirm that the farmer gave consent before saving.'];
+        return [
+            ...$this->beneficiaryMessages(),
+            'consent.accepted' => 'Confirm that the farmer gave consent before saving.',
+            'valid_id_type.*' => 'Choose the type of valid ID.',
+            'valid_id_number.required' => 'Enter the ID number.',
+            'valid_id_photo.required' => 'Attach a photo or scan of the valid ID (JPG or PNG).',
+            'valid_id_photo.mimes' => 'Attach a photo or scan of the valid ID (JPG or PNG).',
+            'valid_id_photo.max' => 'The ID photo must be 8 MB or smaller.',
+        ];
     }
 
     public function after(): array
