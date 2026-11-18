@@ -5,6 +5,18 @@
         $link = $shape.' border-field bg-white text-ink transition-colors hover:border-brand-soft hover:bg-[#efeaff] hover:text-brand';
         $off = $shape.' border-field bg-white cursor-not-allowed text-muted';
         $current = $shape.' border-brand bg-brand text-white';
+        // Only one page number on the far side of each "...": "1 2 3 … 14", not "… 13 14" (and "1 …", not "1 2 …").
+        $elements = array_values($elements);   // the paginator leaves gaps in the keys
+        foreach ($elements as $i => $element) {
+            if (! is_array($element) || count($element) !== 2) {
+                continue;
+            }
+            if (is_string($elements[$i - 1] ?? null)) {
+                $elements[$i] = array_slice($element, -1, 1, true);
+            } elseif (is_string($elements[$i + 1] ?? null)) {
+                $elements[$i] = array_slice($element, 0, 1, true);
+            }
+        }
     @endphp
     <nav data-agapay-pagination role="navigation" aria-label="Pagination" class="flex items-center justify-between gap-[12px]">
         <p class="text-[13px] font-medium text-muted">

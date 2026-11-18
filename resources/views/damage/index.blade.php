@@ -62,7 +62,7 @@
             <div class="mt-[16px] grid grid-cols-4 gap-[20px] pl-[1.5px]">
                 @foreach ($cards as [$label, $value, $dot, $text, $modal])
                     {{-- A button (panel): opens the data behind the number. Pointer, lift and "View details" show it can be clicked. --}}
-                    <button type="button" x-data @click="$dispatch('open-modal', '{{ $modal }}')" aria-haspopup="dialog"
+                    <button type="button" x-data @click="$dispatch('damage-filter', null); $dispatch('open-modal', '{{ $modal }}')" aria-haspopup="dialog"
                             class="stat-card group relative h-[108px] cursor-pointer rounded-[16px] border-[1.5px] border-transparent bg-[#f7f7f9] pt-[18px] pl-[20px] text-left transition hover:-translate-y-[2px] hover:border-brand-soft hover:shadow-[0_8px_20px_rgba(90,93,227,0.15)] focus-visible:border-brand-soft focus-visible:outline-none">
                         <span class="flex items-center gap-[7px] text-[13px] leading-[17px]"><span class="size-[11px] rounded-[3px] {{ $dot }}"></span>{{ $label }}</span>
                         <span class="mt-[5px] block text-[30px] font-bold leading-[39px] tabular-nums {{ $text }}" data-count-up>{{ $value }}</span>
@@ -75,8 +75,8 @@
 
             {{-- Graphical summary of the same filtered reports (paper 1.4.1). --}}
             <div class="mt-[20px] grid grid-cols-2 gap-[20px] pl-[1.5px]">
-                <x-damage.bar-chart title="Cost of Damage by Barangay" :bars="$charts['barangays']" />
-                <x-damage.bar-chart title="Cost of Damage by Crop" :bars="$charts['crops']" />
+                <x-damage.bar-chart title="Cost of Damage by Barangay" :bars="$charts['barangays']" by="barangay" />
+                <x-damage.bar-chart title="Cost of Damage by Crop" :bars="$charts['crops']" by="crop" />
             </div>
 
             <h3 class="mt-[22px] pl-[1.5px] text-[16px] font-bold leading-[20px]">Reported Damage Records</h3>

@@ -301,6 +301,11 @@ html.nav-restored .nav-enter { animation: none; }
     animation: bar-grow 700ms cubic-bezier(.2, .8, .2, 1) calc(150ms + var(--i, 0) * 70ms) both;
 }
 @media (prefers-reduced-motion: reduce) { .damage-bar { animation: none; } }
+/* A bar row that opens the farmers behind it (Crisis Reports): tinted on hover and keyboard focus. */
+.damage-row { transition: background-color 150ms; }
+.damage-row:hover, .damage-row:focus-visible { background-color: #efeaff; outline: none; }
+.damage-row:focus-visible { box-shadow: 0 0 0 2px #7e80ff; }
+html.dark .damage-row:hover, html.dark .damage-row:focus-visible { background-color: rgb(126 128 255 / 0.16); }
 
 /* Home page charts (components/dashboard/overview). Colours checked for colour-blind separation and contrast in light
    and dark mode; every bar also prints its number. Segments end in 4px rounded corners with a 2px gap between them. */

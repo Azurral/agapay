@@ -33,11 +33,12 @@ fi
 if [ "${AGAPAY_SAMPLE_DATA:-false}" = "true" ] && ! php artisan agapay:install --status >/dev/null 2>&1; then
     php artisan agapay:install --sample-data
 fi
-# Demo copies: farm locations for the photo GPS check, and about 120 more made-up farmers (each added once).
+# Demo copies: farm locations for the photo GPS check, and made-up farmers up to AGAPAY_DEMO_FARMERS (default 1,000,
+# so the panel sees a full office; only the missing ones are added).
 # Never fatal: the website must start even if the demo extras cannot be added.
 if [ "${AGAPAY_SAMPLE_DATA:-false}" = "true" ]; then
     php artisan agapay:demo-farm-locations --force || echo "AGAPAY: demo farm locations skipped."
-    php artisan agapay:demo-data --force || echo "AGAPAY: demo farmers skipped."
+    php artisan agapay:demo-data --force --count="${AGAPAY_DEMO_FARMERS:-1000}" || echo "AGAPAY: demo farmers skipped."
 fi
 php artisan config:cache
 php artisan route:cache

@@ -53,3 +53,15 @@ it('splits production loss by crop with the yield used', function () {
 
     expect($rice['farmers'])->toBe(3)->and($rice['yield'])->toBe(4.0);
 });
+
+it('lets a barangay or crop bar open the farmers affected there', function () {
+    $html = $this->actingAs($this->admin)->get('/damage-reports?disaster='.$this->typhoon->id)->assertOk()
+        ->assertSee('data-damage-filter="barangay"', false)
+        ->assertSee('data-damage-filter="crop"', false)
+        ->assertSee('Click a row to see the farmers')
+        ->assertSee('data-farmer-row', false)
+        ->getContent();
+
+    expect(substr_count($html, 'data-farmer-row'))->toBe(6)
+        ->and($html)->toContain('width: calc(100vw - 80px)');   // the details windows use the whole width
+});

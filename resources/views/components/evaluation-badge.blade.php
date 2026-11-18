@@ -4,7 +4,7 @@
 @if (config('agapay.evaluation'))
     <div class="pointer-events-none fixed right-[16px] bottom-[16px] z-[60] flex flex-col items-end gap-[8px] print:hidden">
         @if ($accounts)
-            <div class="pointer-events-auto rounded-[10px] border border-black/15 bg-white/95 px-[14px] py-[10px] text-[13px] leading-[1.5] shadow-md">
+            <div class="pointer-events-auto rounded-[10px] border border-black/15 bg-white/95 px-[14px] py-[10px] text-[13px] leading-[1.5] text-[#1f2328] shadow-md">
                 <p class="font-semibold">Test accounts (password {{ config('agapay.seed_password') }})</p>
                 <p>Administrator: <span class="font-mono">Admin_01</span></p>
                 <p>Agricultural Technologist: <span class="font-mono">Agritech_02</span></p>

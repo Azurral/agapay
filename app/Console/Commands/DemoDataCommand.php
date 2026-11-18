@@ -38,6 +38,9 @@ class DemoDataCommand extends Command
     private const LAST = ['Agpawa', 'Bacwaden', 'Chalsiw', 'Dumalo', 'Fagyan', 'Gaongen', 'Kiwang', 'Lumiwes', 'Mangili', 'Ngalob',
         'Otom', 'Pagteng', 'Sagudang', 'Tayaban', 'Wakit', 'Bangsoy', 'Fomagas', 'Kinaw', 'Lagman', 'Sakai'];
 
+    private const MIDDLE = ['Alawas', 'Bayang', 'Cayat', 'Dao-as', 'Estacio', 'Falag-ey', 'Guinaang', 'Insiong', 'Lacbao', 'Malecdan',
+        'Nabus', 'Oblas', 'Pacio', 'Siwa', 'Tumapang', 'Ulep', 'Wacnang', 'Yag-ao', 'Bugtong', 'Culallad'];
+
     private const CROPS = ['Rice', 'Corn', 'Cabbage', 'Sweet Potato', 'Carrots', 'Beans', 'Potato'];
 
     private const STREETS = ['Rizal St.', 'Mabini St.', 'Bonifacio St.', 'Luna St.', 'Del Pilar St.', 'Session Rd.'];
@@ -79,9 +82,10 @@ class DemoDataCommand extends Command
 
                     $farmer = new Beneficiary;
                     $farmer->forceFill([
+                        // Every farmer gets a different full name (first x last = 600 pairs, then the middle name changes).
                         'first_name' => self::FIRST[$i % count(self::FIRST)],
-                        'middle_name' => null,
-                        'last_name' => self::LAST[intdiv($i, 3) % count(self::LAST)],
+                        'middle_name' => self::MIDDLE[($i + intdiv($i, count(self::FIRST) * count(self::LAST))) % count(self::MIDDLE)],
+                        'last_name' => self::LAST[intdiv($i, count(self::FIRST)) % count(self::LAST)],
                         'birthdate' => now()->subYears(22 + ($i * 7) % 48)->subDays(($i * 37) % 360)->toDateString(),
                         'house_no' => (string) (10 + $i),
                         'street' => self::STREETS[$i % count(self::STREETS)],

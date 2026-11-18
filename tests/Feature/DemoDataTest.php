@@ -57,3 +57,10 @@ it('runs only once and only with --force', function () {
 
     expect(Beneficiary::where('source', 'demo')->count())->toBe(120);
 });
+
+it('gives every made-up farmer a different full name', function () {
+    $this->artisan('agapay:demo-data', ['--force' => true, '--count' => 700])->assertSuccessful();
+
+    $names = Beneficiary::where('source', 'demo')->get()->map(fn ($f) => $f->first_name.' '.$f->middle_name.' '.$f->last_name);
+    expect($names->unique()->count())->toBe(700);
+});
