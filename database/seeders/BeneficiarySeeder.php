@@ -12,6 +12,15 @@ use Illuminate\Support\Carbon;
 /** The sample people shown in the Figma wireframes, so demo screens match the designs. */
 class BeneficiarySeeder extends Seeder
 {
+    /** Approximate centre of the sample barangays (latitude, longitude). */
+    public const FARMS = [
+        'Poblacion' => [17.0890, 120.9775],
+        'Samoki' => [17.0835, 120.9830],
+        'Bontoc Ili' => [17.0945, 120.9725],
+        'Bayyo' => [17.0650, 121.0150],
+        'Maligcong' => [17.1080, 120.9940],
+    ];
+
     public function run(): void
     {
         $encoder = User::where('username', 'Encoder_03')->value('id');
@@ -57,6 +66,9 @@ class BeneficiarySeeder extends Seeder
                 'sitio' => $address,
                 'address' => Beneficiary::joinAddress(['sitio' => $address]),
                 'farm_area_ha' => [1.5, 0.8, 0.5, 2.0, 1.2, 0.75, 1.0, 2.5, 1.8, 0.6, 0.4, 1.1, 0.9][$i] ?? 1.0,
+                // Made-up farm positions inside each barangay (about 150 m apart), for the photo GPS check.
+                'farm_latitude' => round((self::FARMS[$barangay] ?? self::FARMS['Poblacion'])[0] + $i * 0.0013, 6),
+                'farm_longitude' => round((self::FARMS[$barangay] ?? self::FARMS['Poblacion'])[1] + $i * 0.0009, 6),
                 'contact_number' => sprintf('0917-%03d-%04d', 310 + $i, 1200 + $i * 37),
                 'rsbsa_number' => $number,
                 'rsbsa_status' => Beneficiary::RSBSA_REGISTERED,

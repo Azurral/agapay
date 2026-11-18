@@ -22,6 +22,8 @@ trait BeneficiaryRules
             'barangay_id' => ['required', 'integer', Rule::exists('barangays', 'id')],
             'contact_number' => ['nullable', 'regex:/^09\d{2}-?\d{3}-?\d{4}$/'],
             'farm_area_ha' => ['nullable', 'numeric', 'min:0', 'max:9999.99'],
+            'farm_latitude' => ['nullable', 'required_with:farm_longitude', 'numeric', 'between:-90,90'],
+            'farm_longitude' => ['nullable', 'required_with:farm_latitude', 'numeric', 'between:-180,180'],
             'crop_type' => ['nullable', 'string', 'max:255'],
         ];
     }
@@ -35,6 +37,8 @@ trait BeneficiaryRules
             'barangay_id.required' => 'Select a barangay.',
             'sitio.required' => 'Enter the sitio or purok.',
             'farm_area_ha.*' => 'Enter the farm area in hectares, e.g. 1.5.',
+            'farm_latitude.required_with' => "Enter the farm's GPS location (latitude and longitude).",
+            'farm_longitude.required_with' => "Enter the farm's GPS location (latitude and longitude).",
         ];
     }
 

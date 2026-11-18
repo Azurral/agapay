@@ -64,9 +64,21 @@
         <h3 class="mt-[22px] text-[16px] font-bold leading-[20px]">Photos ({{ $report->photos->count() }})</h3>
         <div class="mt-[10px] flex flex-wrap gap-[12px]">
             @forelse ($report->photos as $photo)
-                <a href="{{ route('damage.photos.show', $photo) }}" target="_blank" rel="noopener" class="block size-[140px] overflow-hidden rounded-[12px] border border-field">
-                    <img src="{{ route('damage.photos.show', $photo) }}" alt="{{ $photo->original_name }}" class="size-full object-cover">
-                </a>
+                <figure class="w-[140px]">
+                    <a href="{{ route('damage.photos.show', $photo) }}" target="_blank" rel="noopener" class="block size-[140px] overflow-hidden rounded-[12px] border border-field">
+                        <img src="{{ route('damage.photos.show', $photo) }}" alt="{{ $photo->original_name }}" class="size-full object-cover">
+                    </a>
+                    {{-- Where the photo was taken (its GPS), read from the photo itself. --}}
+                    <figcaption class="mt-[4px] text-[11px] leading-[14px]">
+                        @if ($photo->latitude !== null)
+                            <a href="https://www.openstreetmap.org/?mlat={{ (float) $photo->latitude }}&amp;mlon={{ (float) $photo->longitude }}#map=17/{{ (float) $photo->latitude }}/{{ (float) $photo->longitude }}"
+                               target="_blank" rel="noopener" class="font-bold text-brand hover:underline">
+                                {{ $photo->distance_m === null ? 'View where it was taken' : ($photo->distance_m >= 1000 ? number_format($photo->distance_m / 1000, 1).' km' : $photo->distance_m.' m').' from the farm' }}</a>
+                        @else
+                            <span class="text-muted">No GPS in this photo</span>
+                        @endif
+                    </figcaption>
+                </figure>
             @empty
                 <p class="text-[14px] font-medium text-muted">No photos were attached.</p>
             @endforelse

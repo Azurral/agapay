@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Beneficiary;
 use App\Models\Crop;
 use App\Models\DamageReport;
 use App\Services\DamageCalculator;
+use App\Support\FarmPhotoCheck;
 use App\Support\StagedPhotos;
 use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -95,6 +98,15 @@ class DamageReportRequest extends FormRequest
         };
     }
 
+    /** @return list<UploadedFile> the photos chosen now plus the ones kept from an earlier try */
+    private function photoUploads(): array
+    {
+        return [
+            ...array_values(array_filter((array) $this->file('photos', []), fn ($file) => $file instanceof UploadedFile && $file->isValid())),
+            ...StagedPhotos::files(StagedPhotos::keptTokens($this)),
+        ];
+    }
+
     /** The browser forgets chosen files on an error, so the valid ones are kept for the next try. */
     protected function failedValidation(ValidatorContract $validator): void
     {
@@ -110,6 +122,19 @@ class DamageReportRequest extends FormRequest
                 $photos = count(array_filter((array) $this->file('photos', []))) + count(StagedPhotos::keptTokens($this));
                 if ($photos > self::MAX_PHOTOS && ! $validator->errors()->has('photos')) {
                     $validator->errors()->add('photos', 'Attach up to 10 photos.');
+                }
+
+                // Geolocation: the farm must have its GPS position, and each new photo must have been taken there.
+                $farmer = $validator->errors()->has('beneficiary_id') ? null : Beneficiary::find($this->integer('beneficiary_id'));
+                if ($farmer && ($missing = FarmPhotoCheck::missingFarmLocation($farmer))) {
+                    $validator->errors()->add('beneficiary_id', $missing);
+                } elseif ($farmer) {
+                    foreach ($this->photoUploads() as $photo) {
+                        if ($problem = FarmPhotoCheck::problem($photo, $farmer)) {
+                            $validator->errors()->add('photos', $problem);
+                            break;
+                        }
+                    }
                 }
 
                 $areas = $validator->errors()->hasAny(['total_area_ha', 'partial_area_ha'])

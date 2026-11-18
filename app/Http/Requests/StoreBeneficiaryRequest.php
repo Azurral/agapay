@@ -28,6 +28,9 @@ class StoreBeneficiaryRequest extends FormRequest
             // Optional: farmers outside the RSBSA can still receive LGU programs.
             'rsbsa_number' => ['nullable', 'string', 'max:50'],
             'consent' => ['accepted'],
+            // Geolocation: every farm has its GPS position (damage photos are checked against it).
+            'farm_latitude' => ['required', 'numeric', 'between:-90,90'],
+            'farm_longitude' => ['required', 'numeric', 'between:-180,180'],
             // Walk-in verification (no ghost farmers).
             'valid_id_type' => ['required', Rule::in(array_keys(Beneficiary::VALID_IDS))],
             'valid_id_number' => ['required', 'string', 'max:50'],
@@ -40,6 +43,10 @@ class StoreBeneficiaryRequest extends FormRequest
         return [
             ...$this->beneficiaryMessages(),
             'consent.accepted' => 'Confirm that the farmer gave consent before saving.',
+            'farm_latitude.required' => "Enter the farm's GPS location (latitude and longitude).",
+            'farm_longitude.required' => "Enter the farm's GPS location (latitude and longitude).",
+            'farm_latitude.*' => 'Latitude must be a number between -90 and 90, e.g. 17.0894.',
+            'farm_longitude.*' => 'Longitude must be a number between -180 and 180, e.g. 120.9770.',
             'valid_id_type.*' => 'Choose the type of valid ID.',
             'valid_id_number.required' => 'Enter the ID number.',
             'valid_id_photo.required' => 'Attach a photo or scan of the valid ID (JPG or PNG).',

@@ -26,6 +26,8 @@ class BeneficiaryFactory extends Factory
             'barangay_id' => fn () => Barangay::inRandomOrder()->value('id') ?? Barangay::create(['name' => 'Poblacion'])->id,
             'contact_number' => '0917-'.fake()->numerify('###-####'),
             'farm_area_ha' => fake()->randomFloat(2, 0.25, 3),
+            'farm_latitude' => fake()->randomFloat(6, 17.080, 17.100),
+            'farm_longitude' => fake()->randomFloat(6, 120.970, 120.990),
             'crop_type' => fake()->randomElement(['Rice', 'Cabbage', 'Corn', 'Sweet Potato']),
             'rsbsa_number' => fn () => 'RSBSA-'.fake()->unique()->numerify('#####'),
             'rsbsa_status' => Beneficiary::RSBSA_REGISTERED,

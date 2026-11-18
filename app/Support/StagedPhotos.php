@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Http\Requests\DamageReportRequest;
+use App\Models\Beneficiary;
 use App\Models\DamagePhoto;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -56,6 +57,7 @@ final class StagedPhotos
     {
         self::prune();
         $staged = self::all();
+        $farmer = Beneficiary::find((int) $request->input('beneficiary_id'));
         $kept = array_intersect_key($staged, array_flip(self::keptTokens($request)));
 
         foreach (array_filter((array) $request->file('photos', []), fn ($file) => $file instanceof UploadedFile) as $file) {
@@ -63,6 +65,10 @@ final class StagedPhotos
                 break;
             }
             if (! $file->isValid() || ! in_array($file->getMimeType(), self::TYPES, true) || $file->getSize() > DamageReportRequest::photoLimitBytes()) {
+                continue;
+            }
+            // A photo refused for its GPS location is not kept: it would only be refused again.
+            if ($farmer && FarmPhotoCheck::problem($file, $farmer) !== null) {
                 continue;
             }
 

@@ -110,6 +110,8 @@ function validRegistration(array $overrides = []): array
         'farm_area_ha' => '1.5',
         'crop_type' => 'Cabbage',
         'consent' => '1',
+        'farm_latitude' => '17.0894',
+        'farm_longitude' => '120.9770',
         // Walk-in verification (no ghost farmers): a valid ID with its number and a photo.
         'valid_id_type' => 'voters',
         'valid_id_number' => 'VIN-1234-5678',

@@ -13,6 +13,7 @@
         ['town', 'Municipality / Province', 'computed'],
         ['rsbsa_number', 'RSBSA Number', 'text'], ['contact_number', 'Contact Number', 'text'],
         ['farm_area_ha', 'Farm Area (ha)', 'number'], ['crop_type', 'Crop Type', 'text'], ['household', 'Household Number', 'computed'],
+        ['farm_latitude', 'Farm Latitude', 'text'], ['farm_longitude', 'Farm Longitude', 'text'],
     ];
 @endphp
 <x-layouts.app title="BENEFICIARY PROFILE">
@@ -94,6 +95,16 @@
             <div class="mt-[12px] text-[14px] leading-[18px]">
                 <p class="font-medium text-muted">Data Privacy Consent</p>
                 <p @class(['font-bold', 'text-danger' => ! $beneficiary->consent_confirmed_at])>{{ $beneficiary->consentDisplay() }}</p>
+            </div>
+            {{-- Geolocation: damage photos are checked against this position. --}}
+            <div class="mt-[12px] text-[14px] leading-[18px]">
+                <p class="font-medium text-muted">Farm Location (GPS)</p>
+                @if ($beneficiary->hasFarmLocation())
+                    <a href="{{ $beneficiary->farmMapUrl() }}" target="_blank" rel="noopener" class="font-bold text-brand hover:underline">
+                        {{ (float) $beneficiary->farm_latitude }}, {{ (float) $beneficiary->farm_longitude }} &middot; view on map</a>
+                @else
+                    <p class="font-bold text-danger">Not set &middot; add it before filing a crisis damage report</p>
+                @endif
             </div>
             {{-- Walk-in verification (no ghost farmers). --}}
             <div class="mt-[12px] text-[14px] leading-[18px]">

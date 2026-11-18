@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -13,6 +13,8 @@ const PASSWORD = process.env.AGAPAY_SEED_PASSWORD ?? 'Agapay@2026';
 const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const TODAY = ymd(new Date());
 const scratch = mkdtempSync(join(tmpdir(), 'agapay-bb-'));
+// A field photo with its GPS position in Samoki (tests/Support/GpsJpeg), like a phone camera with location on.
+const FIELD_PHOTO = join(import.meta.dirname, 'fixtures', 'field-gps.jpg');
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 
 /** A date `years` years before today, moved by `days` (e.g. -1 = one day short of the birthday). */
@@ -67,6 +69,9 @@ async function fillFarmer(page, { first, last, born = '1980-03-15', rsbsa = '', 
     if (rsbsa) await page.fill('[name=rsbsa_number]', rsbsa);
     if (area !== '') await page.fill('[name=farm_area_ha]', area);
     if (consent) await page.check('[name=consent]');
+    // Geolocation: the farm's GPS position (Samoki); damage photos are checked against it.
+    await page.fill('[name=farm_latitude]', '17.0835');
+    await page.fill('[name=farm_longitude]', '120.9830');
     // Walk-in verification: a valid ID with its number and a photo.
     await page.selectOption('[name=valid_id_type]', 'voters');
     await page.fill('[name=valid_id_number]', 'VIN-1234-5678');
@@ -399,8 +404,7 @@ test('BB-31 Crisis: add a crisis', async ({ page }) => {
 
 test('BB-32 Crisis: file a damage report (loss computed)', async ({ page }) => {
     testCase({ module: 'Crisis and damage', input: 'Typhoon Kristine, Bryan Fagyao, Rice (4 MT/ha, ₱20,000/MT, factor 0.5), 1 ha totally + 1 ha partially damaged, 1 photo', expected: 'The report is stored; loss (1 + 0.5 × 1) × 4 = 6 MT and cost 6 × ₱20,000 = ₱120,000.' });
-    const photo = join(scratch, 'field.png');
-    writeFileSync(photo, PNG);
+    const photo = FIELD_PHOTO;   // taken at the farm: its GPS is within 2 km
     await login(page, 'Encoder_03');
     await page.goto('/damage-reports/create');
     await page.selectOption('[name=disaster_id]', { label: 'Typhoon Kristine' });
@@ -437,7 +441,7 @@ test('BB-33 Crisis: damage report with no photo', async ({ page }) => {
 
 test('BB-34 Crisis: damage report with 11 photos', async ({ page }) => {
     testCase({ module: 'Crisis and damage', kind: 'Boundary value', input: '11 photos chosen at once (allowed: 1 to 10)', expected: 'The 11th photo is not accepted; the report is kept to 10 photos.' });
-    const photos = Array.from({ length: 11 }, (_, i) => { const f = join(scratch, `photo-${i + 1}.png`); writeFileSync(f, PNG); return f; });
+    const photos = Array.from({ length: 11 }, (_, i) => { const f = join(scratch, `photo-${i + 1}.jpg`); copyFileSync(FIELD_PHOTO, f); return f; });
     await startDamageReport(page, 'Joy Kiwang');
     await page.setInputFiles('input[name="photos[]"]', photos);
     const note = await shown(page, /Not added: .*10 photos at most/);

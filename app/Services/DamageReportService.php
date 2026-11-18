@@ -8,6 +8,7 @@ use App\Models\DamagePhoto;
 use App\Models\DamageReport;
 use App\Models\Disaster;
 use App\Models\User;
+use App\Support\FarmPhotoCheck;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -219,7 +220,10 @@ final class DamageReportService
      */
     private function storePhotos(DamageReport $report, array $photos, array &$stored): void
     {
+        $farmer = $report->beneficiary;
         foreach ($photos as $photo) {
+            // Where the photo was taken (its EXIF GPS) and how far that is from the farm, for the report.
+            $where = FarmPhotoCheck::measure($photo, $farmer);
             $path = $photo->store("damage/{$report->id}", DamagePhoto::disk());
             $stored[] = $path;
 
@@ -227,7 +231,15 @@ final class DamageReportService
                 'path' => $path,
                 'original_name' => Str::limit($photo->getClientOriginalName(), 250, ''),
                 'size' => (int) $photo->getSize(),
+                'latitude' => $where['latitude'] ?? null,
+                'longitude' => $where['longitude'] ?? null,
+                'distance_m' => $where['distance_m'] ?? null,
             ]);
+
+            // The report's GPS position, when not typed, is where its first photo was taken.
+            if ($where && $report->latitude === null) {
+                $report->forceFill(['latitude' => $where['latitude'], 'longitude' => $where['longitude']])->saveQuietly();
+            }
         }
     }
 }

@@ -9,7 +9,7 @@ return [
     'consent_text' => 'The farmer has given consent for OMAG to record and use their personal information for agricultural programs and assistance, as stated in the privacy notice.',
     'import_consent_text' => 'The farmers in this file gave consent for OMAG to record and use their personal information for agricultural programs and assistance (for example on their RSBSA forms), as stated in the privacy notice.',
 
-    'version' => '0.17.4',
+    'version' => '0.17.5',
 
     // In-app updates of the office copy ("AGAPAY for Windows"): the Administrator sees "Update available" when GitHub
     // has a newer release. Off in a development copy, which is updated from the source code.
@@ -21,6 +21,13 @@ return [
     // 'office' = AGAPAY for Windows on one laptop (installer, tools\backup.ps1, in-app updates);
     // 'cloud' = one online server shared by every staff laptop (Backups page with 3-2-1 encrypted backups).
     'edition' => env('AGAPAY_EDITION', 'office'),
+
+    // Geolocation (panel): every farm has GPS coordinates; each damage photo must carry its own GPS position (EXIF)
+    // taken within max_km of the farm, or the report is refused. check_photos is off only in the old automated tests.
+    'geo' => [
+        'check_photos' => (bool) env('AGAPAY_GEO_CHECK', true),
+        'max_km' => (float) env('AGAPAY_GEO_MAX_KM', 2),
+    ],
 
     // Where damage photos and generated reports are kept: 'local' (storage/app/private; on the cloud server a persistent
     // volume) or 's3' (any S3-compatible object storage, set with the AWS_* variables).

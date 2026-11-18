@@ -54,6 +54,29 @@
                 <x-beneficiary.form-field label="Farm Area (ha)" name="farm_area_ha" type="number" step="0.01" min="0" :value="old('farm_area_ha')" placeholder="1.5" :error="$errors->first('farm_area_ha')" />
                 <x-beneficiary.form-field label="Crop Type" name="crop_type" :value="old('crop_type')" placeholder="Cabbage" :error="$errors->first('crop_type')" />
             </div>
+
+            {{-- Geolocation: every farm has its GPS position; crisis damage photos are checked against it. --}}
+            <div class="mt-[6px] grid grid-cols-[1fr_1fr_auto] items-end gap-x-[29px]"
+                 x-data="{ lat: @js((string) old('farm_latitude', '')), lng: @js((string) old('farm_longitude', '')), locating: false, problem: '',
+                           locate() { if (! navigator.geolocation) { this.problem = 'This browser cannot read the location; type the coordinates.'; return; }
+                                      this.locating = true; this.problem = '';
+                                      navigator.geolocation.getCurrentPosition(
+                                          (p) => { this.lat = p.coords.latitude.toFixed(6); this.lng = p.coords.longitude.toFixed(6); this.locating = false; },
+                                          () => { this.locating = false; this.problem = 'The location could not be read; type the coordinates (e.g. from Google Maps).'; },
+                                          { enableHighAccuracy: true, timeout: 15000 }); } }">
+                <x-beneficiary.form-field label="Farm Latitude" name="farm_latitude" placeholder="17.0894" :error="$errors->first('farm_latitude')" x-model="lat" required />
+                <x-beneficiary.form-field label="Farm Longitude" name="farm_longitude" placeholder="120.9770" :error="$errors->first('farm_longitude')" x-model="lng" required />
+                <div class="mb-[12px] flex flex-col gap-[4px]">
+                    <button type="button" @click="locate()" :disabled="locating"
+                            class="border-gradient pill-button h-[39px] rounded-[50px] px-[16px] text-[13px] font-bold disabled:opacity-60">
+                        <span x-show="! locating">Use my location</span><span x-cloak x-show="locating">Locating&hellip;</span>
+                    </button>
+                    <a x-show="lat && lng" x-cloak :href="`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`" target="_blank" rel="noopener"
+                       class="text-center text-[12px] font-bold text-brand hover:underline">Check on the map</a>
+                </div>
+                <p x-show="problem" x-cloak x-text="problem" class="col-span-3 text-[12px] font-bold text-danger"></p>
+                <p class="col-span-3 -mt-[6px] text-[12px] text-arrow">Stand at the farm and press Use my location, or type the coordinates from a map. Crisis damage photos must be taken within {{ rtrim(rtrim(number_format(config('agapay.geo.max_km'), 1), '0'), '.') }} km of this point.</p>
+            </div>
         </x-ui.card>
 
         {{-- No ghost farmers: a walk-in shows a valid ID; the Administrator checks it before any program is given. --}}

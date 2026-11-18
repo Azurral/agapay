@@ -62,6 +62,8 @@ test('an encoder adds a farmer without an RSBSA number, who shows as N/A on the 
     await page.selectOption('[name=barangay_id]', { label: 'Samoki' });
     await page.fill('[name=farm_area_ha]', '1.25');
     await page.check('[name=consent]');
+    await page.fill('[name=farm_latitude]', '17.0835');
+    await page.fill('[name=farm_longitude]', '120.9830');
     await page.selectOption('[name=valid_id_type]', 'philsys');
     await page.fill('[name=valid_id_number]', '1234-5678-9012-3456');
     const id = join(scratch, 'valid-id.png');
@@ -117,8 +119,7 @@ test('an encoder imports a masterlist', async ({ page }) => {
 });
 
 test('a damage report with a photo is filed and validated', async ({ page }) => {
-    const photo = join(scratch, 'field.png');
-    writeFileSync(photo, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'));
+    const photo = join(import.meta.dirname, 'fixtures', 'field-gps.jpg');   // GPS within 2 km of Ana's farm
 
     await login(page, 'Encoder_03');
     await page.goto('/damage-reports/create');

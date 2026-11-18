@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
     'first_name', 'middle_name', 'last_name', 'birthdate', 'address', 'house_no', 'street', 'sitio', 'barangay_id', 'contact_number',
     'farm_area_ha', 'crop_type', 'rsbsa_number', 'rsbsa_status', 'rsbsa_status_reason', 'life_status',
     'encoding_issue', 'source', 'consent_confirmed_at', 'consent_confirmed_by', 'created_by', 'updated_by',
+    'farm_latitude', 'farm_longitude',
     'valid_id_type', 'valid_id_number', 'valid_id_photo', 'verification_status', 'verified_by', 'verified_at', 'rejection_reason',
 ])]
 class Beneficiary extends Model
@@ -208,6 +209,22 @@ class Beneficiary extends Model
     public function latestRecord(): HasOne
     {
         return $this->hasOne(InterventionRecord::class)->ofMany(['distribution_cycle_id' => 'max', 'id' => 'max']);
+    }
+
+    public function hasFarmLocation(): bool
+    {
+        return $this->farm_latitude !== null && $this->farm_longitude !== null;
+    }
+
+    public function farmMapUrl(): ?string
+    {
+        if (! $this->hasFarmLocation()) {
+            return null;
+        }
+        $lat = (float) $this->farm_latitude;
+        $lng = (float) $this->farm_longitude;
+
+        return "https://www.openstreetmap.org/?mlat={$lat}&mlon={$lng}#map=16/{$lat}/{$lng}";
     }
 
     public function isVerified(): bool
