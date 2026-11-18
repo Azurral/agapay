@@ -27,6 +27,10 @@ done
 if [ "${AGAPAY_SAMPLE_DATA:-false}" = "true" ] && ! php artisan agapay:install --status >/dev/null 2>&1; then
     php artisan agapay:install --sample-data
 fi
+# Demo copies made before farm locations existed: give the sample farmers one, for the photo GPS check.
+if [ "${AGAPAY_SAMPLE_DATA:-false}" = "true" ]; then
+    php artisan agapay:demo-farm-locations --force
+fi
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
