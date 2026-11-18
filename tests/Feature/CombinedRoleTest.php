@@ -20,7 +20,7 @@ it('merges both menus and quick actions for the combined role', function () {
     $user = userWithRole(Role::AGRITECH_ENCODER);
 
     expect(array_column(Navigation::items($user), 'label'))->toBe([
-        'Home', 'Beneficiary Profiles', 'Intervention Records', 'DA Intervention', 'LGU Intervention', 'Crisis Reports', 'Inventory', 'Download Reports',
+        'Home', 'Claiming Calendar', 'Beneficiary Profiles', 'Intervention Records', 'DA Intervention', 'LGU Intervention', 'Crisis Reports', 'Inventory', 'Download Reports',
     ])->and(array_column(Navigation::quickActions($user)['items'], 'label'))->toBe([
         'Upload Excel', 'Add Beneficiary', 'File Crisis Report', 'New Request',
     ]);

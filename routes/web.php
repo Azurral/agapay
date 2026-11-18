@@ -7,6 +7,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BeneficiaryController;
 use App\Http\Controllers\BeneficiaryLookupController;
 use App\Http\Controllers\BeneficiaryRegistrationController;
+use App\Http\Controllers\ClaimingController;
 use App\Http\Controllers\DamageExportController;
 use App\Http\Controllers\DamagePhotoController;
 use App\Http\Controllers\DamageReferenceController;
@@ -59,6 +60,20 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
     // Registered before /beneficiaries/{beneficiary} so "create" is not read as a profile id.
     Route::get('/beneficiaries/create', [BeneficiaryRegistrationController::class, 'create'])->middleware('can:rsbsa.register')->name('beneficiaries.create');
     Route::post('/beneficiaries', [BeneficiaryRegistrationController::class, 'store'])->middleware('can:rsbsa.register')->name('beneficiaries.store');
+    // Claiming: the calendar of claiming days, each cycle's acknowledgment sheets and signed copies, and the
+    // verification of records left unclaimed after the claiming period (forwarded to the next date, or closed).
+    Route::middleware('can:dashboard.view')->group(function () {
+        Route::get('/claiming', [ClaimingController::class, 'index'])->name('claiming.index');
+        Route::get('/claiming/{cycle}', [ClaimingController::class, 'show'])->name('claiming.show');
+        Route::get('/claiming/signed/{sheet}', [ClaimingController::class, 'downloadSigned'])->name('claiming.signed.download');
+    });
+    Route::get('/claiming/{cycle}/sheet', [ClaimingController::class, 'sheet'])->middleware('can:reports.generate')->name('claiming.sheet');
+    Route::post('/claiming/{cycle}/signed', [ClaimingController::class, 'storeSigned'])->middleware('can:interventions.claim')->name('claiming.signed');
+    Route::middleware('can:interventions.validate')->group(function () {
+        Route::post('/claiming/records/{record}/forward', [ClaimingController::class, 'forward'])->name('claiming.forward');
+        Route::post('/claiming/records/{record}/close', [ClaimingController::class, 'close'])->name('claiming.close');
+    });
+
     // Walk-in verification (no ghost farmers): the Administrator approves or rejects each hand-entered registration.
     Route::middleware('can:beneficiaries.approve')->group(function () {
         Route::get('/beneficiaries/approvals', [WalkInApprovalController::class, 'index'])->name('beneficiaries.approvals');

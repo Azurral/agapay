@@ -58,6 +58,12 @@ final class ClaimService
             if ($record->isClaimed()) {
                 throw new InterventionRuleViolation('Already claimed.');
             }
+            // After its claiming period, an unclaimed record was forwarded to the next cycle or closed: release that one.
+            if ($record->forward_status !== null) {
+                throw new InterventionRuleViolation($record->forward_status === InterventionRecord::FORWARDED
+                    ? 'This record was forwarded to a later claiming date; release it there.'
+                    : 'This record was closed after its claiming period: '.$record->forward_note);
+            }
             InterventionAssignment::ensureRsbsaFor($record->beneficiary, $record->intervention);
 
             if (! in_array($record->validation_status, InterventionRecord::CLAIMABLE, true)) {

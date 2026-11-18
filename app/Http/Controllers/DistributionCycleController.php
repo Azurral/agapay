@@ -70,6 +70,7 @@ class DistributionCycleController extends Controller
             'code' => ['required', 'string', 'max:20', 'regex:/^[A-Z0-9-]+$/', Rule::unique('distribution_cycles', 'code')->ignore($cycle?->id)],
             'label' => ['required', 'string', 'max:100'],
             'schedule_date' => ['required', 'date'],
+            'claim_end_date' => ['nullable', 'date', 'after_or_equal:schedule_date'],
             'venue' => ['nullable', 'string', 'max:255'],
             'status' => ['required', 'string', Rule::in(array_keys(DistributionCycle::STATUSES))],
         ], [
@@ -78,6 +79,8 @@ class DistributionCycleController extends Controller
             'code.required' => 'Enter a cycle code, e.g. 2026-Q4.',
             'label.required' => 'Enter a label, e.g. 2026-Q4 Wet Season.',
             'schedule_date.*' => 'Enter the schedule date.',
+            'claim_end_date.after_or_equal' => 'The claiming period cannot end before it starts.',
+            'claim_end_date.date' => 'Enter the last claiming day.',
             'status.*' => 'Choose a status.',
         ]);
 

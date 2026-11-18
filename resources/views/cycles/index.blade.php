@@ -4,11 +4,11 @@
     $cols = 'grid-cols-[150px_300px_180px_1fr_140px_110px_90px]';
     $editing = old('editing_id');
     $cycleData = $cycles->map(fn ($c) => [
-        'id' => $c->id, 'code' => $c->code, 'label' => $c->label, 'schedule_date' => $c->schedule_date?->toDateString(),
+        'id' => $c->id, 'code' => $c->code, 'label' => $c->label, 'schedule_date' => $c->schedule_date?->toDateString(), 'claim_end_date' => $c->claim_end_date?->toDateString(),
         'venue' => $c->venue, 'status' => $c->status, 'url' => route('cycles.update', $c),
     ])->values();
     $oldForm = ['id' => $editing ? (int) $editing : null, 'code' => old('code', ''), 'label' => old('label', ''),
-        'schedule_date' => old('schedule_date', ''), 'venue' => old('venue', ''), 'status' => old('status', DistributionCycle::STATUS_SCHEDULED)];
+        'schedule_date' => old('schedule_date', ''), 'claim_end_date' => old('claim_end_date', ''), 'venue' => old('venue', ''), 'status' => old('status', DistributionCycle::STATUS_SCHEDULED)];
 @endphp
 <x-layouts.app title="DISTRIBUTION CYCLES">
     {{-- No Figma frame: reuses the card, table and modal components (spec §2). --}}
@@ -16,7 +16,7 @@
 
     <div x-data="{
             cycles: @js($cycleData), form: @js($oldForm), storeUrl: @js(route('cycles.store')),
-            blank() { return { id: null, code: '', label: '', schedule_date: '', venue: '', status: 'scheduled' }; },
+            blank() { return { id: null, code: '', label: '', schedule_date: '', claim_end_date: '', venue: '', status: 'scheduled' }; },
             add() { this.form = this.blank(); $dispatch('open-modal', 'cycle-form'); },
             edit(cycle) { this.form = { ...cycle }; $dispatch('open-modal', 'cycle-form'); },
         }">
@@ -59,6 +59,7 @@
                 <div class="grid grid-cols-2 gap-[12px]">
                     <x-ui.inline-field label="Code" name="code" maxlength="20" placeholder="e.g. 2026-Q4" required x-model="form.code" :error="$errors->first('code')" />
                     <x-ui.inline-field label="Schedule Date" name="schedule_date" type="date" required x-model="form.schedule_date" :error="$errors->first('schedule_date')" />
+                    <x-ui.inline-field label="Claiming Ends" name="claim_end_date" type="date" x-model="form.claim_end_date" :error="$errors->first('claim_end_date')" />
                     <div class="col-span-2">
                         <x-ui.inline-field label="Label" name="label" maxlength="100" placeholder="e.g. 2026-Q4 Wet Season" required x-model="form.label" :error="$errors->first('label')" />
                     </div>

@@ -59,6 +59,11 @@ class InterventionRecord extends Model
         return array_values(array_diff(array_keys(self::VALIDATIONS), self::CLAIMABLE));
     }
 
+    /** After the claiming period: forwarded to the next cycle, or closed (not forwarded) with a reason. */
+    public const FORWARDED = 'forwarded';
+
+    public const NOT_FORWARDED = 'not_forwarded';
+
     public const CLAIM_UNCLAIMED = 'unclaimed';
 
     public const CLAIM_CLAIMED = 'claimed';

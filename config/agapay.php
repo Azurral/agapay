@@ -9,7 +9,7 @@ return [
     'consent_text' => 'The farmer has given consent for OMAG to record and use their personal information for agricultural programs and assistance, as stated in the privacy notice.',
     'import_consent_text' => 'The farmers in this file gave consent for OMAG to record and use their personal information for agricultural programs and assistance (for example on their RSBSA forms), as stated in the privacy notice.',
 
-    'version' => '0.17.3',
+    'version' => '0.17.4',
 
     // In-app updates of the office copy ("AGAPAY for Windows"): the Administrator sees "Update available" when GitHub
     // has a newer release. Off in a development copy, which is updated from the source code.
@@ -41,6 +41,7 @@ return [
     'nav' => [
         Role::ADMIN => [
             ['label' => 'Home', 'route' => 'dashboard', 'icon' => 'home', 'permission' => 'dashboard.view'],
+            ['label' => 'Claiming Calendar', 'route' => 'claiming.index', 'icon' => 'calendar', 'permission' => 'dashboard.view'],
             ['label' => 'DA Intervention', 'route' => 'interventions.da', 'icon' => 'report', 'permission' => 'interventions.view'],
             ['label' => 'LGU Intervention', 'route' => 'interventions.lgu', 'icon' => 'report', 'permission' => 'interventions.view'],
             ['label' => 'Crisis Reports', 'route' => 'damage.index', 'icon' => 'disaster', 'permission' => 'damage.view'],
@@ -52,6 +53,7 @@ return [
         ],
         Role::AGRITECH => [
             ['label' => 'Home', 'route' => 'dashboard', 'icon' => 'home', 'permission' => 'dashboard.view'],
+            ['label' => 'Claiming Calendar', 'route' => 'claiming.index', 'icon' => 'calendar', 'permission' => 'dashboard.view'],
             ['label' => 'DA Intervention', 'route' => 'interventions.da', 'icon' => 'report', 'permission' => 'interventions.view'],
             ['label' => 'LGU Intervention', 'route' => 'interventions.lgu', 'icon' => 'report', 'permission' => 'interventions.view'],
             ['label' => 'Crisis Reports', 'route' => 'damage.index', 'icon' => 'disaster', 'permission' => 'damage.view'],
@@ -60,6 +62,7 @@ return [
         // Both jobs in one account: the encoder's pages, then the technologist's.
         Role::AGRITECH_ENCODER => [
             ['label' => 'Home', 'route' => 'dashboard', 'icon' => 'home', 'permission' => 'dashboard.view'],
+            ['label' => 'Claiming Calendar', 'route' => 'claiming.index', 'icon' => 'calendar', 'permission' => 'dashboard.view'],
             ['label' => 'Beneficiary Profiles', 'route' => 'beneficiaries.index', 'icon' => 'profile', 'permission' => 'beneficiaries.manage'],
             ['label' => 'Intervention Records', 'route' => 'intervention-records.index', 'icon' => 'report', 'permission' => 'intervention_records.manage'],
             ['label' => 'DA Intervention', 'route' => 'interventions.da', 'icon' => 'report', 'permission' => 'interventions.view'],
@@ -70,6 +73,7 @@ return [
         ],
         Role::ENCODER => [
             ['label' => 'Home', 'route' => 'dashboard', 'icon' => 'home', 'permission' => 'dashboard.view'],
+            ['label' => 'Claiming Calendar', 'route' => 'claiming.index', 'icon' => 'calendar', 'permission' => 'dashboard.view'],
             ['label' => 'Beneficiary Profiles', 'route' => 'beneficiaries.index', 'icon' => 'profile', 'permission' => 'beneficiaries.manage'],
             ['label' => 'Intervention Records', 'route' => 'intervention-records.index', 'icon' => 'report', 'permission' => 'intervention_records.manage'],
             ['label' => 'Inventory', 'route' => 'inventory.index', 'icon' => 'inventory', 'permission' => 'inventory.view'],
