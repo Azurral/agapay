@@ -117,8 +117,7 @@ it('lifts buttons with a dark shadow in light mode and a light glow in dark mode
 });
 
 // v0.18.2 (user): charts in each theme's own colourway. Navy: navy / light blue / gold. Green: dark green / light
-// green / gold. Not claimable (and low stock) also gets a stripe, since light green and gold are close for colour-blind
-// readers; every bar prints its number too.
+// green / gold, all solid colours (no stripes or patterns).
 
 function tokenBlock(string $selector): string
 {
@@ -137,11 +136,16 @@ it('draws the charts in each new theme\'s own colours', function () {
         ->and(tokenBlock('html[data-palette="green"]'))->toContain('--chart-waiting: #6dbb5a')->toContain('--chart-notclaimable: #d99a00');
 });
 
-it('stripes not claimable and low stock in the new themes only', function () {
-    expect(flatLayer())->toMatch('/html:not\(\[data-palette="violet"\]\) \.chart-notclaimable[^{]*\{[^}]*repeating-linear-gradient/');
+it('draws every chart colour solid, with no stripes or patterns', function () {
+    expect(file_get_contents(resource_path('css/app.css')))->not->toContain('repeating-linear-gradient');
 });
 
 it('keeps Violet & Blue\'s chart colours in light and dark mode', function () {
     expect(tokenBlock('html[data-palette="violet"]'))->toContain('--chart-waiting: #2aa7c4')->toContain('--chart-notclaimable: #d0733f')
         ->and(tokenBlock('html.dark[data-palette="violet"]'))->toContain('--chart-waiting: #1e93ad')->toContain('--chart-notclaimable: #d0733f');
+});
+
+it('gives Green & Cream the same gold as Navy & Gold', function () {
+    expect(tokenBlock('html[data-palette="green"]'))->toContain('--color-accent: #f5c518')->toContain('--chart-notclaimable: #d99a00')
+        ->and(tokenBlock('html.dark[data-palette="green"]'))->toContain('--dark-brand: #f5c84c')->toContain('--chart-notclaimable: #b8891d');
 });

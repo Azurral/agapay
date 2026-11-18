@@ -60,8 +60,8 @@ html[data-palette="green"] {
     --color-brand-deep: #0a4a1f;
     --color-tint: #dcf3d0;
     --color-panel: #f7f1df;
-    --color-accent: #7fd86a;
-    --color-accent-soft: #e8f8df;
+    --color-accent: #f5c518;   /* the same gold as Navy & Gold */
+    --color-accent-soft: #fff6d1;
     --color-stat-1: #a8790a;
     --color-stat-2: #11692e;
     --color-stat-3: #8a6d0f;
@@ -71,10 +71,10 @@ html[data-palette="green"] {
     --logo-1: #0b5e27;
     --logo-2: #1c8a36;
     --logo-3: #56b34f;
-    --logo-leaf: #8fd16f;
+    --logo-leaf: #f5c518;
     --switch-night: #0a4a1f;
-    /* Dark green / light green / gold: light green and gold are close for colour-blind readers (validator warns),
-       so not claimable and low stock also carry a stripe (flat themes, below). */
+    /* Dark green / light green / gold (the user's colourway). Light green and gold are close for colour-blind readers,
+       so every bar also prints its number and the legend names each colour. */
     --chart-claimed: #11692e;
     --chart-waiting: #6dbb5a;
     --chart-notclaimable: #d99a00;
@@ -476,14 +476,14 @@ html.dark[data-palette="green"] {
     --dark-border: #343a29;
     --dark-text: #eeecdc;
     --dark-muted: #9c9d86;
-    --dark-brand: #a8e895;
+    --dark-brand: #f5c84c;   /* gold links, headings and open page, as in Navy & Gold */
     --chart-claimed: #2b8042;
     --chart-waiting: #72b45e;
-    --chart-notclaimable: #b9802a;
+    --chart-notclaimable: #b8891d;   /* Navy & Gold's dark-mode gold */
 }
 /* The logo's darkest bars brighten in dark mode so they stay visible on the dark header. */
 html.dark:not([data-palette="violet"]):not([data-palette="green"]) { --logo-1: #5a7cc7; --logo-2: #8aa4e0; --logo-3: #c0cff0; }
-html.dark[data-palette="green"] { --logo-1: #2f9e4e; --logo-2: #4cbb6a; --logo-3: #8fd16f; --logo-leaf: #c1f2b0; }
+html.dark[data-palette="green"] { --logo-1: #2f9e4e; --logo-2: #4cbb6a; --logo-3: #8fd16f; --logo-leaf: #f5c518; }
 /* Violet & Blue: the original dark theme. */
 html.dark[data-palette="violet"] {
     --dark-tint: #2a2b55;
@@ -648,18 +648,14 @@ html:not([data-palette="violet"]) .stat-card:hover, html:not([data-palette="viol
    repeated to outrank the dark theme's rule for white surfaces (html.dark .bg-white:not(...):not(...)). */
 html:not([data-palette="violet"]) .site-header.site-header.site-header.site-header { background-color: var(--color-brand); border-color: var(--color-brand); color: #fff; box-shadow: var(--lift);
     --logo-1: #ffffff; --logo-2: #dfe6f5; --logo-3: #b9c7e6; --logo-leaf: var(--color-accent); }
-html[data-palette="green"] .site-header.site-header.site-header.site-header { --logo-2: #e6f6dc; --logo-3: #c1f2b0; --logo-leaf: #9fe08a; }
+html[data-palette="green"] .site-header.site-header.site-header.site-header { --logo-2: #e6f6dc; --logo-3: #c1f2b0; }
 html:not([data-palette="violet"]) .site-header .bg-tint, html:not([data-palette="violet"]) .site-header .hover\:bg-tint:hover { background-color: rgb(255 255 255 / 0.14); color: #fff; }
 html:not([data-palette="violet"]) .site-header .text-brand, html:not([data-palette="violet"]) .site-header .group:hover .group-hover\:text-brand { color: var(--color-accent); }
 html:not([data-palette="violet"]) .site-header .text-muted { color: rgb(255 255 255 / 0.75); }
-html[data-palette="green"] .site-header .text-brand, html[data-palette="green"] .site-header .group:hover .group-hover\:text-brand { color: #c1f2b0; }
 html:not([data-palette="violet"]) .site-header .focus-visible\:outline-brand-soft:focus-visible { outline-color: var(--color-accent); }
 
-/* Side panel: the open page's bar in gold (Navy & Gold); the chosen swatch ringed in white on the solid card. */
-html:not([data-palette="violet"]):not([data-palette="green"]) .nav-enter[aria-current="page"]::before { background-color: var(--color-accent); }
+/* Side panel: the open page's bar in gold; the chosen swatch ringed in white on the solid card. */
+html:not([data-palette="violet"]) .nav-enter[aria-current="page"]::before { background-color: var(--color-accent); }
 html:not([data-palette="violet"]) .theme-swatch[aria-checked="true"] { box-shadow: 0 0 0 2px var(--fill), 0 0 0 4px #fff; }
 html:not([data-palette="violet"]) .hover-tint:focus-visible, html:not([data-palette="violet"]) .pill-button:focus-visible, html:not([data-palette="violet"]) .gradient-button:focus-visible { outline-color: var(--color-accent); }
-/* Not claimable and low stock: a fine stripe as well as gold, so they read apart from the light blue or light green
-   without colour (dataviz texture rule); the legend swatch matches. */
-html:not([data-palette="violet"]) .chart-notclaimable { background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / 0.38) 0 2px, transparent 2px 5px); }
 /* ==== End of flat themes ==== */
