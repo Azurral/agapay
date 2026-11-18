@@ -200,5 +200,6 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
         Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
         Route::post('/backups', [BackupController::class, 'store'])->name('backups.store');
         Route::get('/backups/{disk}/{file}', [BackupController::class, 'download'])->name('backups.download');
+        Route::delete('/backups/{file}', [BackupController::class, 'destroy'])->name('backups.destroy');
     });
 });

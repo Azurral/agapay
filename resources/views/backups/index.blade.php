@@ -43,8 +43,8 @@
         <div class="divider mt-[14px]"></div>
 
         <table class="mt-[4px] w-full table-fixed text-left text-[14px] leading-[21px]">
-            <colgroup><col class="w-[360px]"><col class="w-[220px]"><col class="w-[110px]"><col></colgroup>
-            <thead><tr class="h-[40px] text-[12px] text-arrow"><th class="pl-[8px]">Backup</th><th>Made on</th><th>Size</th><th>Kept at (click to download)</th></tr></thead>
+            <colgroup><col class="w-[360px]"><col class="w-[220px]"><col class="w-[110px]"><col><col class="w-[110px]"></colgroup>
+            <thead><tr class="h-[40px] text-[12px] text-arrow"><th class="pl-[8px]">Backup</th><th>Made on</th><th>Size</th><th>Kept at (click to download)</th><th></th></tr></thead>
             <tbody>
                 @forelse ($backups as $backup)
                     <tr class="h-[44px] border-t border-black/5 font-bold">
@@ -57,9 +57,24 @@
                                     class="rounded-full border-[1.5px] border-brand-soft px-[12px] py-[2px] text-[12px] text-brand hover:bg-canvas">{{ $copy['location'] }}</a>
                             @endforeach
                         </td>
+                        <td class="pr-[8px] text-right">
+                            @if ($loop->first)
+                                <span class="text-[12px] font-medium text-arrow" title="The newest backup is always kept">Newest</span>
+                            @else
+                                {{-- Removes it from the server and off-site, e.g. backups made with an old password. --}}
+                                <form method="POST" action="{{ route('backups.destroy', $backup['name']) }}"
+                                      onsubmit="return confirm('Delete {{ $backup['name'] }}?
+
+It is removed from the server and from off-site storage, and cannot be brought back.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="rounded-full border-[1.5px] border-bad px-[12px] py-[2px] text-[12px] text-danger hover:bg-canvas">Delete</button>
+                                </form>
+                            @endif
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="py-[12px] pl-[8px]">No backups yet. Press Back up now to make the first one.</td></tr>
+                    <tr><td colspan="5" class="py-[12px] pl-[8px]">No backups yet. Press Back up now to make the first one.</td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -142,3 +142,41 @@ it('runs the scheduled backups only on the cloud copy', function () {
     config(['agapay.edition' => 'office']);
     expect($backup->filtersPass(app()))->toBeFalse();
 });
+
+it('deletes an old backup from every place it is kept, and records it', function () {
+    $old = 'AGAPAY-backup-2026-11-17-12-00-00.zip';
+    $new = 'AGAPAY-backup-2026-11-18-12-00-00.zip';
+    foreach (['backups', 'offsite'] as $disk) {
+        Storage::disk($disk)->put("AGAPAY/{$old}", 'x');
+        Storage::disk($disk)->put("AGAPAY/{$new}", 'x');
+    }
+
+    $this->actingAs($this->admin)->get('/backups')->assertSee('Delete');
+    $this->actingAs($this->admin)->delete("/backups/{$old}")->assertRedirect(route('backups.index'))->assertSessionHas('status');
+
+    foreach (['backups', 'offsite'] as $disk) {
+        Storage::disk($disk)->assertMissing("AGAPAY/{$old}");
+        Storage::disk($disk)->assertExists("AGAPAY/{$new}");
+    }
+    expect(AuditLog::where('action', 'Deleted Backup')->where('record_label', 'like', "%{$old}%")->exists())->toBeTrue();
+});
+
+it('keeps the newest backup, so there is always one to restore', function () {
+    $new = 'AGAPAY-backup-2026-11-18-12-00-00.zip';
+    Storage::disk('backups')->put('AGAPAY/AGAPAY-backup-2026-11-17-12-00-00.zip', 'x');
+    Storage::disk('backups')->put("AGAPAY/{$new}", 'x');
+
+    $this->actingAs($this->admin)->delete("/backups/{$new}")->assertRedirect(route('backups.index'))->assertSessionHas('error');
+    Storage::disk('backups')->assertExists("AGAPAY/{$new}");
+});
+
+it('lets only the Administrator delete, and only backup files', function () {
+    Storage::disk('backups')->put('AGAPAY/AGAPAY-backup-2026-11-17-12-00-00.zip', 'x');
+    Storage::disk('backups')->put('AGAPAY/AGAPAY-backup-2026-11-18-12-00-00.zip', 'x');
+
+    $this->actingAs(userWithRole(Role::ENCODER))->delete('/backups/AGAPAY-backup-2026-11-17-12-00-00.zip')->assertForbidden();
+    $this->actingAs($this->admin)->delete('/backups/..%2F.env')->assertClientError();   // refused, whichever way the router reads it
+    $this->actingAs($this->admin)->delete('/backups/notes.txt')->assertNotFound();
+    $this->actingAs($this->admin)->delete('/backups/AGAPAY-backup-2026-01-01-00-00-00.zip')->assertNotFound();
+    Storage::disk('backups')->assertExists('AGAPAY/AGAPAY-backup-2026-11-17-12-00-00.zip');
+});

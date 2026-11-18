@@ -86,6 +86,31 @@ class BackupController extends Controller
         return Storage::disk($disk)->download($path, $file);
     }
 
+    /**
+     * Deletes one backup from every place it is kept (e.g. old ones made with a password that has since been changed).
+     * The newest backup always stays, so there is something to restore.
+     */
+    public function destroy(string $file): RedirectResponse
+    {
+        abort_unless(preg_match(self::FILE_PATTERN, $file), 404);
+        $path = $this->folder().'/'.$file;
+        $where = array_values(array_filter($this->disks(), fn (string $disk) => in_array($path, $this->files($disk), true)));
+        abort_if($where === [], 404);
+
+        $newest = collect($this->disks())->flatMap(fn (string $disk) => array_map('basename', $this->files($disk)))->max();
+        if ($file === $newest) {
+            return redirect()->route('backups.index')->with('error', 'The newest backup is kept, so there is always one to restore. Make a new backup first.');
+        }
+
+        foreach ($where as $disk) {
+            Storage::disk($disk)->delete($path);
+        }
+        $places = implode(' and ', array_map(fn (string $disk) => strtolower(self::LOCATIONS[$disk] ?? $disk), $where));
+        AuditLogger::record('Deleted Backup', label: $file.' ('.$places.')');
+
+        return redirect()->route('backups.index')->with('status', "Backup {$file} deleted ({$places}).");
+    }
+
     /** @return list<string> the backup destinations configured (copy 2 and, when set up, copy 3) */
     private function disks(): array
     {
