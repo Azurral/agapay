@@ -42,7 +42,7 @@
                 <button type="button" class="font-bold text-brand hover:underline" @click="by = null">Show every farmer</button></span>
             Click a name to open the report.
         </p>
-        <div class="mt-[12px] max-h-[calc(100vh-190px)] overflow-auto">
+        <div class="mt-[12px] max-h-[calc(var(--app-vh,100vh)-190px)] overflow-auto">
             <table class="w-full text-left text-[13px]">
                 <thead class="sticky top-0 bg-white text-muted"><tr><th class="py-[6px]">Farmer</th><th>Barangay</th><th>Crop</th><th class="text-right">Area</th><th class="text-right">Cost</th><th class="pl-[16px]">Status</th></tr></thead>
                 <tbody>
@@ -65,7 +65,7 @@
 
 <x-ui.modal name="damage-area" title="Area damaged" width="wide" top="40">
     <p class="-mt-[12px] text-[13px] text-muted">Hectares totally and partially damaged. A partly damaged hectare counts at the crop's partial-loss factor in the production loss.</p>
-    <div class="mt-[12px] grid max-h-[calc(100vh-190px)] grid-cols-2 gap-[18px] overflow-auto">
+    <div class="mt-[12px] grid max-h-[calc(var(--app-vh,100vh)-190px)] grid-cols-2 gap-[18px] overflow-auto">
         @foreach (['By barangay' => $breakdown['area_by_barangay'], 'By crop' => $breakdown['area_by_crop']] as $heading => $rows)
             <div>
                 <p class="text-[14px] font-bold">{{ $heading }}</p>
@@ -88,7 +88,7 @@
 
 <x-ui.modal name="damage-loss" title="Production loss" width="wide" top="40">
     <p class="-mt-[12px] text-[13px] text-muted">Metric tons lost per crop: (totally damaged + factor &times; partly damaged area) &times; the crop's yield per hectare.</p>
-    <ul class="mt-[14px] flex max-h-[calc(100vh-190px)] flex-col gap-[9px] overflow-auto">
+    <ul class="mt-[14px] flex max-h-[calc(var(--app-vh,100vh)-190px)] flex-col gap-[9px] overflow-auto">
         @forelse ($breakdown['loss_by_crop'] as $r)
             {!! $bar($r['name'], $r['percent'], DamageCalculator::decimal($r['value']).' MT', $r['farmers'].' '.\Illuminate\Support\Str::plural('farmer', $r['farmers']).', '.DamageCalculator::decimal($r['yield']).' MT/ha', 'crop') !!}
         @empty
@@ -99,7 +99,7 @@
 
 <x-ui.modal name="damage-cost" title="Estimated cost of damage" width="wide" top="40">
     <p class="-mt-[12px] text-[13px] text-muted">Production loss &times; the crop's farmgate price per metric ton.</p>
-    <div class="mt-[12px] flex max-h-[calc(100vh-190px)] flex-col gap-[16px] overflow-auto">
+    <div class="mt-[12px] flex max-h-[calc(var(--app-vh,100vh)-190px)] flex-col gap-[16px] overflow-auto">
         @foreach ([['By barangay', $breakdown['cost_by_barangay'], 'barangay'], ['By crop', $breakdown['cost_by_crop'], 'crop'], ['By crisis', $breakdown['cost_by_crisis'], null]] as [$heading, $rows, $by])
             <div>
                 <p class="text-[14px] font-bold">{{ $heading }}</p>

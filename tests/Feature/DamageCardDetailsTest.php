@@ -63,5 +63,5 @@ it('lets a barangay or crop bar open the farmers affected there', function () {
         ->getContent();
 
     expect(substr_count($html, 'data-farmer-row'))->toBe(6)
-        ->and($html)->toContain('width: calc(100vw - 80px)');   // the details windows use the whole width
+        ->and($html)->toContain('width: 1520px');   // the details windows use the whole width
 });

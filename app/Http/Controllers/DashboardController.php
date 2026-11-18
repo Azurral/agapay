@@ -8,6 +8,7 @@ use App\Models\Disaster;
 use App\Models\DistributionCycle;
 use App\Models\InterventionRecord;
 use App\Services\AuditLogger;
+use App\Support\DashboardDetails;
 use App\Support\DashboardOverview;
 use App\Support\DashboardWidgets;
 use Illuminate\Http\RedirectResponse;
@@ -27,6 +28,7 @@ class DashboardController extends Controller
             'widgets' => $widgets,
             'allowed' => DashboardWidgets::allowed($user),
             'overview' => DashboardOverview::build(),
+            'details' => DashboardDetails::build($widgets),   // the windows behind the tiles and chart rows
             // Data Encoders see their encoding queue; Admin and Agri Tech see all beneficiaries (Figma).
             'queue' => $has('encoding_queue')
                 ? Beneficiary::whereNotNull('encoding_issue')->oldest()->oldest('id')->limit(10)->get()

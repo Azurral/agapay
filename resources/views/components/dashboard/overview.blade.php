@@ -1,18 +1,19 @@
-@props(['overview', 'widgets', 'allowed'])
+@props(['overview', 'widgets', 'allowed', 'details' => []])
 @php
     $t = $overview['tiles'];
     $percent = $t['assigned'] > 0 ? (int) round($t['claimed'] / $t['assigned'] * 100) : 0;
     $tiles = [
-        'tile_farmers' => ['Registered farmers', number_format($t['farmers']), 'in AGAPAY, all barangays'],
-        'tile_released' => ['Released in '.($t['cycle'] ?? 'this cycle'), $t['claimed'].' of '.$t['assigned'], $percent.'% of the program records claimed'],
-        'tile_requests' => ['Pending requests', number_format($t['pending_requests']), 'assistance requests waiting for a decision'],
-        'tile_low_stock' => ['Low stock', number_format($t['low_stock']), $t['low_stock'] === 1 ? 'item at or below its low-stock level' : 'items at or below their low-stock level'],
+        'tile_farmers' => ['Registered farmers', number_format($t['farmers']), 'in AGAPAY, all barangays', 'dash-farmers'],
+        'tile_released' => ['Released in '.($t['cycle'] ?? 'this cycle'), $t['claimed'].' of '.$t['assigned'], $percent.'% of the program records claimed', 'dash-releases'],
+        'tile_requests' => ['Pending requests', number_format($t['pending_requests']), 'assistance requests waiting for a decision', 'dash-requests'],
+        'tile_low_stock' => ['Low stock', number_format($t['low_stock']), $t['low_stock'] === 1 ? 'item at or below its low-stock level' : 'items at or below their low-stock level', 'dash-stock'],
     ];
     $shownTiles = array_values(array_filter($widgets, fn ($id) => isset($tiles[$id])));
     $shownCharts = array_values(array_filter($widgets, fn ($id) => in_array($id, ['chart_releases', 'chart_barangays', 'chart_stock'], true)));
     $chartCols = ['grid-cols-1', 'grid-cols-[1.25fr_1fr]', 'grid-cols-[1.25fr_1fr_1fr]'][max(0, count($shownCharts) - 1)];
 @endphp
-{{-- Home page data presentation (App\Support\DashboardOverview). Every bar also prints its number; hover shows the details. --}}
+{{-- Home page data presentation (App\Support\DashboardOverview). Every bar also prints its number; the tiles and bars
+     open their details windows (components/dashboard/details). --}}
 <x-ui.card title="Overview" class="mb-[20px]">
     <x-slot:actions>
         <button type="button" x-data @click="$dispatch('open-modal', 'customize-home')" aria-haspopup="dialog"
@@ -26,12 +27,15 @@
     @if ($shownTiles !== [])
     <div class="mt-[14px] grid gap-[14px]" style="grid-template-columns: repeat({{ count($shownTiles) }}, minmax(0, 1fr))">
         @foreach ($shownTiles as $id)
-            @php([$label, $value, $note] = $tiles[$id])
-            <div class="rounded-[16px] bg-[#f7f7f9] px-[18px] py-[14px]">
-                <p class="text-[13px] font-bold text-arrow">{{ $label }}</p>
-                <p class="mt-[2px] text-[28px] font-bold leading-[34px] tabular-nums">{{ $value }}</p>
-                <p class="text-[12px] text-arrow">{{ $note }}</p>
-            </div>
+            @php([$label, $value, $note, $modal] = $tiles[$id])
+            {{-- A button, like the Crisis Reports cards: opens what the number is made of. --}}
+            <button type="button" x-data @click="$dispatch('open-modal', '{{ $modal }}')" aria-haspopup="dialog" data-dash-tile="{{ $modal }}"
+                    class="stat-card group relative cursor-pointer rounded-[16px] border-[1.5px] border-transparent bg-[#f7f7f9] px-[18px] py-[14px] text-left transition hover:-translate-y-[2px] hover:border-brand-soft hover:shadow-[0_8px_20px_rgba(90,93,227,0.15)] focus-visible:border-brand-soft focus-visible:outline-none">
+                <span class="block text-[13px] font-bold text-arrow">{{ $label }}</span>
+                <span class="mt-[2px] block text-[28px] font-bold leading-[34px] tabular-nums">{{ $value }}</span>
+                <span class="block pr-[84px] text-[12px] text-arrow">{{ $note }}</span>
+                <span class="absolute right-[14px] bottom-[12px] text-[12px] font-bold text-brand opacity-70 group-hover:opacity-100">View details &rsaquo;</span>
+            </button>
         @endforeach
     </div>
     @endif
@@ -54,9 +58,11 @@
                 <p class="mt-[12px] text-[13px] text-arrow">No program records in the current cycle yet.</p>
             @else
                 @php($most = max(array_column($overview['programs'], 'total')))
-                <ul class="mt-[12px] flex flex-col gap-[9px]">
+                <ul class="mt-[10px] flex flex-col gap-[3px]" x-data>
                     @foreach ($overview['programs'] as $p)
-                        <li class="grid grid-cols-[170px_1fr_58px] items-center gap-[10px] text-[12px] leading-[16px]">
+                        <li><button type="button" data-dash-pick="program" aria-haspopup="dialog" title="Show this program by barangay"
+                                @click="$dispatch('dash-pick-program', {{ $p['id'] }}); $dispatch('open-modal', 'dash-program')"
+                                class="grid grid-cols-[170px_1fr_58px] items-center gap-[10px] damage-row -mx-[6px] w-[calc(100%+12px)] cursor-pointer rounded-[8px] px-[6px] py-[3px] text-left text-[12px] leading-[16px]">
                             <span class="truncate font-bold" title="{{ $p['name'] }}">{{ $p['name'] }}</span>
                             <span class="flex h-[14px] gap-[2px]" style="width: {{ max($p['total'] / $most * 100, 4) }}%">
                                 @foreach ([['claimed', 'Claimed', 'chart-claimed'], ['waiting', 'Waiting', 'chart-waiting'], ['not_claimable', 'Not claimable', 'chart-notclaimable']] as [$key, $text, $class])
@@ -66,7 +72,7 @@
                                 @endforeach
                             </span>
                             <span class="text-right tabular-nums text-arrow" title="claimed / total">{{ $p['claimed'] }}/{{ $p['total'] }}</span>
-                        </li>
+                        </button></li>
                     @endforeach
                 </ul>
             @endif
@@ -75,13 +81,16 @@
         {{-- Farmers per barangay: one series, so one colour and no legend. --}}
         <figure class="rounded-[16px] bg-[#f7f7f9] px-[18px] pt-[14px] pb-[16px]">
             <figcaption class="text-[14px] font-bold">Farmers per barangay</figcaption>
-            <ul class="mt-[12px] flex flex-col gap-[9px]">
+            <ul class="mt-[10px] flex flex-col gap-[3px]" x-data>
                 @forelse ($overview['barangays'] as $b)
-                    <li class="grid grid-cols-[96px_1fr_34px] items-center gap-[10px] text-[12px] leading-[16px]" title="{{ $b['name'] }}: {{ $b['value'] }} {{ \Illuminate\Support\Str::plural('farmer', $b['value']) }}">
+                    {{-- A barangay opens its details; "Others" opens the table of every barangay. --}}
+                    <li><button type="button" data-dash-pick="barangay" aria-haspopup="dialog" title="{{ $b['name'] }}: {{ $b['value'] }} {{ \Illuminate\Support\Str::plural('farmer', $b['value']) }}"
+                            @if ($b['id']) @click="$dispatch('dash-pick-barangay', {{ $b['id'] }}); $dispatch('open-modal', 'dash-barangay')" @else @click="$dispatch('open-modal', 'dash-farmers')" @endif
+                            class="grid grid-cols-[96px_1fr_34px] items-center gap-[10px] damage-row -mx-[6px] w-[calc(100%+12px)] cursor-pointer rounded-[8px] px-[6px] py-[3px] text-left text-[12px] leading-[16px]">
                         <span class="truncate font-bold">{{ $b['name'] }}</span>
                         <span class="h-[14px]"><span class="chart-seg chart-claimed block h-full" style="width: {{ max($b['percent'], 2) }}%"></span></span>
                         <span class="text-right tabular-nums text-arrow">{{ $b['value'] }}</span>
-                    </li>
+                    </button></li>
                 @empty
                     <li class="text-[13px] text-arrow">No farmers yet.</li>
                 @endforelse
@@ -94,10 +103,12 @@
                 <span class="text-[14px] font-bold">Stock levels</span>
                 <span class="flex items-center gap-[5px] text-[12px] text-arrow"><i class="chart-mark-key"></i>low-stock level</span>
             </figcaption>
-            <ul class="mt-[12px] flex flex-col gap-[11px]">
+            <ul class="mt-[10px] flex flex-col gap-[3px]" x-data>
                 @forelse ($overview['stock'] as $s)
                     @php($amount = \App\Models\InventoryItem::quantity($s['balance']).' '.$s['unit'])
-                    <li class="text-[12px] leading-[16px]" title="{{ $s['name'] }}: {{ $amount }} left; low at {{ \App\Models\InventoryItem::quantity($s['threshold']) }}">
+                    <li><button type="button" data-dash-pick="item" aria-haspopup="dialog" title="{{ $s['name'] }}: {{ $amount }} left; low at {{ \App\Models\InventoryItem::quantity($s['threshold']) }}"
+                            @click="$dispatch('dash-pick-item', {{ $s['id'] }}); $dispatch('open-modal', 'dash-item')"
+                            class="block damage-row -mx-[6px] w-[calc(100%+12px)] cursor-pointer rounded-[8px] px-[6px] py-[4px] text-left text-[12px] leading-[16px]">
                         <span class="flex justify-between gap-[8px]">
                             <span class="truncate font-bold">{{ $s['name'] }}</span>
                             <span class="shrink-0 tabular-nums {{ $s['low'] ? 'font-bold text-danger' : 'text-arrow' }}">{{ $s['low'] ? '⚠ Low · ' : '' }}{{ $amount }}</span>
@@ -108,7 +119,7 @@
                                 <span class="chart-mark absolute -top-[3px] h-[16px]" style="left: {{ $s['mark'] }}%"></span>
                             @endif
                         </span>
-                    </li>
+                    </button></li>
                 @empty
                     <li class="text-[13px] text-arrow">No stock items yet.</li>
                 @endforelse
@@ -121,6 +132,8 @@
 
     {{ $slot }}
 </x-ui.card>
+
+<x-dashboard.details :details="$details" :overview="$overview" />
 
 {{-- Customize: tick what Home shows; the arrows change the order. Only widgets the role may see are offered. --}}
 <x-ui.modal name="customize-home" title="Customize your home page" width="560">

@@ -66,6 +66,7 @@ final class DashboardOverview
         $names = Intervention::whereIn('id', $counts->pluck('intervention_id'))->get(['id', 'source', 'name'])->keyBy('id');
 
         return $counts->map(fn ($row) => [
+            'id' => (int) $row->intervention_id,
             'name' => strtoupper((string) $names[$row->intervention_id]?->source).' - '.$names[$row->intervention_id]?->name,
             'claimed' => (int) $row->claimed,
             'waiting' => (int) $row->waiting,
@@ -84,11 +85,11 @@ final class DashboardOverview
             ->pluck('farmers', 'barangay_id')->map(fn ($n) => (int) $n)->sortDesc();
         $names = Barangay::options();   // cached (id => name)
 
-        $rows = $counts->map(fn (int $n, $id) => ['name' => $names[$id] ?? 'Unknown', 'value' => $n])
+        $rows = $counts->map(fn (int $n, $id) => ['id' => (int) $id, 'name' => $names[$id] ?? 'Unknown', 'value' => $n])
             ->sortBy([['value', 'desc'], ['name', 'asc']])->values();
         if ($rows->count() > self::BARANGAYS) {
             $others = $rows->slice(self::BARANGAYS - 1)->sum('value');
-            $rows = $rows->take(self::BARANGAYS - 1)->push(['name' => 'Others', 'value' => $others]);
+            $rows = $rows->take(self::BARANGAYS - 1)->push(['id' => null, 'name' => 'Others', 'value' => $others]);
         }
         $max = max(1, (int) $rows->max('value'));
 
@@ -103,6 +104,7 @@ final class DashboardOverview
         $max = max(1.0, (float) $items->map(fn (InventoryItem $i) => max($i->balance(), (float) $i->low_stock_threshold))->max());
 
         return $items->map(fn (InventoryItem $item) => [
+            'id' => $item->id,
             'name' => $item->name,
             'balance' => $item->balance(),
             'threshold' => (float) $item->low_stock_threshold,

@@ -8,7 +8,7 @@
     @endif
 
     {{-- The user's chosen widgets, in their order (Customize); until they choose, their role's defaults. --}}
-    <x-dashboard.overview :overview="$overview" :widgets="$widgets" :allowed="$allowed">
+    <x-dashboard.overview :overview="$overview" :widgets="$widgets" :allowed="$allowed" :details="$details">
         @if ($panels !== [])
             <div class="mt-[14px] grid grid-cols-2 gap-[14px]">
                 @foreach ($panels as $panel)
