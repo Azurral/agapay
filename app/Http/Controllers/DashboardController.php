@@ -10,6 +10,7 @@ use App\Models\InterventionRecord;
 use App\Services\AuditLogger;
 use App\Support\DashboardDetails;
 use App\Support\DashboardOverview;
+use App\Support\DashboardSummary;
 use App\Support\DashboardWidgets;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,6 +45,10 @@ class DashboardController extends Controller
                 : collect(),
             'damage' => $has('damage') ? $this->latestDamage() : null,
             'toVerify' => $has('to_verify') ? $this->toVerify() : collect(),
+            // Quarterly and yearly summary (panel): the year chosen on Home, else this year.
+            'summary' => $has('summary')
+                ? DashboardSummary::build(min(max((int) $request->query('year', now()->year), 2000), (int) now()->year))
+                : null,
         ]);
     }
 

@@ -87,6 +87,51 @@
                     @endforelse
                 </div>
             </x-ui.card>
+        @elseif ($widget === 'summary' && $summary)
+            {{-- Quarterly and yearly summary (panel): each quarter of the chosen year and the whole year. --}}
+            <x-ui.card title="Quarterly and Yearly Summary" class="mb-[20px]">
+                <x-slot:actions>
+                    <form method="GET" class="-mt-[6px]">
+                        <label class="text-[13px] font-bold">Year
+                            <select name="year" onchange="this.form.submit()" aria-label="Year of the summary"
+                                    class="ml-[6px] h-[34px] cursor-pointer rounded-[50px] border-[1.5px] border-brand-soft bg-white px-[12px] text-[13px] font-bold">
+                                @foreach ($summary['years'] as $year)
+                                    <option value="{{ $year }}" @selected($year === $summary['year'])>{{ $year }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                    </form>
+                </x-slot:actions>
+                <table class="mt-[14px] w-full text-[14px]">
+                    <thead>
+                        <tr class="text-left text-[13px] text-muted">
+                            <th class="py-[6px] font-medium">{{ $summary['year'] }}</th>
+                            @foreach (['Q1' => 'Jan–Mar', 'Q2' => 'Apr–Jun', 'Q3' => 'Jul–Sep', 'Q4' => 'Oct–Dec'] as $q => $months)
+                                <th class="py-[6px] text-right font-medium">{{ $q }} <span class="block text-[11px]">{{ $months }}</span></th>
+                            @endforeach
+                            <th class="py-[6px] pr-[8px] text-right font-bold text-ink">Whole year</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($summary['rows'] as $row)
+                            <tr class="border-t border-black/5">
+                                <td class="py-[9px] font-bold">
+                                    @if ($row['link'] && auth()->user()->can($row['permission']))
+                                        <a href="{{ $row['link'] }}" class="hover:text-brand hover:underline">{{ $row['label'] }} &rsaquo;</a>
+                                    @else
+                                        {{ $row['label'] }}
+                                    @endif
+                                </td>
+                                @foreach ($row['values'] as $i => $value)
+                                    <td @class(['py-[9px] text-right font-bold tabular-nums', 'pr-[8px] text-brand' => $i === 4])>
+                                        {{ $row['money'] ? '₱'.number_format($value) : number_format($value) }}
+                                    </td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </x-ui.card>
         @elseif ($widget === 'recent_list')
             <div class="mb-[20px]"><x-beneficiary.table title="All Beneficiaries" :beneficiaries="$recent" /></div>
         @endif

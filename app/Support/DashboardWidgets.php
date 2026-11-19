@@ -24,15 +24,16 @@ final class DashboardWidgets
         'claiming' => ['Next claiming dates', 'dashboard.view', 'panel'],
         'damage' => ['Latest crisis damage', 'damage.view', 'panel'],
         'to_verify' => ['Unclaimed records to verify after claiming', 'interventions.validate', 'panel'],
+        'summary' => ['Quarterly and yearly summary', 'dashboard.view', 'list'],
         'recent_list' => ['All beneficiaries (latest)', 'beneficiaries.view', 'list'],
         'encoding_queue' => ['Pending encoding queue', 'beneficiaries.manage', 'list'],
     ];
 
     private const DEFAULTS = [
-        Role::ADMIN => ['tile_farmers', 'tile_released', 'tile_requests', 'tile_low_stock', 'chart_releases', 'chart_barangays', 'chart_stock', 'walkins', 'recent_list'],
-        Role::AGRITECH => ['tile_farmers', 'tile_released', 'tile_requests', 'chart_releases', 'chart_barangays', 'damage', 'to_verify', 'claiming', 'recent_list'],
-        Role::ENCODER => ['tile_farmers', 'tile_released', 'tile_low_stock', 'chart_releases', 'chart_stock', 'claiming', 'encoding_queue'],
-        Role::AGRITECH_ENCODER => ['tile_farmers', 'tile_released', 'tile_requests', 'tile_low_stock', 'chart_releases', 'chart_stock', 'damage', 'to_verify', 'claiming', 'encoding_queue'],
+        Role::ADMIN => ['tile_farmers', 'tile_released', 'tile_requests', 'tile_low_stock', 'chart_releases', 'chart_barangays', 'chart_stock', 'walkins', 'summary', 'recent_list'],
+        Role::AGRITECH => ['tile_farmers', 'tile_released', 'tile_requests', 'chart_releases', 'chart_barangays', 'damage', 'to_verify', 'claiming', 'summary', 'recent_list'],
+        Role::ENCODER => ['tile_farmers', 'tile_released', 'tile_low_stock', 'chart_releases', 'chart_stock', 'claiming', 'summary', 'encoding_queue'],
+        Role::AGRITECH_ENCODER => ['tile_farmers', 'tile_released', 'tile_requests', 'tile_low_stock', 'chart_releases', 'chart_stock', 'damage', 'to_verify', 'claiming', 'summary', 'encoding_queue'],
     ];
 
     /** @return array<string, string> id => label, the widgets this user may show */
