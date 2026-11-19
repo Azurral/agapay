@@ -11,13 +11,17 @@ use App\Models\Permission;
 use App\Models\User;
 use App\Services\AssistanceRequestStats;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use Tests\Support\GpsJpeg;
 
 beforeEach(function () {
     $this->seed(DatabaseSeeder::class);
     $this->admin = User::where('username', 'Admin_01')->sole();
     $this->agritech = User::where('username', 'Agritech_02')->sole();
     $this->encoder = User::where('username', 'Encoder_03')->sole();
+    config(['agapay.geo.check_photos' => true]);   // the request photos are checked as on the real copies
 });
 
 function farmer(string $first, string $last): Beneficiary
@@ -25,9 +29,16 @@ function farmer(string $first, string $last): Beneficiary
     return Beneficiary::where(['first_name' => $first, 'last_name' => $last])->sole();
 }
 
+/** A phone photo taken at the farmer's farm (GPS on), at the given time. */
+function farmPhoto(Beneficiary $farmer, ?string $takenAt = '2026-07-21 09:00:00', float $north = 0.0, string $name = 'damage.jpg'): UploadedFile
+{
+    return UploadedFile::fake()->createWithContent($name, GpsJpeg::bytes((float) $farmer->farm_latitude + $north, (float) $farmer->farm_longitude, takenAt: $takenAt));
+}
+
+/** A request after Typhoon Cristina; a crisis request carries a photo taken at the farm unless the test gives its own. */
 function requestInput(array $overrides = []): array
 {
-    return [
+    $input = [
         'beneficiary_id' => farmer('Ana', 'Dela Cruz')->id,
         'source' => 'lgu',
         'intervention_id' => program('lgu', 'Emergency Seedlings')->id,
@@ -37,6 +48,11 @@ function requestInput(array $overrides = []): array
         'reason' => 'Seedbed washed out',
         ...$overrides,
     ];
+    if (! array_key_exists('photos', $overrides) && $input['disaster_id'] && ($farmer = Beneficiary::find($input['beneficiary_id']))) {
+        $input['photos'] = [farmPhoto($farmer)];
+    }
+
+    return $input;
 }
 
 it('lets encoders and agri techs file a request that waits for the administrator', function (string $username) {
@@ -173,4 +189,50 @@ it('downloads the requests as Excel', function () {
         'Filed', 'Farmer', 'RSBSA No.', 'Barangay', 'Sitio/Purok', 'Program', 'Source', 'Quantity', 'Crisis', 'Crop', 'Reason',
         'Status', 'Decided By', 'Decision Note',
     ] && $export->query()->count() === 9);
+});
+
+it('needs a photo of the damage when the request is about a crisis, and none otherwise', function () {
+    $this->actingAs($this->encoder)->post('/assistance-requests', requestInput(['photos' => []]))
+        ->assertSessionHasErrors(['photos' => "Attach at least one photo of the damage, taken at the farm with the phone's location on."]);
+
+    $this->post('/assistance-requests', requestInput(['disaster_id' => '', 'photos' => []]))->assertSessionHasNoErrors();
+    expect(AssistanceRequest::latest('id')->first()->photos)->toHaveCount(0);
+});
+
+it("refuses a crisis photo without the phone's location or taken away from the farm", function () {
+    $ana = farmer('Ana', 'Dela Cruz');
+    $noGps = UploadedFile::fake()->createWithContent('nogps.jpg', GpsJpeg::bytes(null, null, takenAt: '2026-07-21 09:00:00'));
+
+    $this->actingAs($this->encoder)->post('/assistance-requests', requestInput(['photos' => [$noGps]]))
+        ->assertSessionHasErrors(['photos' => "nogps.jpg has no GPS location. Take the photo with the phone's location turned on."]);
+    $this->post('/assistance-requests', requestInput(['photos' => [farmPhoto($ana, north: 0.05, name: 'far.jpg')]]))
+        ->assertSessionHasErrors('photos');
+    expect(session('errors')->getBag('default')->first('photos'))->toContain('far.jpg was taken 5.')->toContain("from Ana Dela Cruz's farm");
+});
+
+it('refuses a crisis photo with no date taken, a future date, or a date before the crisis', function (?string $takenAt, string $message) {
+    $this->actingAs($this->encoder)->post('/assistance-requests', requestInput(['photos' => [farmPhoto(farmer('Ana', 'Dela Cruz'), $takenAt, name: 'field.jpg')]]))
+        ->assertSessionHasErrors(['photos' => $message]);
+    expect(AssistanceRequest::where('reason', 'Seedbed washed out')->exists())->toBeFalse();
+})->with([
+    'no date' => [null, "field.jpg has no date taken. Use the phone's own camera, not a screenshot or an edited copy."],
+    'future' => ['2099-01-01 08:00:00', "field.jpg is dated Jan 1, 2099, which is later than today. Check the phone's date and time."],
+    'before the crisis' => ['2026-07-01 08:00:00', 'field.jpg was taken on Jul 1, 2026, before Typhoon Cristina (Jul 20, 2026). Attach photos taken after the crisis.'],
+]);
+
+it('keeps the photos with the request, where and when each was taken, for the administrator to see', function () {
+    Storage::fake('local');
+    $this->actingAs($this->encoder)->post('/assistance-requests', requestInput(['photos' => [farmPhoto(farmer('Ana', 'Dela Cruz'), '2026-07-22 10:15:00')]]))
+        ->assertSessionHasNoErrors();
+
+    $request = AssistanceRequest::latest('id')->firstOrFail();
+    $photo = $request->photos()->sole();
+    expect($photo->taken_at->format('Y-m-d H:i'))->toBe('2026-07-22 10:15')
+        ->and($photo->latitude)->not->toBeNull()
+        ->and($photo->distance_m)->toBe(0);
+    Storage::disk('local')->assertExists($photo->path);
+
+    $this->actingAs($this->admin)->get('/interventions/lgu?tab=requests')->assertOk()
+        ->assertSee(route('assistance-requests.photo', [$request, $photo]), false);
+    $this->get(route('assistance-requests.photo', [$request, $photo]))->assertOk();
 });

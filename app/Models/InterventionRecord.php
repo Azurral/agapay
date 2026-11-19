@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
@@ -82,6 +83,12 @@ class InterventionRecord extends Model
         return $this->belongsTo(Beneficiary::class)->withTrashed();
     }
 
+    /** A status change sent with proof, waiting for the Administrator. */
+    public function pendingProof(): HasOne
+    {
+        return $this->hasOne(ValidationProof::class)->ofMany(['id' => 'max'], fn ($q) => $q->where('status', ValidationProof::PENDING));
+    }
+
     public function intervention(): BelongsTo
     {
         return $this->belongsTo(Intervention::class);
@@ -123,14 +130,23 @@ class InterventionRecord extends Model
         return $this->claim_status === self::CLAIM_CLAIMED;
     }
 
+    /**
+     * An unclaimed record of an OFW, bedridden, deceased, inactive, relocated or duplicate farmer cannot be claimed, so
+     * its claim status is locked: no Unclaimed/Claimed dropdown, only a "Not claimable" label.
+     */
+    public function isClaimLocked(): bool
+    {
+        return ! $this->isClaimed() && ! in_array($this->validation_status, self::CLAIMABLE, true);
+    }
+
     public function claimLabel(): string
     {
-        return $this->isClaimed() ? 'Claimed' : 'Unclaimed';
+        return $this->isClaimed() ? 'Claimed' : ($this->isClaimLocked() ? 'Not claimable' : 'Unclaimed');
     }
 
     public function claimTone(): string
     {
-        return $this->isClaimed() ? 'ok' : 'bad';
+        return $this->isClaimed() ? 'ok' : ($this->isClaimLocked() ? 'neutral' : 'bad');
     }
 
     /** "2 sacks", "1 sack", "5 L"; "-" when no quantity was recorded. */

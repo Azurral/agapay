@@ -19,11 +19,11 @@ RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction --pr
 COPY . .
 RUN composer dump-autoload --no-dev --optimize --classmap-authoritative --no-scripts
 
-# ---- 3. The server: PHP 8.5 + Apache, the office copy's extensions, and mysqldump for the backups
+# ---- 3. The server: PHP 8.5 + Apache, the office copy's extensions, mysqldump for the backups, Tesseract OCR for ID checks
 FROM php:8.5-apache
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 RUN install-php-extensions pdo_mysql gd intl zip exif bcmath opcache \
-    && apt-get update && apt-get install -y --no-install-recommends mariadb-client \
+    && apt-get update && apt-get install -y --no-install-recommends mariadb-client tesseract-ocr tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/* \
     && a2dismod -f mpm_event mpm_worker || true \
     && a2enmod mpm_prefork rewrite headers

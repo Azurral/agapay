@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Beneficiary;
+use App\Models\Disaster;
 use Illuminate\Http\UploadedFile;
 
 /**
@@ -50,6 +51,31 @@ final class FarmPhotoCheck
             $max = rtrim(rtrim(number_format($limit, 1), '0'), '.');
 
             return "{$name} was taken {$km} km from {$farmer->fullName()}'s farm (at most {$max} km). Attach photos taken at the farm.";
+        }
+
+        return null;
+    }
+
+    /**
+     * When (panel: proof of the crisis, its place and time): the photo must carry the moment it was taken, not later
+     * than now and not before the crisis it is meant to show.
+     */
+    public static function timeProblem(UploadedFile $photo, Disaster $crisis): ?string
+    {
+        if (! self::enabled()) {
+            return null;
+        }
+
+        $name = $photo->getClientOriginalName() ?: 'A photo';
+        $taken = PhotoGps::takenAt($photo->getRealPath() ?: $photo->getPathname());
+        if ($taken === null) {
+            return "{$name} has no date taken. Use the phone's own camera, not a screenshot or an edited copy.";
+        }
+        if ($taken->isAfter(now()->addMinutes(10))) {   // a few minutes' leeway for the phone's clock
+            return "{$name} is dated {$taken->format('M j, Y')}, which is later than today. Check the phone's date and time.";
+        }
+        if ($taken->lt($crisis->occurred_on->copy()->startOfDay())) {
+            return "{$name} was taken on {$taken->format('M j, Y')}, before {$crisis->auditRecordLabel()}. Attach photos taken after the crisis.";
         }
 
         return null;

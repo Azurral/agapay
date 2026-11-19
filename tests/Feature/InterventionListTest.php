@@ -44,8 +44,27 @@ it('leaves OFW, bedridden and deceased farmers off the list by itself, and shows
 
     $this->get('/interventions/da')->assertOk()->assertSee('Juan Dela Cruz')->assertDontSee('Liza Domingo');   // Liza: Bedridden
     $this->get('/interventions/da?show=not')->assertOk()
-        ->assertSeeInOrder(['Liza Domingo', 'PAFF', 'Bedridden', 'Unclaimed'])->assertDontSee('Juan Dela Cruz');
+        ->assertSeeInOrder(['Liza Domingo', 'PAFF', 'Bedridden', 'Not claimable'])->assertDontSee('Juan Dela Cruz');
     $this->get('/interventions/da?show=all')->assertOk()->assertSee('Juan Dela Cruz')->assertSee('Liza Domingo');
+});
+
+it('locks the claim status of a not-claimable farmer: no Unclaimed/Claimed dropdown, only a Not claimable label', function () {
+    $liza = seededRecord('Liza', 'Domingo');   // Bedridden, unclaimed
+
+    $page = $this->actingAs($this->agritech)->get('/interventions/da?show=not')->assertOk()
+        ->assertSeeInOrder(['Liza Domingo', 'Bedridden', 'Not claimable']);
+    expect($page->getContent())->not->toContain(route('intervention-records.claim', $liza))
+        ->and($liza->claimLabel())->toBe('Not claimable')
+        ->and($liza->claimTone())->toBe('neutral');
+});
+
+it('keeps the dropdown on a claimed record whose farmer later became not claimable, so it can still be unclaimed', function () {
+    $liza = seededRecord('Liza', 'Domingo');
+    $liza->forceFill(['claim_status' => InterventionRecord::CLAIM_CLAIMED, 'date_distributed' => now()->toDateString()])->saveQuietly();
+
+    $page = $this->actingAs($this->agritech)->get('/interventions/da?show=all')->assertOk();
+    expect($page->getContent())->toContain('action="'.route('intervention-records.claim', $liza).'"')
+        ->and($liza->fresh()->claimLabel())->toBe('Claimed');
 });
 
 it('gives agri techs validation and status dropdowns without archive controls', function () {

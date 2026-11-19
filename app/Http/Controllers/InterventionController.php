@@ -60,7 +60,7 @@ class InterventionController extends Controller
 
         $records = InterventionRecord::query()
             ->ofSource($source)
-            ->with(['beneficiary.barangay:id,name', 'intervention', 'cycle'])
+            ->with(['beneficiary.barangay:id,name', 'intervention', 'cycle', 'pendingProof'])
             // Records of archived beneficiaries stay out of the working lists.
             ->whereIn('beneficiary_id', Beneficiary::select('id'))
             ->when($name !== '', fn (Builder $q) => $q->whereHas('beneficiary', fn (Builder $b) => $b->search($name)))
@@ -141,7 +141,7 @@ class InterventionController extends Controller
             'filters' => $filters,
             'stats' => app(AssistanceRequestStats::class)->build($filters),
             'requests' => AssistanceRequestStats::query($filters)
-                ->with(['beneficiary.barangay:id,name', 'intervention', 'disaster:id,name', 'record:id,claim_status'])
+                ->with(['beneficiary.barangay:id,name', 'intervention', 'disaster:id,name', 'record:id,claim_status', 'photos'])
                 ->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END")->latest()->latest('id')
                 ->paginate(15)->withQueryString(),
             'disasters' => Disaster::orderByDesc('occurred_on')->orderByDesc('id')->pluck('name', 'id'),

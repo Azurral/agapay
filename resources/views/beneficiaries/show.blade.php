@@ -138,7 +138,7 @@
                         <span>{{ $record->intervention->sourceLabel() }}</span>
                         <span class="truncate pr-[12px]">{{ $record->intervention->name }}</span>
                         <span>{{ $barangayName }}</span>
-                        @if ($isEdit && auth()->user()->can('interventions.claim'))
+                        @if ($isEdit && auth()->user()->can('interventions.claim') && ! $record->isClaimLocked())
                             <x-intervention.chip-select name="claim_status" :options="['unclaimed' => 'Unclaimed', 'claimed' => 'Claimed']" :selected="$record->claim_status"
                                                         :tone="$record->claimTone()"
                                                         :actions="['claimed' => route('intervention-records.claim', $record), 'unclaimed' => route('intervention-records.unclaim', $record)]" />

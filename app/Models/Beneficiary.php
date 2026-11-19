@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\DB;
     'encoding_issue', 'source', 'consent_confirmed_at', 'consent_confirmed_by', 'created_by', 'updated_by',
     'farm_latitude', 'farm_longitude',
     'valid_id_type', 'valid_id_number', 'valid_id_photo', 'verification_status', 'verified_by', 'verified_at', 'rejection_reason',
+    'rsbsa_id_photo', 'valid_id_sha256', 'rsbsa_id_sha256', 'id_checks', 'valid_id_key',
 ])]
 class Beneficiary extends Model
 {
@@ -181,7 +182,33 @@ class Beneficiary extends Model
     {
         // The contact number is encrypted in the database with the server's APP_KEY (privacy on the cloud copy).
         return ['birthdate' => 'date', 'consent_confirmed_at' => 'datetime', 'contact_number' => 'encrypted',
-            'valid_id_number' => 'encrypted', 'verified_at' => 'datetime'];
+            'valid_id_number' => 'encrypted', 'verified_at' => 'datetime', 'id_checks' => 'array'];
+    }
+
+    /** Keyed fingerprint of an ID (type + number, ignoring case, dashes and spaces), searchable while the number is encrypted. */
+    public static function validIdKey(string $type, string $number): string
+    {
+        $plain = preg_replace('/[^A-Z0-9]/', '', strtoupper($number)) ?? '';
+
+        return hash_hmac('sha256', "{$type}|{$plain}", (string) config('app.key'));
+    }
+
+    /** The other farmer already holding this ID (type + number), if any. */
+    public static function holderOfValidId(string $type, string $number): ?self
+    {
+        return self::withTrashed()->where('valid_id_key', self::validIdKey($type, $number))->first();
+    }
+
+    /** The farmer whose valid ID or RSBSA ID photo has this fingerprint (the same file), if any. */
+    public static function holderOfIdPhoto(string $sha256): ?self
+    {
+        return self::withTrashed()->where('valid_id_sha256', $sha256)->orWhere('rsbsa_id_sha256', $sha256)->first();
+    }
+
+    /** @return int how many automatic ID checks failed */
+    public function failedIdChecks(): int
+    {
+        return collect($this->id_checks ?? [])->where('result', 'fail')->count();
     }
 
     public function barangay(): BelongsTo

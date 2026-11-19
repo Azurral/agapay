@@ -30,6 +30,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SidebarController;
 use App\Http\Controllers\SystemUpdateController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ValidationProofController;
 use App\Http\Controllers\WalkInApprovalController;
 use App\Models\Intervention;
 use Illuminate\Support\Facades\Route;
@@ -85,6 +86,13 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
         Route::post('/beneficiaries/{beneficiary}/reject', [WalkInApprovalController::class, 'reject'])->name('beneficiaries.reject');
     });
     Route::get('/beneficiaries/{beneficiary}/valid-id', [WalkInApprovalController::class, 'photo'])->middleware('can:beneficiaries.view')->name('beneficiaries.valid-id');
+    Route::middleware('can:beneficiaries.approve')->group(function () {
+        Route::post('/validation-proofs/{proof}/approve', [ValidationProofController::class, 'approve'])->name('validation-proofs.approve');
+        Route::post('/validation-proofs/{proof}/reject', [ValidationProofController::class, 'reject'])->name('validation-proofs.reject');
+    });
+    Route::get('/validation-proofs/{proof}/file', [ValidationProofController::class, 'file'])
+        ->middleware('can.any:beneficiaries.approve,interventions.validate')->name('validation-proofs.file');
+    Route::get('/beneficiaries/{beneficiary}/rsbsa-id', [WalkInApprovalController::class, 'rsbsaPhoto'])->middleware('can:beneficiaries.view')->name('beneficiaries.rsbsa-id');
     Route::get('/beneficiaries/{beneficiary}', [BeneficiaryController::class, 'show'])->middleware('can:beneficiaries.view')->name('beneficiaries.show');
     Route::put('/beneficiaries/{beneficiary}', [BeneficiaryController::class, 'update'])->middleware('can:beneficiaries.manage')->name('beneficiaries.update');
 
@@ -123,6 +131,8 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
     });
     Route::get('/assistance-requests/export', [AssistanceRequestController::class, 'export'])
         ->middleware('can:interventions.view')->name('assistance-requests.export');
+    Route::get('/assistance-requests/{assistanceRequest}/photos/{photo}', [AssistanceRequestController::class, 'photo'])
+        ->middleware('can.any:interventions.view,requests.create')->name('assistance-requests.photo');
     Route::middleware('can:requests.decide')->group(function () {
         Route::post('/assistance-requests/{assistanceRequest}/approve', [AssistanceRequestController::class, 'approve'])->name('assistance-requests.approve');
         Route::post('/assistance-requests/{assistanceRequest}/deny', [AssistanceRequestController::class, 'deny'])->name('assistance-requests.deny');

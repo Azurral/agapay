@@ -30,9 +30,13 @@
                     <span class="truncate pr-[12px]">{{ $record->deLabel() }}</span>
                     <span>{{ $record->quantityDisplay() }}</span>
                     <span>{{ $record->date_distributed?->format('M j, Y') ?? '-' }}</span>
-                    <x-intervention.chip-select name="claim_status" :options="['unclaimed' => 'Unclaimed', 'claimed' => 'Claimed']" :selected="$record->claim_status"
-                                                :tone="$record->claimTone()"
-                                                :actions="['claimed' => route('intervention-records.claim', $record), 'unclaimed' => route('intervention-records.unclaim', $record)]" />
+                    @if ($record->isClaimLocked())
+                        <x-ui.status-chip tone="neutral">Not claimable</x-ui.status-chip>
+                    @else
+                        <x-intervention.chip-select name="claim_status" :options="['unclaimed' => 'Unclaimed', 'claimed' => 'Claimed']" :selected="$record->claim_status"
+                                                    :tone="$record->claimTone()"
+                                                    :actions="['claimed' => route('intervention-records.claim', $record), 'unclaimed' => route('intervention-records.unclaim', $record)]" />
+                    @endif
                     <a href="{{ route('intervention-records.edit', $record) }}"
                        class="flex h-[39px] w-[98px] items-center justify-center rounded-[10px] border-4 border-brand-soft bg-white text-[11px] transition-colors hover:bg-tint hover:text-brand">Edit</a>
                 </div>

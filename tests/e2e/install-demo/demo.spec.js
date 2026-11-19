@@ -264,6 +264,7 @@ test('5.11 assistance request: filed and approved', async ({ page }) => {
     await page.selectOption('[name=intervention_id]', { label: 'Emergency Seedlings' });
     await page.selectOption('[name=disaster_id]', { label: 'Typhoon Kristine' });
     await page.fill('[name=reason]', 'Seedbed washed out by the typhoon');
+    await page.setInputFiles('input[name="photos[]"]', join(process.cwd(), 'defense', 'demo-field-photo.jpg'));   // a crisis request needs a damage photo
     await page.getByRole('button', { name: 'File Request' }).click();
     await expect(page.getByText('Request filed for Gloria Ramos.')).toBeVisible();
 

@@ -99,6 +99,15 @@
                            class="h-[39px] w-full cursor-pointer rounded-[15px] bg-brand-soft/10 px-[10px] py-[7px] text-[13px] font-medium text-ink outline-none file:mr-[10px] file:rounded-full file:border-0 file:bg-white file:px-[12px] file:text-[12px] file:font-bold">
                 </x-beneficiary.form-field>
             </div>
+            {{-- The RSBSA / agricultural ID with the farmer's signature: needed when an RSBSA No. is entered above. --}}
+            <div class="mt-[12px] grid grid-cols-3 gap-x-[29px]">
+                <x-beneficiary.form-field label="RSBSA / Agricultural ID Photo (with signature)" name="rsbsa_id_photo" :error="$errors->first('rsbsa_id_photo')">
+                    <input id="field-rsbsa_id_photo" name="rsbsa_id_photo" type="file" accept="image/jpeg,image/png"
+                           class="h-[39px] w-full cursor-pointer rounded-[15px] bg-brand-soft/10 px-[10px] py-[7px] text-[13px] font-medium text-ink outline-none file:mr-[10px] file:rounded-full file:border-0 file:bg-white file:px-[12px] file:text-[12px] file:font-bold">
+                </x-beneficiary.form-field>
+                <p class="col-span-2 self-end pb-[8px] text-[12px] text-arrow">Needed when the farmer has an RSBSA No. AGAPAY checks that each photo is clear, not used for another farmer,
+                    and, when the text reader is installed, that the name and number are printed on it. The results are shown to the Administrator.</p>
+            </div>
             @cannot('beneficiaries.approve')
                 <p class="mt-[6px] text-[12px] text-arrow">This walk-in registration will wait for the Administrator's approval before any program can be given.</p>
             @endcannot

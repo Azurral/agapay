@@ -9,7 +9,7 @@ return [
     'consent_text' => 'The farmer has given consent for OMAG to record and use their personal information for agricultural programs and assistance, as stated in the privacy notice.',
     'import_consent_text' => 'The farmers in this file gave consent for OMAG to record and use their personal information for agricultural programs and assistance (for example on their RSBSA forms), as stated in the privacy notice.',
 
-    'version' => '0.18.4',
+    'version' => '0.18.5',
 
     // In-app updates of the office copy ("AGAPAY for Windows"): the Administrator sees "Update available" when GitHub
     // has a newer release. Off in a development copy, which is updated from the source code.
@@ -36,6 +36,15 @@ return [
     'geo' => [
         'check_photos' => (bool) env('AGAPAY_GEO_CHECK', true),
         'max_km' => (float) env('AGAPAY_GEO_MAX_KM', 2),
+    ],
+
+    // Proof checks (panel): the printed name and number on ID photos and validation proofs are read with Tesseract
+    // OCR when it is installed (binary: its full path, or found on PATH / C:\Program Files\Tesseract-OCR). Without it
+    // the checks say "not read" and the Administrator compares by eye.
+    'ocr' => [
+        'enabled' => (bool) env('AGAPAY_OCR', true),
+        'binary' => env('AGAPAY_OCR_BINARY', ''),
+        'timeout' => (int) env('AGAPAY_OCR_TIMEOUT', 30),
     ],
 
     // Where damage photos and generated reports are kept: 'local' (storage/app/private; on the cloud server a persistent

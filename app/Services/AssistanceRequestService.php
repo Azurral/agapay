@@ -5,9 +5,14 @@ namespace App\Services;
 use App\Exceptions\InterventionRuleViolation;
 use App\Models\AssistanceRequest;
 use App\Models\Beneficiary;
+use App\Models\DamagePhoto;
 use App\Models\DistributionCycle;
 use App\Models\User;
+use App\Support\FarmPhotoCheck;
+use App\Support\PhotoGps;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 /** Files assistance requests and records the Administrator's decision on them. */
@@ -15,8 +20,42 @@ final class AssistanceRequestService
 {
     public function __construct(private readonly InterventionAssignment $assignment) {}
 
-    /** @param array{beneficiary_id: int|string, intervention_id: int|string, disaster_id?: int|string|null, crop_id?: int|string|null, quantity?: string|null, reason?: string|null} $data */
-    public function file(array $data, User $actor): AssistanceRequest
+    /**
+     * @param  array{beneficiary_id: int|string, intervention_id: int|string, disaster_id?: int|string|null, crop_id?: int|string|null, quantity?: string|null, reason?: string|null}  $data
+     * @param  list<UploadedFile>  $photos  photos of the damage (already checked: taken at the farm, after the crisis)
+     */
+    public function file(array $data, User $actor, array $photos = []): AssistanceRequest
+    {
+        $farmer = Beneficiary::find($data['beneficiary_id']);
+        $stored = [];
+
+        try {
+            return DB::transaction(function () use ($data, $actor, $photos, $farmer, &$stored) {
+                $request = $this->create($data, $actor);
+                foreach ($photos as $photo) {
+                    $where = FarmPhotoCheck::measure($photo, $farmer);
+                    $stored[] = $path = $photo->store('request-photos', DamagePhoto::disk());
+                    $request->photos()->create([
+                        'path' => $path,
+                        'original_name' => mb_substr($photo->getClientOriginalName() ?: 'photo.jpg', 0, 255),
+                        'size' => (int) $photo->getSize(),
+                        'latitude' => $where['latitude'] ?? null,
+                        'longitude' => $where['longitude'] ?? null,
+                        'distance_m' => $where['distance_m'] ?? null,
+                        'taken_at' => PhotoGps::takenAt($photo->getRealPath() ?: $photo->getPathname()),
+                    ]);
+                }
+
+                return $request;
+            });
+        } catch (\Throwable $e) {
+            Storage::disk(DamagePhoto::disk())->delete($stored);   // no orphaned files when the save fails
+
+            throw $e;
+        }
+    }
+
+    private function create(array $data, User $actor): AssistanceRequest
     {
         return AssistanceRequest::create([
             'beneficiary_id' => $data['beneficiary_id'],

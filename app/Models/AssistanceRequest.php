@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** A farmer asking OMAG for a program; the Administrator approves it into a program record, or denies it with a reason. */
 #[Fillable([
@@ -52,6 +53,12 @@ class AssistanceRequest extends Model
     public function crop(): BelongsTo
     {
         return $this->belongsTo(Crop::class);
+    }
+
+    /** Photos of the damage (crisis-related requests), with where and when each was taken. */
+    public function photos(): HasMany
+    {
+        return $this->hasMany(AssistanceRequestPhoto::class)->orderBy('id');
     }
 
     /** The program record an approval created. */

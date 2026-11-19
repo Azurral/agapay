@@ -5,7 +5,6 @@
     // Figma 344:76 column widths, measured from the card's inner edge (DA and LGU program records alike).
     $cols = 'grid-cols-[251px_260px_255px_242px_100px_162px_155px]';
     $filterWidth = 230;
-    $validationOptions = InterventionRecord::VALIDATIONS;
     $claimOptions = [InterventionRecord::CLAIM_UNCLAIMED => 'Unclaimed', InterventionRecord::CLAIM_CLAIMED => 'Claimed'];
     $canValidate = $variant === 'dropdowns' && auth()->user()->can('interventions.validate');
     $canClaim = $variant === 'dropdowns' && auth()->user()->can('interventions.claim');
@@ -43,16 +42,17 @@
             <span class="truncate pr-[12px]">{{ $record->intervention->name }}</span>
             <span class="truncate pr-[12px]">{{ $record->quantityDisplay() }}</span>
             <span>
-                @if ($canValidate)
-                    <x-intervention.chip-select name="validation_status" :options="$validationOptions" :selected="$record->validation_status"
-                                                :tone="InterventionRecord::validationTone($record->validation_status)"
-                                                :action="route('intervention-records.validate', $record)" />
+                @if ($record->pendingProof)
+                    {{-- A change sent with proof waits for the Administrator; no second change meanwhile. --}}
+                    <x-ui.status-chip tone="neutral" pulse title="Sent with proof, waiting for the Administrator">Pending: {{ InterventionRecord::validationLabel($record->pendingProof->to_status) }}</x-ui.status-chip>
+                @elseif ($canValidate)
+                    <x-intervention.validation-select :record="$record" />
                 @else
                     <x-ui.status-chip :tone="InterventionRecord::validationTone($record->validation_status)">{{ InterventionRecord::validationLabel($record->validation_status) }}</x-ui.status-chip>
                 @endif
             </span>
             <span>
-                @if ($canClaim)
+                @if ($canClaim && ! $record->isClaimLocked())
                     <x-intervention.chip-select name="claim_status" :options="$claimOptions" :selected="$record->claim_status" :tone="$record->claimTone()" :pop="session('changed_record') === $record->id"
                                                 :actions="['claimed' => route('intervention-records.claim', $record), 'unclaimed' => route('intervention-records.unclaim', $record)]" />
                 @else

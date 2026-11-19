@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\InterventionRuleViolation;
 use App\Models\InterventionRecord;
+use App\Models\ValidationProof;
 use App\Services\ClaimService;
+use App\Services\ValidationProofService;
 use Closure;
 use Illuminate\Database\DetectsConcurrencyErrors;
 use Illuminate\Http\RedirectResponse;
@@ -17,14 +19,24 @@ class InterventionRecordActionController extends Controller
 {
     use DetectsConcurrencyErrors;
 
-    public function __construct(private readonly ClaimService $claims) {}
+    public function __construct(private readonly ClaimService $claims, private readonly ValidationProofService $proofs) {}
 
+    /** A change of status needs proof; an Agricultural Technologist's change then waits for the Administrator. */
     public function validate(Request $request, InterventionRecord $record): RedirectResponse
     {
         $status = $request->input('validation_status');
+        $proof = null;
 
-        return $this->attempt($record, fn () => $this->claims->validate($record, is_string($status) ? $status : '', $request->user()),
-            fn (InterventionRecord $r) => InterventionRecord::validationLabel($r->validation_status));
+        return $this->attempt($record, function () use ($record, $status, $request, &$proof) {
+            $result = $this->proofs->change($record, is_string($status) ? $status : '', $request->file('proof'), $request->user());
+            $proof = $result['proof'];
+
+            return $result['record'];
+        }, function (InterventionRecord $r) use (&$proof) {
+            return $proof?->status === ValidationProof::PENDING
+                ? InterventionRecord::validationLabel($proof->to_status)." sent with proof for the Administrator's approval"
+                : InterventionRecord::validationLabel($r->validation_status);
+        });
     }
 
     public function claim(Request $request, InterventionRecord $record): RedirectResponse

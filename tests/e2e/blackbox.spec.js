@@ -72,12 +72,21 @@ async function fillFarmer(page, { first, last, born = '1980-03-15', rsbsa = '', 
     // Geolocation: the farm's GPS position (Samoki); damage photos are checked against it.
     await page.fill('[name=farm_latitude]', '17.0835');
     await page.fill('[name=farm_longitude]', '120.9830');
-    // Walk-in verification: a valid ID with its number and a photo.
+    // Walk-in verification: a valid ID with its number and a photo, each farmer's own (a reused ID or photo is refused),
+    // and the RSBSA / agricultural ID with signature when the farmer has an RSBSA No.
+    const n = ++idCount;
     await page.selectOption('[name=valid_id_type]', 'voters');
-    await page.fill('[name=valid_id_number]', 'VIN-1234-5678');
-    const id = join(scratch, 'valid-id.png');
-    writeFileSync(id, PNG);
-    await page.setInputFiles('input[name=valid_id_photo]', id);
+    await page.fill('[name=valid_id_number]', `VIN-${Date.now() % 100000}-${n}`);
+    await page.setInputFiles('input[name=valid_id_photo]', idPhoto(`valid-id-${n}.png`));
+    if (rsbsa) await page.setInputFiles('input[name=rsbsa_id_photo]', idPhoto(`rsbsa-id-${n}.png`));
+}
+
+let idCount = 0;
+/** A small PNG, different every time (bytes after the image end make each file unique). */
+function idPhoto(name) {
+    const path = join(scratch, name);
+    writeFileSync(path, Buffer.concat([PNG, Buffer.from(`${name}-${Date.now()}-${Math.random()}`)]));
+    return path;
 }
 
 /** The Administrator approves a walk-in registration on Walk-in Approvals. */
@@ -299,13 +308,21 @@ test('BB-23 DA intervention: one per household per cycle', async ({ page }) => {
     actual(`Juan: Claimed. Maria: refused, message "${await shown(page, /already claimed PAFF for this household/)}".`);
 });
 
-test('BB-24 DA intervention: a deceased farmer leaves the claim list by itself', async ({ page }) => {
-    testCase({ module: 'DA intervention', input: "Agricultural Technologist marks Carlos Ibanez's Complete Fertilizer as Deceased", expected: 'AGAPAY removes the record from the claim list; it is listed under Validation: Not claimable.' });
+test('BB-24 DA intervention: a deceased farmer leaves the claim list once the proof is approved', async ({ page }) => {
+    testCase({ module: 'DA intervention', input: "Agricultural Technologist marks Carlos Ibanez's Complete Fertilizer as Deceased with a signed certification; the Administrator approves it", expected: 'The change waits for the Administrator; once approved, AGAPAY removes the record from the claim list and lists it under Validation: Not claimable.' });
     await login(page, 'Agritech_02');
     await page.goto('/interventions/da?name=Carlos');
     const row = page.locator('div.grid').filter({ hasText: 'Carlos Ibanez' }).filter({ hasText: 'Complete Fertilizer' }).first();
     await row.locator('select[name=validation_status]').selectOption('deceased');
-    await page.waitForLoadState('networkidle');
+    await row.locator('input[name=proof]').setInputFiles(join(import.meta.dirname, 'fixtures', 'proof-certification.jpg'));
+    await row.getByRole('button', { name: 'Send for approval' }).click();
+    await expect(page.getByText(/Deceased sent with proof for the Administrator's approval/)).toBeVisible();
+
+    await login(page, 'Admin_01');
+    await page.goto('/beneficiaries/approvals');
+    const change = page.locator('div.grid').filter({ hasText: 'Carlos Ibanez' }).filter({ hasText: 'Deceased' }).first();
+    await change.getByRole('button', { name: 'Approve' }).click();
+    await expect(page.getByText(/is now Deceased/)).toBeVisible();
     await page.goto('/interventions/da?name=Carlos');
     await expect(page.getByText('No intervention records match these filters.')).toBeVisible();
     await page.goto('/interventions/da?name=Carlos&show=not');

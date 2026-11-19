@@ -34,3 +34,17 @@ it('measures the distance between two points in metres', function () {
     expect(PhotoGps::distance(17.0894, 120.9770, 17.0894, 120.9770))->toBe(0.0)
         ->and(PhotoGps::distance(17.0894, 120.9770, 17.0984, 120.9770))->toEqualWithDelta(1000.8, 2.0);
 });
+
+it('reads when the photo was taken (the camera DateTimeOriginal), with or without GPS', function () {
+    $both = tempnam(sys_get_temp_dir(), 'gps').'.jpg';
+    file_put_contents($both, GpsJpeg::bytes(17.0894, 120.977, takenAt: '2026-11-18 07:45:10'));
+    $timeOnly = tempnam(sys_get_temp_dir(), 'gps').'.jpg';
+    file_put_contents($timeOnly, GpsJpeg::bytes(null, null, takenAt: '2026-10-02 16:05:00'));
+
+    expect(PhotoGps::takenAt($both)?->format('Y-m-d H:i:s'))->toBe('2026-11-18 07:45:10')
+        ->and(PhotoGps::read($both))->toEqualWithDelta(['latitude' => 17.0894, 'longitude' => 120.977], 0.00001)
+        ->and(PhotoGps::takenAt($timeOnly)?->format('Y-m-d H:i:s'))->toBe('2026-10-02 16:05:00')
+        ->and(PhotoGps::read($timeOnly))->toBeNull()
+        ->and(PhotoGps::takenAt(tempJpeg(17.0894, 120.977)))->toBeNull()
+        ->and(PhotoGps::takenAt('/no/such/file.jpg'))->toBeNull();
+});

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Beneficiary;
 use App\Models\DamagePhoto;
+use App\Models\ValidationProof;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,9 @@ class WalkInApprovalController extends Controller
                 ->where('verification_status', Beneficiary::VERIFICATION_PENDING)->oldest()->oldest('id')->get(),
             'rejected' => Beneficiary::with(['barangay:id,name', 'verifier:id,username'])
                 ->where('verification_status', Beneficiary::VERIFICATION_REJECTED)->latest('verified_at')->limit(20)->get(),
+            // Validation status changes sent with proof by the Agricultural Technologists.
+            'proofs' => ValidationProof::with(['record.beneficiary', 'record.intervention', 'record.cycle', 'submitter:id,username'])
+                ->where('status', ValidationProof::PENDING)->oldest()->oldest('id')->get(),
         ]);
     }
 
@@ -63,10 +67,20 @@ class WalkInApprovalController extends Controller
     /** The ID photo is private: shown only to signed-in staff who may see profiles. */
     public function photo(Beneficiary $beneficiary): StreamedResponse
     {
-        $disk = Storage::disk(DamagePhoto::disk());
-        abort_unless($beneficiary->valid_id_photo && $disk->exists($beneficiary->valid_id_photo), 404);
+        return $this->idPhoto($beneficiary->valid_id_photo, 'valid-id-'.$beneficiary->id);
+    }
 
-        return $disk->response($beneficiary->valid_id_photo, 'valid-id-'.$beneficiary->id.'.'.pathinfo($beneficiary->valid_id_photo, PATHINFO_EXTENSION),
-            ['Cache-Control' => 'private, no-store'], 'inline');
+    /** The RSBSA / agricultural ID with the farmer's signature, private like the valid ID. */
+    public function rsbsaPhoto(Beneficiary $beneficiary): StreamedResponse
+    {
+        return $this->idPhoto($beneficiary->rsbsa_id_photo, 'rsbsa-id-'.$beneficiary->id);
+    }
+
+    private function idPhoto(?string $path, string $name): StreamedResponse
+    {
+        $disk = Storage::disk(DamagePhoto::disk());
+        abort_unless($path && $disk->exists($path), 404);
+
+        return $disk->response($path, $name.'.'.pathinfo($path, PATHINFO_EXTENSION), ['Cache-Control' => 'private, no-store'], 'inline');
     }
 }

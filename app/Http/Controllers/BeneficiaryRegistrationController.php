@@ -6,6 +6,7 @@ use App\Http\Requests\StoreBeneficiaryRequest;
 use App\Models\Barangay;
 use App\Models\Beneficiary;
 use App\Models\DamagePhoto;
+use App\Support\IdCheck;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Arr;
@@ -15,6 +16,26 @@ use Illuminate\View\View;
 /** Add Beneficiary: profiles are created directly; the RSBSA number is optional. */
 class BeneficiaryRegistrationController extends Controller
 {
+    public function __construct(private readonly IdCheck $idCheck) {}
+
+    /**
+     * Automatic checks on the ID photos (clear photo, name and number printed on them), kept with the profile for the
+     * Administrator who approves the walk-in.
+     *
+     * @return list<array{check: string, result: string}>
+     */
+    private function idChecks(StoreBeneficiaryRequest $request, array $data): array
+    {
+        $checks = $this->idCheck->check($request->file('valid_id_photo')->getRealPath(), Beneficiary::VALID_IDS[$data['valid_id_type']],
+            $data['first_name'], $data['last_name'], $data['valid_id_number']);
+        if ($rsbsaId = $request->file('rsbsa_id_photo')) {
+            $checks = [...$checks, ...$this->idCheck->check($rsbsaId->getRealPath(), 'RSBSA / agricultural ID',
+                $data['first_name'], $data['last_name'], (string) $data['rsbsa_number'])];
+        }
+
+        return $checks;
+    }
+
     public function create(): View
     {
         return view('beneficiaries.create', [
@@ -47,12 +68,19 @@ class BeneficiaryRegistrationController extends Controller
 
             // The ID photo is a private file (like damage photos): served only to signed-in staff.
             $photo = $request->file('valid_id_photo')->store('valid-ids', DamagePhoto::disk());
+            $rsbsaId = $request->file('rsbsa_id_photo')?->store('valid-ids', DamagePhoto::disk());
+            $checks = $this->idChecks($request, $data);
             // The Administrator approves walk-ins, so their own registrations are verified at once.
             $approver = $request->user()->can('beneficiaries.approve');
 
             $beneficiary = Beneficiary::create([
-                ...Arr::except($data, ['valid_id_photo', 'consent']),
+                ...Arr::except($data, ['valid_id_photo', 'rsbsa_id_photo', 'consent']),
                 'valid_id_photo' => $photo,
+                'rsbsa_id_photo' => $rsbsaId,
+                'valid_id_key' => Beneficiary::validIdKey($data['valid_id_type'], $data['valid_id_number']),
+                'valid_id_sha256' => hash_file('sha256', $request->file('valid_id_photo')->getRealPath()),
+                'rsbsa_id_sha256' => $request->file('rsbsa_id_photo') ? hash_file('sha256', $request->file('rsbsa_id_photo')->getRealPath()) : null,
+                'id_checks' => $checks,
                 'verification_status' => $approver ? Beneficiary::VERIFICATION_VERIFIED : Beneficiary::VERIFICATION_PENDING,
                 'verified_by' => $approver ? $request->user()->id : null,
                 'verified_at' => $approver ? now() : null,

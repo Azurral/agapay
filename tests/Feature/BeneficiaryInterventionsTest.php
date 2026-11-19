@@ -3,7 +3,10 @@
 use App\Models\Beneficiary;
 use App\Models\DistributionCycle;
 use App\Models\User;
+use App\Models\ValidationProof;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Http\UploadedFile;
+use Tests\Support\GpsJpeg;
 
 beforeEach(function () {
     $this->seed(DatabaseSeeder::class);
@@ -81,15 +84,20 @@ it('lets the admin override the household block with a reason', function () {
     expect($record->fresh()->override_reason)->toBe('Separate farm with its own RSBSA');
 });
 
-it('lets agri techs mark special cases without a validation step on the profile', function () {
+it('lets agri techs mark special cases with proof, approved by the administrator, without a separate validation step', function () {
     $carlos = ($this->person)('Carlos', 'Ibanez');
     $record = $carlos->interventionRecords()->sole();
 
     $this->actingAs($this->agritech)->get(route('beneficiaries.show', $carlos))->assertOk()
         ->assertDontSee('Validate Beneficiary')->assertDontSee('Confirm Validation');
 
-    $this->actingAs($this->agritech)->post(route('intervention-records.validate', $record), ['validation_status' => 'bedridden'])
+    $proof = UploadedFile::fake()->createWithContent('cert.jpg', GpsJpeg::bytes(null, null, 800, 1000));
+    $this->actingAs($this->agritech)->post(route('intervention-records.validate', $record), ['validation_status' => 'bedridden', 'proof' => $proof])
         ->assertSessionHasNoErrors();
+    expect($record->fresh()->validation_status)->toBe('eligible');   // waits for the Administrator
+
+    $this->actingAs(User::where('username', 'Admin_01')->sole())
+        ->post(route('validation-proofs.approve', ValidationProof::sole()))->assertSessionHasNoErrors();
     expect($record->fresh()->validation_status)->toBe('bedridden');
 });
 

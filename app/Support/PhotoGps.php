@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use Carbon\CarbonImmutable;
+
 /**
  * Reads the GPS position a phone camera stores in a photo (EXIF GPSLatitude / GPSLongitude), without the PHP exif
  * extension (the office copy's PHP has none). JPEG: the APP1 "Exif" segment; PNG: the eXIf chunk. Both hold a TIFF
@@ -20,6 +22,50 @@ final class PhotoGps
         $tiff = str_starts_with($data, "\xFF\xD8") ? self::jpegTiff($data) : (str_starts_with($data, "\x89PNG") ? self::pngTiff($data) : null);
 
         return $tiff === null ? null : self::gps($tiff);
+    }
+
+    /**
+     * When the photo was taken: the camera's DateTimeOriginal (Exif IFD tag 0x9003), else IFD0 DateTime (0x0132).
+     * Phones store local time without a zone, so it is read in the app's time zone (Asia/Manila, the PHP default Laravel sets).
+     */
+    public static function takenAt(string $path): ?CarbonImmutable
+    {
+        $data = @file_get_contents($path, false, null, 0, 512 * 1024);
+        if ($data === false || strlen($data) < 12) {
+            return null;
+        }
+        $tiff = str_starts_with($data, "\xFF\xD8") ? self::jpegTiff($data) : (str_starts_with($data, "\x89PNG") ? self::pngTiff($data) : null);
+        if ($tiff === null || strlen($tiff) < 8 || ! in_array(substr($tiff, 0, 2), ['II', 'MM'], true)) {
+            return null;
+        }
+        $little = substr($tiff, 0, 2) === 'II';
+        $u16 = fn (int $at) => $at >= 0 && $at + 2 <= strlen($tiff) ? unpack($little ? 'v' : 'n', substr($tiff, $at, 2))[1] : null;
+        $u32 = fn (int $at) => $at >= 0 && $at + 4 <= strlen($tiff) ? unpack($little ? 'V' : 'N', substr($tiff, $at, 4))[1] : null;
+        // [tag => value offset] of one IFD's entries.
+        $entries = function (?int $ifd) use ($u16, $u32): array {
+            $count = $ifd !== null ? $u16($ifd) : null;
+            $found = [];
+            for ($i = 0; $count !== null && $i < min($count, 200); $i++) {
+                $entry = $ifd + 2 + $i * 12;
+                $found[$u16($entry)] = $u32($entry + 8);
+            }
+
+            return $found;
+        };
+        $text = function (?int $at) use ($tiff): ?CarbonImmutable {
+            $value = $at !== null ? substr($tiff, $at, 19) : '';
+            if (! preg_match('/^\d{4}:\d{2}:\d{2} \d{2}:\d{2}:\d{2}$/', $value)) {
+                return null;
+            }
+            $when = CarbonImmutable::createFromFormat('Y:m:d H:i:s', $value, date_default_timezone_get());   // Laravel sets it from app.timezone
+
+            return $when !== false && $when->year >= 2000 ? $when : null;
+        };
+
+        $ifd0 = $entries($u32(4));
+        $exif = isset($ifd0[0x8769]) ? $entries($ifd0[0x8769]) : [];
+
+        return $text($exif[0x9003] ?? null) ?? $text($ifd0[0x0132] ?? null);
     }
 
     /** Distance in metres between two points (haversine). */

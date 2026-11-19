@@ -5,15 +5,19 @@ namespace App\Http\Controllers;
 use App\Exports\AssistanceRequestExport;
 use App\Http\Requests\AssistanceRequestRequest;
 use App\Models\AssistanceRequest;
+use App\Models\AssistanceRequestPhoto;
 use App\Models\Crop;
+use App\Models\DamagePhoto;
 use App\Models\Disaster;
 use App\Models\Intervention;
 use App\Services\AssistanceRequestService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /** Assistance requests: filed by staff for a farmer, decided by the Administrator (summary on the LGU page's Requests tab). */
 class AssistanceRequestController extends Controller
@@ -33,7 +37,7 @@ class AssistanceRequestController extends Controller
 
     public function store(AssistanceRequestRequest $request): RedirectResponse
     {
-        $filed = $this->requests->file($request->validated(), $request->user());
+        $filed = $this->requests->file($request->safe()->except(['photos']), $request->user(), $request->filled('disaster_id') ? $request->photoUploads() : []);
 
         return redirect()->route('assistance-requests.create')->with('status', "Request filed for {$filed->beneficiary->fullName()}.");
     }
@@ -50,6 +54,16 @@ class AssistanceRequestController extends Controller
         $denied = $this->requests->deny($assistanceRequest, (string) $request->input('decision_note', ''), $request->user());
 
         return back()->with('status', "Denied: {$denied->auditRecordLabel()}.");
+    }
+
+    /** A photo of the damage on a request, from the private disk (signed-in users who can see requests only). */
+    public function photo(AssistanceRequest $assistanceRequest, AssistanceRequestPhoto $photo): StreamedResponse
+    {
+        abort_unless($photo->assistance_request_id === $assistanceRequest->id, 404);
+        $disk = Storage::disk(DamagePhoto::disk());
+        abort_unless($disk->exists($photo->path), 404);
+
+        return $disk->response($photo->path, $photo->original_name, ['Cache-Control' => 'private, max-age=3600']);
     }
 
     public function export(Request $request): BinaryFileResponse

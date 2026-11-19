@@ -80,7 +80,18 @@
                 <span class="truncate pr-[12px]">{{ $item->beneficiary->barangay?->name }}</span>
                 <span class="truncate pr-[12px]" title="{{ $item->reason }}">{{ $item->intervention->sourcedName() }}</span>
                 <span>{{ $item->quantity === null ? '—' : rtrim(rtrim((string) $item->quantity, '0'), '.') }}</span>
-                <span class="truncate pr-[12px]">{{ $item->disaster?->name ?? '—' }}</span>
+                <span class="min-w-0 pr-[12px]">
+                    <span class="block truncate">{{ $item->disaster?->name ?? '—' }}</span>
+                    @if ($item->photos->isNotEmpty())
+                        {{-- Proof of the damage: where (GPS, distance from the farm) and when each photo was taken. --}}
+                        <span class="flex flex-wrap gap-x-[8px] text-[12px] font-semibold">
+                            @foreach ($item->photos as $photo)
+                                <a href="{{ route('assistance-requests.photo', [$item, $photo]) }}" target="_blank" rel="noopener" class="text-brand hover:underline"
+                                   title="Taken {{ $photo->taken_at?->format('M j, Y g:i A') ?? '(no date)' }}{{ $photo->distance_m !== null ? ', '.$photo->distance_m.' m from the farm' : '' }}">Photo {{ $loop->iteration }}</a>
+                            @endforeach
+                        </span>
+                    @endif
+                </span>
                 <x-ui.status-chip :tone="$item->statusTone()" :pulse="$item->isPending()">{{ $item->statusLabel() }}</x-ui.status-chip>
                 @if ($canDecide && $item->isPending())
                     <div class="flex items-center gap-[8px] pl-[12px]">

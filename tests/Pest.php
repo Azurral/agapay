@@ -13,6 +13,7 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use Tests\Support\GpsJpeg;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -97,7 +98,7 @@ function spreadsheet(array $rows, string $type = 'xlsx', string $name = 'masterl
 /** Valid Add Beneficiary input (BarangaySeeder must have run). */
 function validRegistration(array $overrides = []): array
 {
-    return [
+    $input = [
         'first_name' => 'Juan',
         'middle_name' => 'Abenoja',
         'last_name' => 'Dela Cruz',
@@ -112,10 +113,23 @@ function validRegistration(array $overrides = []): array
         'consent' => '1',
         'farm_latitude' => '17.0894',
         'farm_longitude' => '120.9770',
-        // Walk-in verification (no ghost farmers): a valid ID with its number and a photo.
+        // Walk-in verification (no ghost farmers): a valid ID with its number and a photo (each photo different, as a
+        // reused photo is refused).
         'valid_id_type' => 'voters',
-        'valid_id_number' => 'VIN-1234-5678',
-        'valid_id_photo' => UploadedFile::fake()->image('valid-id.jpg', 600, 380),
+        'valid_id_number' => 'VIN-'.random_int(1000, 9999).'-'.random_int(1000, 9999),   // each farmer's own ID
+        'valid_id_photo' => idPhoto('valid-id.jpg'),
         ...$overrides,
     ];
+    // A farmer with an RSBSA No. also shows the RSBSA / agricultural ID with signature.
+    if (! array_key_exists('rsbsa_id_photo', $overrides) && trim((string) ($input['rsbsa_number'] ?? '')) !== '') {
+        $input['rsbsa_id_photo'] = idPhoto('rsbsa-id.jpg');
+    }
+
+    return array_filter($input, fn ($value, $key) => ! ($key === 'rsbsa_id_photo' && $value === null), ARRAY_FILTER_USE_BOTH);
+}
+
+/** A photo of an ID card, different every time. */
+function idPhoto(string $name): UploadedFile
+{
+    return UploadedFile::fake()->createWithContent($name, GpsJpeg::bytes(null, null, 600, 380));
 }

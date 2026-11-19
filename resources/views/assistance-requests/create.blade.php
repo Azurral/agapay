@@ -14,8 +14,8 @@
         <p class="mt-[2px] text-[13px] text-muted">A farmer asking OMAG for a program, for example after a crisis. The Administrator approves or denies it.</p>
         <div class="divider mt-[10px]"></div>
 
-        <form method="POST" action="{{ route('assistance-requests.store') }}" class="mt-[14px] flex flex-col gap-[12px]"
-              x-data="{ source: @js(old('source', '')), interventions: @js($interventions->map->only(['id', 'source', 'name'])), intervention: @js((string) old('intervention_id', '')) }">
+        <form method="POST" action="{{ route('assistance-requests.store') }}" enctype="multipart/form-data" class="mt-[14px] flex flex-col gap-[12px]"
+              x-data="{ crisis: @js((string) old('disaster_id', '')), source: @js(old('source', '')), interventions: @js($interventions->map->only(['id', 'source', 'name'])), intervention: @js((string) old('intervention_id', '')) }">
             @csrf
 
             <div class="relative" x-data="{
@@ -75,7 +75,7 @@
                 <div>
                     <label class="{{ $box }} {{ $border('disaster_id') }}">
                         <span class="shrink-0">Crisis:</span>
-                        <select name="disaster_id" class="{{ $control }} cursor-pointer">
+                        <select name="disaster_id" x-model="crisis" class="{{ $control }} cursor-pointer">
                             <option value="">None / not crisis-related</option>
                             @foreach ($disasters as $disaster)
                                 <option value="{{ $disaster->id }}" @selected((string) old('disaster_id') === (string) $disaster->id)>{{ $disaster->name }}</option>
@@ -99,6 +99,18 @@
                 </div>
                 <x-ui.inline-field label="Reason" name="reason" maxlength="500" placeholder="e.g. Seedbed washed out by the typhoon"
                                    :value="old('reason')" :error="$errors->first('reason')" />
+
+                {{-- Proof of the crisis: photos taken at the farm with the phone's location on, after the crisis. --}}
+                <div class="col-span-2" x-show="crisis !== ''" x-cloak>
+                    <label class="{{ $box }} {{ $border('photos') }}">
+                        <span class="shrink-0">Damage Photos:</span>
+                        <input type="file" name="photos[]" accept="image/jpeg,image/png" multiple :required="crisis !== ''" :disabled="crisis === ''"
+                               class="{{ $control }} cursor-pointer file:mr-[10px] file:rounded-[50px] file:border-0 file:bg-tint file:px-[12px] file:py-[4px] file:font-bold">
+                    </label>
+                    <p class="mt-[4px] pl-[4px] text-[12px] text-muted">Up to {{ \App\Http\Requests\AssistanceRequestRequest::MAX_PHOTOS }} photos, taken at the farm after the crisis with the phone's location on. The place and time are read from each photo.</p>
+                    @error('photos')<p class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger">{{ $message }}</p>@enderror
+                    @error('photos.*')<p class="mt-[4px] pl-[4px] text-[12px] font-semibold text-danger">{{ $message }}</p>@enderror
+                </div>
             </div>
 
             <button type="submit" class="bg-brand-bar gradient-button mt-[10px] h-[47px] w-full rounded-[50px] text-[20px] font-bold leading-[24px] text-white">File Request</button>
